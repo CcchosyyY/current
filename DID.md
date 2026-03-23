@@ -1,50 +1,27 @@
 # Done
 
-## 보안
-- [x] CSRF verifyOrigin 강화 (Origin/Referer 필수 검증)
-- [x] safeParseBody 유틸 추가, 모든 POST/DELETE 라우트 적용
-- [x] /api/articles rate limiting (60req/min)
-- [x] /api/ai-models rate limiting (60req/min)
-- [x] /api/bookmarks GET rate limiting
-- [x] API Cache-Control 헤더 (articles 60초, ai-models 300초, mutations no-store)
-- [x] middleware 보호 라우트 (/saved 미인증 시 리디렉션)
-- [x] env.ts lazy getter로 Supabase 클라이언트 non-null assertion 제거
-- [x] 보안 헤더 (CSP, HSTS, X-Frame-Options, Referrer-Policy 등)
+## 2026-03-23 — AI 뉴스 큐레이션 플랫폼 MVP 구현
 
-## 프론트엔드
-- [x] 모바일 반응형 전체 대응 (헤더, 사이드바, 그리드, 카드)
-- [x] 사이드바 접기/펼치기 (240px ↔ 60px, localStorage 저장)
-- [x] 모바일 사이드바 오버레이 (햄버거 메뉴, ESC/외부 클릭 닫기)
-- [x] Command Palette 검색 모달 (Cmd+K, 통합 검색, 키보드 네비게이션)
-- [x] Framer Motion 애니메이션 (뉴스 토글, 카드 stagger, 필터 layout, 구독 전환)
-- [x] 카드 호버 효과 강화 (shadow + translate)
-- [x] 스켈레톤 로딩 컴포넌트 (NewsCard, AIModelCard)
-- [x] 유저 메뉴 드롭다운 (Guest, Profile/Settings/Sign Out)
-- [x] 토스트 알림 시스템 (success/error/info, 3초 자동 제거)
+### 완료 항목
+- MVP 전체 구현 (대시보드, 트렌딩, 북마크, 뉴스레터, 기사 상세 5개 페이지)
+- API 4개 엔드포인트 구축 (articles, ai-models, bookmarks, newsletter)
+- 보안 인프라 적용 (Rate Limiting, CSRF, Zod, 보안 헤더)
+- 모바일 반응형 + Framer Motion 애니메이션 전면 적용
+- Command Palette 검색 (Cmd+K), 북마크/공유, 토스트 알림 구현
+- PPT 초안용 프로젝트 상세 정리
 
-## 기능 연결
-- [x] 북마크 버튼 실제 동작 (localStorage, 아이콘 전환, 토스트)
-- [x] 공유 버튼 실제 동작 (Web Share API + 클립보드 폴백)
-- [x] 기사 상세 Save/Share 동작 (ArticleActions 컴포넌트)
-- [x] 카테고리 필터 실제 동작 (URL 파라미터 → 데이터 필터링)
-- [x] 트렌딩 기간 필터 실제 동작 (today/week/month 시간 필터)
-- [x] 사이드바 카테고리별 기사 수 뱃지
-- [x] 뉴스레터 구독 API 연결 (로딩/에러/성공 처리)
-- [x] stats bar 동적 기사 수 표시
+### 변경 사항
 
-## 이미지/성능 최적화
-- [x] `<img>` → `next/image` 전환 (NewsCard, Trending, Article Detail)
-- [x] next.config.ts remotePatterns 설정
-- [x] Trending 정렬 useMemo
-- [x] Saved 페이지 서버 컴포넌트 전환 ("use client" 제거)
+| 영역 | 변경 내용 |
+|------|-----------|
+| 대시보드 | 뉴스 피드, AI 모델 디렉토리(24개), 전문가 인사이트, 카테고리 필터 |
+| 페이지 | 트렌딩(기간 필터), 북마크(Saved), 뉴스레터(구독), 기사 상세 |
+| 컴포넌트 | Header, Sidebar, NewsCard, AIModelCard 등 11개 + 스켈레톤 2개 |
+| API/보안 | Rate Limiting, CSRF, Zod 검증, Cache-Control, 보호 라우트 |
+| UX | Command Palette, 사이드바 접기/펼치기, 모바일 오버레이, 토스트 |
+| 커스텀 훅 | useBookmarks, useShare, useToast 3개 |
 
-## 접근성
-- [x] nav aria-label (Header, Sidebar)
-- [x] 뉴스 토글 aria-expanded + aria-controls
-- [x] 뉴스레터 이메일 label (sr-only)
-- [x] Article not found → notFound() (HTTP 404)
-
-## 버그 수정 (검사팀)
-- [x] ai-models Zod 카테고리 enum 불일치 수정 (Critical)
-- [x] AI_MODEL_CATEGORIES에 "Search" 탭 누락 추가
-- [x] AIModelCardSkeleton 레이아웃 재작성
+### 아키텍처 노트
+- Server Component 우선 설계, 인터랙션 필요 시에만 Client Component 분리
+- Mock 데이터로 전체 흐름 완성 후 DB 연동 전략 채택
+- Claude Code 병렬 에이전트 12개 팀 활용, 2회 세션(약 30분)으로 구현 완료
