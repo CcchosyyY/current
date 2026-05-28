@@ -1,29 +1,46 @@
 "use client";
 
-import { useEffect, useCallback, useState, useMemo } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Brain,
-  Monitor,
-  Sparkles,
-  Gem,
-  Globe,
+  MessageSquare,
+  Image,
+  Video,
+  Music,
+  Code,
+  Search,
+  Languages,
+  Palette,
+  PenTool,
+  Zap,
+  Bot,
+  Box,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
-import { TODAYS_ARTICLES } from "@/lib/mock-data";
+import { useCategoryCounts } from "@/lib/hooks/useCategoryCounts";
 import SidebarToggle from "./SidebarToggle";
 
 const STORAGE_KEY = "sidebar-collapsed";
 
-// Map category icon names to lucide-react components
 const ICON_MAP: Record<string, LucideIcon> = {
   brain: Brain,
-  monitor: Monitor,
-  sparkles: Sparkles,
-  gem: Gem,
-  globe: Globe,
+  "message-square": MessageSquare,
+  image: Image,
+  video: Video,
+  music: Music,
+  code: Code,
+  search: Search,
+  languages: Languages,
+  palette: Palette,
+  "pen-tool": PenTool,
+  zap: Zap,
+  bot: Bot,
+  box: Box,
+  "graduation-cap": GraduationCap,
 };
 
 interface SidebarProps {
@@ -37,7 +54,6 @@ export function useSidebarState() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Restore collapsed state from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "true") {
@@ -59,6 +75,9 @@ export function useSidebarState() {
   return { collapsed, toggle, mobileOpen, openMobile, closeMobile };
 }
 
+const coreCategories = CATEGORIES.filter((c) => c.group === "core");
+const extendedCategories = CATEGORIES.filter((c) => c.group === "extended");
+
 export default function Sidebar({
   collapsed,
   onToggle,
@@ -69,20 +88,8 @@ export default function Sidebar({
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category") || "ai-ml";
 
-  // Count articles per category
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const cat of CATEGORIES) {
-      if (cat.slug === "ai-ml") {
-        counts[cat.slug] = TODAYS_ARTICLES.length;
-      } else {
-        counts[cat.slug] = TODAYS_ARTICLES.filter((a) => a.category === cat.slug).length;
-      }
-    }
-    return counts;
-  }, []);
+  const { counts: categoryCounts, total } = useCategoryCounts();
 
-  // Close mobile sidebar on ESC
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && mobileOpen) {
@@ -93,63 +100,99 @@ export default function Sidebar({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileOpen, onMobileClose]);
 
-  // Close mobile sidebar on route change
   useEffect(() => {
     onMobileClose();
   }, [pathname, searchParams, onMobileClose]);
 
+  function renderCategoryItem(cat: (typeof CATEGORIES)[number], isActive: boolean) {
+    const Icon = ICON_MAP[cat.icon] || Brain;
+
+    return (
+      <Link
+        key={cat.slug}
+        href={`${pathname}?category=${cat.slug}`}
+        title={collapsed ? cat.name : undefined}
+        className={`group flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg transition-all duration-150 ${
+          collapsed ? "justify-center" : ""
+        } ${
+          isActive
+            ? "text-white"
+            : "hover:bg-white/[0.04]"
+        }`}
+        style={
+          isActive
+            ? { backgroundColor: `${cat.color}20`, }
+            : undefined
+        }
+      >
+        {/* Colored icon */}
+        <Icon
+          size={16}
+          className="shrink-0 transition-transform duration-150 group-hover:scale-110"
+          style={{ color: isActive ? cat.color : cat.color }}
+        />
+
+        {!collapsed && (
+          <>
+            <span
+              className={`flex-1 text-[12.5px] font-semibold tracking-tight transition-colors ${
+                isActive
+                  ? "text-text-primary"
+                  : "text-text-secondary group-hover:text-text-primary"
+              }`}
+            >
+              {cat.name}
+            </span>
+            {(cat.slug === "ai-ml" ? total : categoryCounts[cat.slug]) > 0 && (
+              <span
+                className={`text-[10px] font-bold tabular-nums ${
+                  isActive ? "" : "opacity-50"
+                }`}
+                style={{ color: cat.color }}
+              >
+                {cat.slug === "ai-ml" ? total : categoryCounts[cat.slug]}
+              </span>
+            )}
+          </>
+        )}
+      </Link>
+    );
+  }
+
   const sidebarContent = (
     <>
-      {/* Section title - hidden when collapsed */}
+      {/* Core categories */}
       {!collapsed && (
-        <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-4">
-          Categories
+        <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
+          Main
+        </h3>
+      )}
+      {collapsed && <div className="mb-2" />}
+
+      <nav aria-label="Core category navigation" className="flex flex-col gap-0.5">
+        {coreCategories.map((cat) =>
+          renderCategoryItem(cat, activeCategory === cat.slug)
+        )}
+      </nav>
+
+      {/* Divider */}
+      <div className={`my-3 ${collapsed ? "mx-1" : "mx-2.5"}`}>
+        <div className="h-px bg-border-subtle" />
+      </div>
+
+      {/* Extended categories */}
+      {!collapsed && (
+        <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
+          More
         </h3>
       )}
 
-      {/* Spacer when collapsed to align items */}
-      {collapsed && <div className="mb-4" />}
-
-      {/* Category list */}
-      <nav aria-label="Category navigation" className="flex flex-col gap-1 flex-1">
-        {CATEGORIES.map((cat) => {
-          const Icon = ICON_MAP[cat.icon] || Brain;
-          const isActive = activeCategory === cat.slug;
-
-          return (
-            <Link
-              key={cat.slug}
-              href={`${pathname}?category=${cat.slug}`}
-              title={collapsed ? cat.name : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                collapsed ? "justify-center" : ""
-              } ${
-                isActive
-                  ? "bg-primary text-white"
-                  : "text-text-secondary hover:bg-bg-surface hover:text-text-primary"
-              }`}
-            >
-              <Icon size={18} className="shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="flex-1">{cat.name}</span>
-                  <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-bg-surface text-text-tertiary"
-                    }`}
-                  >
-                    {categoryCounts[cat.slug] ?? 0}
-                  </span>
-                </>
-              )}
-            </Link>
-          );
-        })}
+      <nav aria-label="Extended category navigation" className="flex flex-col gap-0.5 flex-1">
+        {extendedCategories.map((cat) =>
+          renderCategoryItem(cat, activeCategory === cat.slug)
+        )}
       </nav>
 
-      {/* Desktop toggle button at the bottom */}
       <SidebarToggle
         collapsed={collapsed}
         onToggle={onToggle}
@@ -162,8 +205,8 @@ export default function Sidebar({
     <>
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col h-full bg-bg-sidebar border-r border-border-subtle py-6 shrink-0 transition-[width] duration-200 overflow-hidden ${
-          collapsed ? "w-[60px] px-2" : "w-[240px] px-5"
+        className={`hidden lg:flex flex-col h-full bg-bg-sidebar border-r border-border-subtle py-4 shrink-0 transition-[width] duration-200 overflow-y-auto overflow-x-hidden ${
+          collapsed ? "w-[50px] px-1.5" : "w-[220px] px-3"
         }`}
       >
         {sidebarContent}
@@ -172,49 +215,35 @@ export default function Sidebar({
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
-          {/* Dim background */}
           <div
             className="fixed inset-0 bg-black/50"
             onClick={onMobileClose}
             aria-hidden="true"
           />
 
-          {/* Sidebar panel */}
-          <aside className="relative z-50 w-[240px] h-full bg-bg-sidebar border-r border-border-subtle flex flex-col py-6 px-5 shrink-0">
-            {/* Always show expanded content on mobile */}
-            <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-4">
-              Categories
+          <aside className="relative z-50 w-[260px] h-full bg-bg-sidebar border-r border-border-subtle flex flex-col py-5 px-4 shrink-0 overflow-y-auto">
+            <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
+              Main
             </h3>
 
-            <nav aria-label="Category navigation" className="flex flex-col gap-1 flex-1">
-              {CATEGORIES.map((cat) => {
-                const Icon = ICON_MAP[cat.icon] || Brain;
-                const isActive = activeCategory === cat.slug;
+            <nav aria-label="Core category navigation" className="flex flex-col gap-0.5">
+              {coreCategories.map((cat) =>
+                renderCategoryItem(cat, activeCategory === cat.slug)
+              )}
+            </nav>
 
-                return (
-                  <Link
-                    key={cat.slug}
-                    href={`${pathname}?category=${cat.slug}`}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary text-white"
-                        : "text-text-secondary hover:bg-bg-surface hover:text-text-primary"
-                    }`}
-                  >
-                    <Icon size={18} />
-                    <span className="flex-1">{cat.name}</span>
-                    <span
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-bg-surface text-text-tertiary"
-                      }`}
-                    >
-                      {categoryCounts[cat.slug] ?? 0}
-                    </span>
-                  </Link>
-                );
-              })}
+            <div className="my-3 mx-2.5">
+              <div className="h-px bg-border-subtle" />
+            </div>
+
+            <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
+              More
+            </h3>
+
+            <nav aria-label="Extended category navigation" className="flex flex-col gap-0.5 flex-1">
+              {extendedCategories.map((cat) =>
+                renderCategoryItem(cat, activeCategory === cat.slug)
+              )}
             </nav>
           </aside>
         </div>

@@ -68,14 +68,25 @@ export interface Category {
   slug: CategorySlug;
   name: string;
   icon: string; // lucide-react icon name
+  color: string; // hex color for icon background
+  group: "core" | "extended";
 }
 
 export type CategorySlug =
   | "ai-ml"
-  | "chatgpt"
-  | "claude"
-  | "gemini"
-  | "global-news";
+  | "llm"
+  | "image-gen"
+  | "video-gen"
+  | "music-audio"
+  | "coding"
+  | "ai-search"
+  | "subtitle-translation"
+  | "design-ui"
+  | "writing"
+  | "productivity"
+  | "ai-agent"
+  | "3d-spatial"
+  | "education";
 
 export interface User {
   id: string;

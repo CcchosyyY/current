@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { TrendingUp, ArrowUpRight, ArrowDownRight, Minus, Eye } from "lucide-react";
 import { motion } from "framer-motion";
-import { TRENDING_ARTICLES, MOCK_NOW, getRelativeTime } from "@/lib/mock-data";
+import { useArticles } from "@/lib/hooks/useArticles";
+import { getRelativeTime } from "@/lib/utils";
 import type { TrendingPeriod } from "@/lib/types";
 
 const PERIOD_OPTIONS: { value: TrendingPeriod; label: string }[] = [
@@ -39,10 +40,10 @@ function formatViews(n: number): string {
 
 export default function TrendingPage() {
   const [period, setPeriod] = useState<TrendingPeriod>("today");
+  const { articles, isLoading } = useArticles({ limit: 50 });
 
-  // Filter by period then sort by view count descending
   const sorted = useMemo(() => {
-    const nowMs = MOCK_NOW.getTime();
+    const nowMs = Date.now();
     const hourMs = 1000 * 60 * 60;
 
     const maxAgeMs =
@@ -52,14 +53,13 @@ export default function TrendingPage() {
           ? 7 * 24 * hourMs
           : 30 * 24 * hourMs;
 
-    return TRENDING_ARTICLES
+    return articles
       .filter((a) => nowMs - new Date(a.publishedAt).getTime() <= maxAgeMs)
       .sort((a, b) => b.viewCount - a.viewCount);
-  }, [period]);
+  }, [period, articles]);
 
   return (
     <div className="space-y-6">
-      {/* Header + period tabs */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold font-heading text-text-primary flex items-center gap-2">
           <TrendingUp size={24} className="text-primary" />
@@ -83,8 +83,13 @@ export default function TrendingPage() {
         </div>
       </div>
 
-      {/* Ranked list */}
-      {sorted.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-20 bg-bg-card border border-border-subtle rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : sorted.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-text-secondary">No trending articles for this period</p>
         </div>
@@ -102,12 +107,10 @@ export default function TrendingPage() {
                 href={`/article/${article.id}`}
                 className="flex items-center gap-3 sm:gap-5 bg-bg-card border border-border-subtle rounded-xl px-4 sm:px-6 py-4 hover:border-border-strong hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 group"
               >
-                {/* Rank */}
                 <span className="text-2xl font-bold font-heading text-primary w-8 text-center shrink-0">
                   {index + 1}
                 </span>
 
-                {/* Thumbnail - hidden on mobile */}
                 {article.imageUrl && (
                   <div className="w-20 h-14 rounded-lg overflow-hidden shrink-0 bg-bg-surface relative hidden sm:block">
                     <Image
@@ -120,7 +123,6 @@ export default function TrendingPage() {
                   </div>
                 )}
 
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-semibold text-text-primary group-hover:text-primary transition-colors truncate">
                     {article.title}
@@ -139,7 +141,6 @@ export default function TrendingPage() {
                   </div>
                 </div>
 
-                {/* Trend arrow */}
                 <div className="shrink-0">
                   <TrendIcon trend={article.isTrending ? "up" : "stable"} />
                 </div>

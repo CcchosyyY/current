@@ -1,12 +1,23 @@
-import type { AIModel, Category } from "./types";
+import type { AIModel, Category, NewsletterIssue } from "./types";
 
 // Sidebar navigation categories (matches the Pencil design)
 export const CATEGORIES: Category[] = [
-  { slug: "ai-ml", name: "AI / ML", icon: "brain" },
-  { slug: "chatgpt", name: "ChatGPT", icon: "monitor" },
-  { slug: "claude", name: "Claude", icon: "sparkles" },
-  { slug: "gemini", name: "Gemini", icon: "gem" },
-  { slug: "global-news", name: "Global News", icon: "globe" },
+  // Core
+  { slug: "ai-ml", name: "AI / ML", icon: "brain", color: "#3B82F6", group: "core" },
+  { slug: "llm", name: "LLM / 챗봇", icon: "message-square", color: "#10B981", group: "core" },
+  { slug: "image-gen", name: "이미지 생성", icon: "image", color: "#A855F7", group: "core" },
+  { slug: "video-gen", name: "비디오 생성", icon: "video", color: "#EF4444", group: "core" },
+  { slug: "music-audio", name: "음악 / 오디오", icon: "music", color: "#EC4899", group: "core" },
+  { slug: "coding", name: "코딩 / 개발", icon: "code", color: "#6366F1", group: "core" },
+  { slug: "ai-search", name: "AI 검색", icon: "search", color: "#14B8A6", group: "core" },
+  // Extended
+  { slug: "subtitle-translation", name: "자막 / 번역", icon: "languages", color: "#F59E0B", group: "extended" },
+  { slug: "design-ui", name: "디자인 / UI", icon: "palette", color: "#F472B6", group: "extended" },
+  { slug: "writing", name: "글쓰기 / 콘텐츠", icon: "pen-tool", color: "#FB923C", group: "extended" },
+  { slug: "productivity", name: "생산성 / 자동화", icon: "zap", color: "#FACC15", group: "extended" },
+  { slug: "ai-agent", name: "AI 에이전트", icon: "bot", color: "#22D3EE", group: "extended" },
+  { slug: "3d-spatial", name: "3D / 공간", icon: "box", color: "#818CF8", group: "extended" },
+  { slug: "education", name: "교육 / 연구", icon: "graduation-cap", color: "#34D399", group: "extended" },
 ];
 
 // Top-level navigation links (Header)
@@ -125,8 +136,8 @@ export const AI_MODELS: AIModel[] = [
     name: "Midjourney",
     company: "Midjourney",
     description: "AI image generation with artistic quality",
-    color: "#E8E8E8",
-    colorSecondary: "#B0B0B0",
+    color: "#2C2C34",
+    colorSecondary: "#1A1A22",
     category: "image",
     websiteUrl: "https://midjourney.com",
     blogUrl: null,
@@ -300,3 +311,42 @@ export const AI_MODEL_CATEGORIES = [
   { value: "multimodal", label: "Multi" },
   { value: "open-source", label: "Open" },
 ] as const;
+
+// Newsletter issues (static editorial content)
+export const NEWSLETTER_ISSUES: NewsletterIssue[] = [
+  {
+    id: "nl1",
+    title: "Current Weekly #12 — Claude 4, GPT-5, and the Race to AGI",
+    summary: "This week saw major releases from both Anthropic and OpenAI...",
+    publishedAt: "2026-03-23",
+    articleIds: [],
+  },
+  {
+    id: "nl2",
+    title: "Current Weekly #11 — Open Source AI Models Catching Up",
+    summary: "Meta's Llama 4 and Mistral's new model challenge proprietary offerings...",
+    publishedAt: "2026-03-16",
+    articleIds: [],
+  },
+  {
+    id: "nl3",
+    title: "Current Weekly #10 — AI Regulation Update: EU AI Act",
+    summary: "The EU finalizes comprehensive AI regulation with implications for global tech...",
+    publishedAt: "2026-03-09",
+    articleIds: [],
+  },
+  {
+    id: "nl4",
+    title: "Current Weekly #9 — AI in Creative Industries",
+    summary: "Sora, Runway, and the evolution of AI-generated video content...",
+    publishedAt: "2026-03-02",
+    articleIds: [],
+  },
+  {
+    id: "nl5",
+    title: "Current Weekly #8 — Coding AI Tools Comparison 2026",
+    summary: "Cursor vs GitHub Copilot vs Claude Code — which is best for developers?",
+    publishedAt: "2026-02-23",
+    articleIds: [],
+  },
+];

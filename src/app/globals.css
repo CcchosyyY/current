@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 13px;
+}
+
 :root {
   /* Background colors */
   --bg-page: #09090B;
@@ -27,8 +31,8 @@
   --error: #EF4444;
 
   /* Font families */
-  --font-heading: var(--font-space-grotesk);
-  --font-body: var(--font-inter);
+  --font-heading: var(--font-nunito);
+  --font-body: var(--font-nunito-sans);
 }
 
 @theme inline {
@@ -52,8 +56,8 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  --font-heading: var(--font-space-grotesk);
-  --font-body: var(--font-inter);
+  --font-heading: var(--font-nunito);
+  --font-body: var(--font-nunito-sans);
 }
 
 /* Global base styles */

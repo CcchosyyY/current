@@ -2,13 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
-import { getArticleById, getRelativeTime, TODAYS_ARTICLES } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/server";
+import { dbArticleToArticle } from "@/lib/transforms";
+import { getRelativeTime } from "@/lib/utils";
+import type { DBArticleRow } from "@/lib/transforms";
 import ArticleActions from "@/components/ArticleActions";
-
-// Generate static params for known articles
-export function generateStaticParams() {
-  return TODAYS_ARTICLES.map((a) => ({ id: a.id }));
-}
 
 export default async function ArticleDetailPage({
   params,
@@ -16,15 +14,26 @@ export default async function ArticleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = getArticleById(id);
+  const supabase = await createClient();
 
-  if (!article) {
+  const { data, error } = await supabase
+    .from("articles")
+    .select(`
+      *,
+      categories(name, slug, color),
+      ai_models(name, slug, company, brand_color, logo_url)
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
     notFound();
   }
 
+  const article = dbArticleToArticle(data as unknown as DBArticleRow);
+
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Back navigation */}
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mb-6"
@@ -33,7 +42,6 @@ export default async function ArticleDetailPage({
         Back to News
       </Link>
 
-      {/* Tag + meta */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="text-xs font-medium bg-primary/20 text-primary px-2.5 py-1 rounded-md">
           {article.category}
@@ -48,12 +56,10 @@ export default async function ArticleDetailPage({
         </span>
       </div>
 
-      {/* Title */}
       <h1 className="text-3xl font-bold font-heading text-text-primary leading-tight mb-4">
         {article.title}
       </h1>
 
-      {/* Source + author */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
           {article.source.slice(0, 2).toUpperCase()}
@@ -68,7 +74,6 @@ export default async function ArticleDetailPage({
         </div>
       </div>
 
-      {/* Hero image */}
       {article.imageUrl && (
         <div className="w-full aspect-video rounded-xl overflow-hidden mb-8 bg-bg-card border border-border-subtle relative">
           <Image
@@ -82,14 +87,11 @@ export default async function ArticleDetailPage({
         </div>
       )}
 
-      {/* Article body */}
       <article className="space-y-5">
-        {/* Summary */}
         <p className="text-text-secondary leading-relaxed text-base font-medium">
           {article.summary}
         </p>
 
-        {/* Full content, split into paragraphs */}
         {article.content.split("\n\n").map((paragraph, i) => (
           <p
             key={i}
@@ -99,7 +101,6 @@ export default async function ArticleDetailPage({
           </p>
         ))}
 
-        {/* Tags */}
         {article.tags.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-4">
             {article.tags.map((tag) => (
@@ -114,7 +115,6 @@ export default async function ArticleDetailPage({
         )}
       </article>
 
-      {/* Bottom action buttons */}
       <ArticleActions
         articleId={article.id}
         articleTitle={article.title}

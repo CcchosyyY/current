@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bookmark, BookmarkCheck, Share2, Clock } from "lucide-react";
 import type { Article } from "@/lib/types";
-import { getRelativeTime } from "@/lib/mock-data";
+import { getRelativeTime } from "@/lib/utils";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
 import { useShare } from "@/lib/hooks/useShare";
 import { useToast } from "@/lib/hooks/useToast";

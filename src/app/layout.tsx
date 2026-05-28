@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Nunito, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const nunitoSans = Nunito_Sans({
+  variable: "--font-nunito-sans",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700"],
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="dark">
       <body
-        className={`${spaceGrotesk.variable} ${inter.variable} antialiased bg-bg-page text-text-primary font-body`}
+        className={`${nunito.variable} ${nunitoSans.variable} antialiased bg-bg-page text-text-primary font-body`}
       >
         {children}
       </body>

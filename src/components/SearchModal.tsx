@@ -5,13 +5,10 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowRight, FileText, Cpu, Compass, X } from "lucide-react";
-import {
-  TODAYS_ARTICLES,
-  TRENDING_ARTICLES,
-  SAVED_ARTICLES,
-} from "@/lib/mock-data";
 import { AI_MODELS, NAV_LINKS } from "@/lib/constants";
 import type { Article } from "@/lib/types";
+import { dbArticleToArticle } from "@/lib/transforms";
+import type { DBArticleRow } from "@/lib/transforms";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -40,28 +37,37 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     setMounted(true);
   }, []);
 
-  // Deduplicate articles by id
-  const allArticles = useMemo(() => {
-    const map = new Map<string, Article>();
-    [...TODAYS_ARTICLES, ...TRENDING_ARTICLES, ...SAVED_ARTICLES].forEach(
-      (a) => {
-        if (!map.has(a.id)) map.set(a.id, a);
+  const [searchArticles, setSearchArticles] = useState<Article[]>([]);
+
+  // Debounced API search for articles
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setSearchArticles([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/articles?search=${encodeURIComponent(q)}&limit=5`);
+        if (res.ok) {
+          const json = await res.json();
+          setSearchArticles(
+            (json.data as DBArticleRow[]).map(dbArticleToArticle)
+          );
+        }
+      } catch {
+        // Silently fail
       }
-    );
-    return Array.from(map.values());
-  }, []);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   // Compute search results
   const results = useMemo<SearchResult[]>(() => {
     const q = query.toLowerCase().trim();
     if (!q) return [];
 
-    const articles: SearchResult[] = allArticles
-      .filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          a.summary.toLowerCase().includes(q)
-      )
+    const articles: SearchResult[] = searchArticles
       .slice(0, MAX_RESULTS_PER_CATEGORY)
       .map((a) => ({
         id: `article-${a.id}`,
@@ -97,7 +103,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       }));
 
     return [...articles, ...models, ...pages];
-  }, [query, allArticles]);
+  }, [query, searchArticles]);
 
   // Group results by category
   const groupedResults = useMemo(() => {

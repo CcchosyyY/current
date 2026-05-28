@@ -37,6 +37,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local scratch / design / generated assets
+.claude/
+a.out
+current.pen
+/images/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

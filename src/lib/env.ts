@@ -22,10 +22,14 @@ function required(key: string): string {
  */
 export const env = {
   get NEXT_PUBLIC_SUPABASE_URL() {
-    return required("NEXT_PUBLIC_SUPABASE_URL");
+    const value = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!value) throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL");
+    return value;
   },
   get NEXT_PUBLIC_SUPABASE_ANON_KEY() {
-    return required("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    const value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!value) throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    return value;
   },
   get NEXT_PUBLIC_SITE_URL() {
     return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

@@ -3,10 +3,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/security";
 
-// Rate limit: 60 requests per minute per IP
 const articlesLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
 
-// Validate query parameters
 const ArticlesQuerySchema = z.object({
   category: z.string().optional(),
   search: z.string().max(200).optional(),
@@ -18,7 +16,6 @@ const ArticlesQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    // Rate limiting
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     if (!articlesLimiter.check(ip)) {
       return NextResponse.json(
@@ -50,21 +47,32 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
+    // Look up category UUID from slug for filtering
+    let categoryId: string | null = null;
+    if (category) {
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("slug", category)
+        .single();
+      if (catData) categoryId = catData.id;
+    }
+
     let query = supabase
       .from("articles")
       .select(
         `
         *,
         categories(name, slug, color),
-        ai_models(name, company, brand_color, logo_url)
+        ai_models(name, slug, company, brand_color, logo_url)
       `,
         { count: "exact" },
       )
       .range(offset, offset + limit - 1);
 
-    // Filter by category slug
-    if (category) {
-      query = query.eq("categories.slug", category);
+    // Filter by category UUID
+    if (categoryId) {
+      query = query.eq("category_id", categoryId);
     }
 
     // Filter by AI model id
@@ -72,9 +80,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("ai_model_id", ai_model);
     }
 
-    // Full-text search on title and summary
-    // Security: escape Postgres LIKE wildcards (% and _) to prevent
-    // pattern injection in ilike filters.
+    // Full-text search
     if (search) {
       const escaped = search
         .replace(/\\/g, "\\\\")

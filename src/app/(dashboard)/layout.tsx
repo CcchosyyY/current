@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Header from "@/components/Header";
 import Sidebar, { useSidebarState } from "@/components/Sidebar";
 import SidebarToggle from "@/components/SidebarToggle";
+import AuthProvider from "@/components/AuthProvider";
 import { ToastProvider } from "@/lib/hooks/useToast";
 import ToastContainer from "@/components/ToastContainer";
 
@@ -16,6 +17,7 @@ export default function DashboardLayout({
     useSidebarState();
 
   return (
+    <AuthProvider>
     <ToastProvider>
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Header: fixed 60px height, full width */}
@@ -46,13 +48,14 @@ export default function DashboardLayout({
         </Suspense>
 
         {/* Main content: fills remaining space, scrollable */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          {children}
+        <main className="flex-1 overflow-y-auto px-6 py-4 md:px-10 md:py-6 lg:px-[130px] lg:py-8">
+          <Suspense fallback={null}>{children}</Suspense>
           <ToastContainer />
         </main>
       </div>
     </div>
     </ToastProvider>
+    </AuthProvider>
   );
 }
 
@@ -61,7 +64,7 @@ function SidebarSkeleton({ collapsed }: { collapsed: boolean }) {
   return (
     <aside
       className={`hidden lg:flex flex-col h-full bg-bg-sidebar border-r border-border-subtle py-6 shrink-0 transition-[width] duration-200 ${
-        collapsed ? "w-[60px] px-2" : "w-[240px] px-5"
+        collapsed ? "w-[50px] px-1.5" : "w-[200px] px-4"
       }`}
     >
       {!collapsed && (

@@ -29,9 +29,9 @@ export default function Header() {
 
   return (
     <>
-      <header className="h-[60px] w-full bg-bg-page border-b border-border-subtle flex items-center justify-between px-4 md:px-8">
+      <header className="h-[48px] w-full bg-bg-page border-b border-border-subtle grid grid-cols-3 items-center pl-4 md:pl-6 lg:pl-10 pr-12 md:pr-20 lg:pr-28">
         {/* Left: Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 justify-self-start">
           <svg
             width="24"
             height="24"
@@ -40,18 +40,18 @@ export default function Header() {
             className="text-primary"
           >
             <path
-              d="M12 2L4 20h16L12 2z"
+              d="M10.5 2L4 20h16L10.5 2z"
               fill="currentColor"
               opacity="0.9"
             />
           </svg>
-          <span className="text-lg font-semibold font-heading text-text-primary tracking-tight">
+          <span className="text-xl font-bold font-heading text-text-primary tracking-tight">
             Current
           </span>
         </Link>
 
         {/* Center: Navigation */}
-        <nav aria-label="Main navigation" className="flex items-center gap-4 md:gap-7">
+        <nav aria-label="Main navigation" className="flex items-center justify-center gap-4 md:gap-7 translate-x-8">
           {NAV_LINKS.map((link) => {
             const isActive =
               link.href === "/"
@@ -62,7 +62,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
+                className={`text-[12px] font-medium transition-colors whitespace-nowrap ${
                   isActive
                     ? "text-primary"
                     : "text-text-secondary hover:text-text-primary"
@@ -75,14 +75,14 @@ export default function Header() {
         </nav>
 
         {/* Right: Search, Bell, Avatar */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 justify-self-end">
           {/* Search trigger - desktop */}
           <button
             onClick={openSearch}
             aria-label="Search (Ctrl+K)"
-            className="hidden md:flex items-center gap-2 bg-bg-card border border-border-subtle rounded-lg px-3 py-2 w-[220px] cursor-pointer hover:border-border-strong transition-colors"
+            className="hidden md:flex items-center gap-2 bg-bg-card border border-border-subtle rounded-md px-2.5 py-1.5 w-[180px] cursor-pointer hover:border-border-strong transition-colors"
           >
-            <Search size={16} className="text-text-tertiary" aria-hidden="true" />
+            <Search size={14} className="text-text-tertiary" aria-hidden="true" />
             <span className="text-sm text-text-tertiary flex-1 text-left">
               Search news...
             </span>
@@ -105,7 +105,7 @@ export default function Header() {
             aria-label="Notifications"
             className="relative p-1.5 hover:bg-bg-surface rounded-lg transition-colors"
           >
-            <Bell size={20} className="text-text-secondary" />
+            <Bell size={16} className="text-text-secondary" />
           </button>
 
           {/* User avatar + dropdown */}

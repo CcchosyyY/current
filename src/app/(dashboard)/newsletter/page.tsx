@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Send, Mail, BookOpen, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NEWSLETTER_ISSUES } from "@/lib/mock-data";
+import { NEWSLETTER_ISSUES } from "@/lib/constants";
 
 const staggerContainer = {
   hidden: {},
