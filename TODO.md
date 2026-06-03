@@ -1,77 +1,63 @@
 # TODO — Current by Jyos
 
 > AI 뉴스 큐레이션 플랫폼 (Next.js 16 + Supabase)
-> Last updated: 2026-03-27
+> Last updated: 2026-06-04
 
 ---
 
-## Phase 1: MVP UI ✅
+## 🔴 최우선 — 데이터 복구
 
-- [x] 대시보드 레이아웃 (Header + Sidebar + Main)
-- [x] 카테고리 14개 구조 (Core 7 + Extended 7) 및 컬러 아이콘
-- [x] 사이드바 리디자인 (Main/More 그룹, 카테고리별 active 색상)
-- [x] AI Models 그리드 (24개 모델 카드)
-- [x] 폰트 변경 (Nunito + Nunito Sans — 둥근 느낌)
-- [x] 아티클 카드 텍스트 축소 (가독성 개선)
-- [x] 다크 테마 기본 적용
+> `.env.local`의 Supabase 프로젝트가 DNS 미해석(삭제/중지) → 라이브 앱에 데이터가 안 뜸
+
+- [ ] 새 Supabase 프로젝트 생성 + `src/lib/supabase/schema.sql` 적용 + `.env.local` 갱신
+- [ ] DB 카테고리 seed를 코드 14개와 일치 (현재 schema seed는 8개)
+- [ ] 14개 카테고리 실데이터/mock 시드로 채우기
 
 ---
 
-## Phase 2: 데이터 & 백엔드
+## Phase: 데이터 & 백엔드
 
-> 목표: mock 데이터 탈피 → Supabase 실데이터 연동
+- [ ] 북마크 localStorage → Supabase API 연결
+- [ ] 검색 Supabase 전문 검색 연동
+- [ ] Rate limiter 인메모리 → Upstash Redis
 
-- [ ] 14개 카테고리 전체에 대한 mock 기사 데이터 보충 (현재 llm/ai-ml만 존재)
-- [ ] Supabase DB 연동 — mock 데이터를 실제 데이터로 교체
-- [ ] 북마크를 Supabase API와 연결 (localStorage → DB)
-- [ ] 검색 기능 Supabase 연동 (DB 전문 검색)
-- [ ] Rate limiter를 Upstash Redis로 교체 (인메모리 → 서버리스 대응)
+## Phase: 인증 & 사용자
 
----
+- [ ] Supabase Auth Google OAuth 로그인/로그아웃
+- [ ] Profile / Settings 페이지
+- [ ] 알림 벨 (드롭다운)
 
-## Phase 3: 인증 & 사용자
+## Phase: 페이지 & 기능 완성
 
-> 목표: Google OAuth 로그인 → 개인화
-
-- [ ] Supabase Auth 연동 (Google OAuth 로그인/로그아웃)
-- [ ] 유저 메뉴 Profile / Settings 페이지 구현
-- [ ] 알림 벨 기능 구현 (알림 시스템 + 드롭다운)
-
----
-
-## Phase 4: 페이지 & 기능 완성
-
-> 목표: 빈 페이지 채우기 + UX 개선
-
-- [ ] "Read" 뉴스레터 상세 페이지 생성
-- [ ] "See All Models" 전용 페이지 생성
+- [ ] Newsletter 상세("Read") 페이지
+- [ ] "See All Models" 전용 페이지
 - [ ] 대시보드 서버/클라이언트 컴포넌트 분리 (번들 최적화)
-- [ ] 에러 바운더리 (error.tsx) 추가
-- [ ] 로딩 UI (loading.tsx) 추가
-- [ ] SEO 메타데이터 페이지별 설정 (generateMetadata)
+- [ ] error.tsx / loading.tsx 추가
+- [ ] 페이지별 SEO 메타데이터 (generateMetadata)
 
----
+## Phase: 폴리싱 & 반응형
 
-## Phase 5: 폴리싱 & 반응형
-
-> 목표: 디테일 다듬기
-
-- [ ] Nunito 한글 폴백 추가 (Noto Sans KR — 현재 Korean 글리프 누락)
-- [ ] 사이드바 반응형 튜닝 (220px 기준, 태블릿/중간 화면 대응)
-- [ ] CSP에서 unsafe-inline/unsafe-eval 제거 (nonce 기반 전환)
+- [ ] Nunito 한글 폴백(Noto Sans KR) — 코드 적용
+- [ ] 사이드바 반응형 튜닝 (태블릿/중간 화면)
 - [ ] 라이트/다크 테마 토글
-- [ ] 페이지 전환 애니메이션 (Framer Motion 활용)
+- [ ] CSP unsafe-inline/eval 제거 (nonce 기반)
+- [ ] 페이지 전환 애니메이션
 
----
+## Phase: 자동화 & 배포
 
-## Phase 6: 자동화 & 배포
-
-> 목표: 실제 서비스로 전환
-
-- [ ] Python 크롤러 + Claude API 요약 파이프라인 연동
-- [ ] Vercel 배포 설정
-- [ ] CI/CD 파이프라인 (GitHub Actions)
+- [ ] Python RSS 크롤러 + Claude API 요약 파이프라인 (Supabase 복구 후)
+- [ ] Vercel 배포 + Cron Job
+- [ ] CI/CD (GitHub Actions)
 - [ ] E2E 테스트 (Playwright)
+
+## Figma / 디자인 시스템
+
+> 파일: `SwGySWU706nVMABEEK65hC`
+
+- [ ] 5개 페이지 요소를 컴포넌트 인스턴스로 연결 (현재는 시각만 동일)
+- [ ] 화면 fill을 `Color` 변수에 바인딩 (테마 전환 대비)
+- [ ] 모바일 반응형 프레임 추가
+- [ ] 사이드바 아이콘 lucide-react ↔ Figma 동기화 유지
 
 ---
 

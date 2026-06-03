@@ -1,5 +1,32 @@
 # Done
 
+## 2026-06-04 — Figma 디자인 시스템 구축 (웹 화면 재현 + 컴포넌트화)
+
+### 완료 항목
+- 실서버(dev)를 띄워 5개 페이지를 스크린샷 → Figma에 1:1 데스크톱 프레임으로 재현 (Dashboard / Trending / Saved / Newsletter / Article)
+- 사이드바 카테고리 아이콘을 컬러 사각형 → 실제 lucide 아이콘으로 교체 (5프레임 × 14개 = 70항목)
+- Figma Variables `Color` 컬렉션(29 토큰) 생성 — scope + WEB code syntax(실제 CSS 변수명) 설정
+- 대시보드 왼쪽에 디자인 시스템 보드 구축: 색상 스와치 / 아이콘 세트 / 컴포넌트
+- 실제 Figma 컴포넌트 생성: Logo, Button(3 variant), Category Pill, Avatar, Search Field, Category Nav Item(2 variant), Model Card, News Card
+- (작업 중 발견) Supabase 프로젝트 다운 → 스크린샷용 mock fallback 임시 적용 후 git 원복
+
+### 변경 사항
+
+| 영역 | 변경 내용 |
+|------|-----------|
+| Figma 화면 | 5개 페이지 데스크톱 프레임(1440) — 다크+블루, 모델 브랜드 SVG, 한글 Noto Sans KR |
+| 아이콘 | 사이드바 14 카테고리 실제 lucide 벡터화 (lucide-react에서 path 추출) |
+| 색상 토큰 | Color Variables 29개 (bg/border/text/accent/status + 카테고리 14) |
+| 컴포넌트 | 8종 컴포넌트 + Button·NavItem variant set |
+| 코드 | 변경 없음 (산출물은 Figma 파일에 존재) |
+
+### 아키텍처 노트
+- 코드 토큰(globals.css / constants.ts)을 Figma Variables로 이관, code syntax를 `var(--…)` CSS 변수명에 맞춰 디자인-코드 동기화 기반 마련
+- Supabase 프로젝트(`zlpdtswbgteufzszjigy`) DNS 미해석 → 라이브 실데이터 미연동 상태
+- Figma fileKey: `SwGySWU706nVMABEEK65hC`
+
+---
+
 ## 2026-03-27 — UI/UX 리디자인 (카테고리 + 사이드바 + 폰트)
 
 ### 완료 항목
