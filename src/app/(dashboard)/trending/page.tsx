@@ -39,7 +39,7 @@ function formatViews(n: number): string {
 }
 
 export default function TrendingPage() {
-  const [period, setPeriod] = useState<TrendingPeriod>("today");
+  const [period, setPeriod] = useState<TrendingPeriod>("this-week");
   const { articles, isLoading } = useArticles({ limit: 50 });
 
   const sorted = useMemo(() => {
@@ -54,7 +54,11 @@ export default function TrendingPage() {
           : 30 * 24 * hourMs;
 
     return articles
-      .filter((a) => nowMs - new Date(a.publishedAt).getTime() <= maxAgeMs)
+      .filter((a) => {
+        const t = new Date(a.publishedAt).getTime();
+        // Keep articles with an unparseable date rather than silently dropping them.
+        return Number.isNaN(t) || nowMs - t <= maxAgeMs;
+      })
       .sort((a, b) => b.viewCount - a.viewCount);
   }, [period, articles]);
 

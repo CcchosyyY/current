@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Minus, ChevronUp, LayoutGrid, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AI_MODELS } from "@/lib/constants";
+import ModelCard from "@/components/ModelCard";
 import { useArticles } from "@/lib/hooks/useArticles";
 import { getRelativeTimeShort, formatDate } from "@/lib/utils";
 import type { AIModelFilter } from "@/lib/types";
@@ -178,49 +179,25 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-3">
-          {modelRows.map((row, rowIdx) => (
-            <div key={rowIdx} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {row.map((model) => (
-                <a
-                  key={model.slug}
-                  href={model.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden rounded-xl aspect-[4/3] cursor-pointer transition-transform duration-300 hover:scale-105"
-                >
-                  <div
-                    className="absolute inset-0 transition-all duration-300 group-hover:brightness-125"
-                    style={{
-                      background: `linear-gradient(135deg, color-mix(in srgb, ${model.color} 20%, #08080E), color-mix(in srgb, ${model.colorSecondary || model.color} 12%, #08080E))`,
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pb-6">
-                    <Image
-                      src={`/icons/models/${model.slug}.svg`}
-                      alt={model.name}
-                      width={40}
-                      height={40}
-                      className="drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
-                    />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/60 to-transparent">
-                    <p className="text-white text-sm font-semibold leading-tight">
-                      {model.name}
-                    </p>
-                    <p className="text-white/70 text-[10px]">
-                      {model.company}
-                    </p>
-                  </div>
-                </a>
-              ))}
-            </div>
-          ))}
-        </div>
+        {featuredModels.length === 0 ? (
+          <div className="py-8 text-center text-sm text-text-tertiary">
+            No models in this category
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {modelRows.map((row, rowIdx) => (
+              <div key={rowIdx} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {row.map((model) => (
+                  <ModelCard key={model.slug} model={model} />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 pt-3 border-t border-border-subtle">
           <Link
-            href="#"
+            href="/models"
             className="text-sm text-primary hover:text-primary-light font-medium inline-flex items-center gap-1 transition-colors"
           >
             See All Models

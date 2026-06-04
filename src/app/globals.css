@@ -91,3 +91,10 @@ body {
   background-color: var(--primary);
   color: var(--text-primary);
 }
+
+/* Global keyboard focus ring — visible for keyboard/AT users only, not on
+   mouse click. Fixes the app-wide lack of visible focus (WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

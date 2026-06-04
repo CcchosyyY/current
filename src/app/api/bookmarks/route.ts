@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         articles(
           id, title, summary, source_url, source_name, image_url, published_at,
           categories(name, slug, color),
-          ai_models(name, company, brand_color)
+          ai_models(name, slug, company, brand_color)
         )
       `,
         { count: "exact" },

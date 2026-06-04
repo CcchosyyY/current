@@ -51,9 +51,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         const res = await fetch(`/api/articles?search=${encodeURIComponent(q)}&limit=5`);
         if (res.ok) {
           const json = await res.json();
-          setSearchArticles(
-            (json.data as DBArticleRow[]).map(dbArticleToArticle)
-          );
+          const rows = Array.isArray(json.data)
+            ? (json.data as DBArticleRow[])
+            : [];
+          setSearchArticles(rows.map(dbArticleToArticle));
         }
       } catch {
         // Silently fail
@@ -86,7 +87,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         id: `model-${m.slug}`,
         title: m.name,
         subtitle: `${m.company} · ${m.description}`,
-        href: `/models/${m.slug}`,
+        // Model results open the model's website (there is no per-model route).
+        href: m.websiteUrl,
         category: "models" as const,
       }));
 
@@ -169,7 +171,13 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const navigateTo = useCallback(
     (href: string) => {
       onClose();
-      router.push(href);
+      // External links (e.g. AI model websites) open in a new tab; internal
+      // routes use the client router.
+      if (/^https?:\/\//.test(href)) {
+        window.open(href, "_blank", "noopener,noreferrer");
+      } else {
+        router.push(href);
+      }
     },
     [onClose, router]
   );

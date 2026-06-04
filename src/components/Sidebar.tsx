@@ -129,7 +129,7 @@ export default function Sidebar({
         <Icon
           size={16}
           className="shrink-0 transition-transform duration-150 group-hover:scale-110"
-          style={{ color: isActive ? cat.color : cat.color }}
+          style={{ color: cat.color }}
         />
 
         {!collapsed && (

@@ -58,9 +58,11 @@ export function useArticles(params: UseArticlesParams = {}): UseArticlesReturn {
         if (!res.ok) throw new Error("Failed to fetch articles");
 
         const json = await res.json();
-        const transformed = (json.data as DBArticleRow[]).map(dbArticleToArticle);
-        setArticles(transformed);
-        setPagination(json.pagination);
+        const rows = Array.isArray(json.data) ? (json.data as DBArticleRow[]) : [];
+        setArticles(rows.map(dbArticleToArticle));
+        setPagination(
+          json.pagination ?? { page, limit, total: 0, totalPages: 0 },
+        );
       } catch (err: unknown) {
         if (err instanceof Error && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Unknown error");

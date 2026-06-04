@@ -23,11 +23,12 @@ export default function SavedPage() {
       fetch("/api/bookmarks?limit=50")
         .then((res) => (res.ok ? res.json() : null))
         .then((json) => {
-          if (json?.data) {
+          if (Array.isArray(json?.data)) {
             setArticles(
-              json.data.map((b: { articles: DBArticleRow }) =>
-                dbArticleToArticle(b.articles)
-              )
+              json.data
+                .map((b: { articles: DBArticleRow | null }) => b.articles)
+                .filter(Boolean)
+                .map((a: DBArticleRow) => dbArticleToArticle(a))
             );
           }
         })

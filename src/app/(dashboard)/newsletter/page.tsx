@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Mail, BookOpen, Loader2 } from "lucide-react";
+import { Send, Mail, BookOpen, Loader2, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NEWSLETTER_ISSUES } from "@/lib/constants";
 
@@ -72,9 +72,7 @@ export default function NewsletterPage() {
               transition={{ duration: 0.25 }}
               className="flex items-center gap-2 text-success text-sm font-medium"
             >
-              <span className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center text-xs">
-                ✓
-              </span>
+              <CheckCircle size={18} className="shrink-0" aria-hidden="true" />
               Successfully subscribed! Check your inbox for confirmation.
             </motion.div>
           ) : (
@@ -113,7 +111,7 @@ export default function NewsletterPage() {
                 </button>
               </form>
               {error && (
-                <p className="text-xs text-red-400 mt-2">{error}</p>
+                <p className="text-xs text-error mt-2">{error}</p>
               )}
             </motion.div>
           )}

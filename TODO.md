@@ -5,13 +5,27 @@
 
 ---
 
-## 🔴 최우선 — 데이터 복구
+## ✅ 데이터 복구 (2026-06-04 완료)
 
-> `.env.local`의 Supabase 프로젝트가 DNS 미해석(삭제/중지) → 라이브 앱에 데이터가 안 뜸
+> Supabase `zlpdtswbgteufzszjigy` 재가동 → 코드 정합 스키마 재구축 + 기사 63건 크롤링 적재
 
-- [ ] 새 Supabase 프로젝트 생성 + `src/lib/supabase/schema.sql` 적용 + `.env.local` 갱신
-- [ ] DB 카테고리 seed를 코드 14개와 일치 (현재 schema seed는 8개)
-- [ ] 14개 카테고리 실데이터/mock 시드로 채우기
+- [x] Supabase 프로젝트 복구 + 코드 정합 스키마 적용(`schema.sql` 동기화) + `.env.local` 갱신
+- [x] DB 카테고리 seed를 코드 14개와 일치 (ai_models 24개도 정합, `ai_models.slug` 추가)
+- [x] RSS 크롤러(`scripts/crawl-articles.mjs`)로 6개 피드 크롤링 → 기사 63건 적재, 클릭→상세 동작 검증
+
+---
+
+## ✅ 코드 점검 · UI · 신규 모델 · 보안 (2026-06-04)
+
+> 멀티에이전트 감사(코드/보안/UI/분류) + 트렌드 리서치 → 구현 → 적대적 리뷰 후 수정
+
+- [x] **AI 모델 24 → 37개**: 2025–26 트렌드 모델 13개 추가(Sora, Veo, Kling, ElevenLabs, Manus, Genspark, Qwen, Kimi K2, Ideogram, Recraft, Glean, Cline, Higgsfield) + monogram 아이콘 + DB/스키마 시드
+- [x] **모델 hover 상세 모달**(`ModelCard`): 설명·카테고리·Website/Blog 링크. portal+fixed 위치(클리핑 방지)·키보드 접근성
+- [x] **"See All Models" `/models` 페이지** 신규 (카테고리 필터)
+- [x] **기사 분류 정확도 개선**: 부분일치 오탐 제거(coding 16→4), intent 우선순위, 신규 모델 트리거, 재크롤
+- [x] **보안 수정**: `.or()` 검색 인젝션 차단, 이미지 `**` 와일드카드 → CDN 허용목록(SSRF 차단), 크롤러 anon 쓰기 가드, 기사 ID UUID 검증
+- [x] **정확성 수정**: 미존재 카테고리 빈 결과, bookmarks 모델 slug, 배열 가드, 트렌딩 NaN/기본기간
+- [x] **UI 정리**: 전역 focus-visible 링, Toast aria-live, 토큰 위반 수정, Header ⌘/Ctrl 분기, 죽은 코드 제거
 
 ---
 
@@ -30,7 +44,7 @@
 ## Phase: 페이지 & 기능 완성
 
 - [ ] Newsletter 상세("Read") 페이지
-- [ ] "See All Models" 전용 페이지
+- [x] "See All Models" 전용 페이지 (`/models`)
 - [ ] 대시보드 서버/클라이언트 컴포넌트 분리 (번들 최적화)
 - [ ] error.tsx / loading.tsx 추가
 - [ ] 페이지별 SEO 메타데이터 (generateMetadata)
@@ -45,7 +59,7 @@
 
 ## Phase: 자동화 & 배포
 
-- [ ] Python RSS 크롤러 + Claude API 요약 파이프라인 (Supabase 복구 후)
+- [~] RSS 크롤러 완료(`scripts/crawl-articles.mjs`, Node). 남은 것: Claude API 요약 + service_role 키로 자동 실행
 - [ ] Vercel 배포 + Cron Job
 - [ ] CI/CD (GitHub Actions)
 - [ ] E2E 테스트 (Playwright)

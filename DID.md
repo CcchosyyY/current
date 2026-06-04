@@ -1,5 +1,35 @@
 # Done
 
+## 2026-06-04 — 코드 점검 · UI 정리 · 신규 모델 · 분류 개선 · 보안 (멀티에이전트)
+
+### 완료 항목
+- **데이터 복구**: Supabase `zlpdtswbgteufzszjigy` 재가동 → 코드 정합 스키마 재구축(카테고리 14·모델 37), RSS 크롤러 신규 작성 → 기사 63건 적재, 클릭→상세 end-to-end 검증
+- **신규 AI 모델 13개**(2025–26 트렌드, 웹 리서치 검증): Sora·Veo·Kling·ElevenLabs·Manus·Genspark·Qwen·Kimi K2·Ideogram·Recraft·Glean·Cline·Higgsfield → constants/types/DB/스키마 + monogram 아이콘
+- **모델 hover 상세 모달**(`ModelCard`) + **`/models` See-All 페이지**(카테고리 필터)
+- **기사 분류 정확도 개선**: 부분일치 오탐 제거(coding 16→4), intent(검색/에이전트) 우선, 신규 모델 트리거 → 재크롤
+- **보안**: `.or()` 검색 인젝션 차단, 이미지 `**`→CDN 허용목록(SSRF/오픈프록시 차단), 크롤러 anon 쓰기 가드, 기사 ID UUID 검증
+- **정확성/UI**: 미존재 카테고리 빈결과, bookmarks 모델 slug, 배열 가드, 트렌딩 기본기간/NaN, 전역 focus-visible 링, Toast aria-live, Header ⌘/Ctrl 분기 등
+
+### 작업 방식
+- Claude Code 워크플로 2회: ① 감사+리서치(5 에이전트, 코드/보안/UI/분류/트렌드) → 구현 → ② 적대적 리뷰(17 에이전트, 변경분 회귀/보안/접근성 검증) → 확정 결함 9건 수정
+- 검증: `tsc --noEmit` 통과, `next build` 통과, 런타임 HTTP(이미지 최적화/검색/페이지) 확인
+
+### 변경 사항
+| 영역 | 변경 내용 |
+|------|-----------|
+| 모델 | AI_MODELS 24→37, AIModelSlug 13개 추가, 아이콘 13 SVG, DB/schema.sql 시드 동기화 |
+| 컴포넌트/페이지 | `ModelCard`(hover 모달, portal), `/models` 페이지, 대시보드 모델 그리드 교체 |
+| 크롤러 | `scripts/crawl-articles.mjs` — MODEL/CATEGORY 규칙 개선, view_count/is_trending, service_role 가드 |
+| 보안/API | articles 검색 sanitize·미존재카테고리, articles/[id] UUID, bookmarks slug, next.config 이미지 허용목록 |
+| UI | globals focus 링, Toast aria-live, newsletter 토큰, Header kbd, Sidebar 정리 |
+
+### 아키텍처 노트
+- 기존 schema.sql이 코드와 불일치(카테고리 슬러그·`ai_models.slug` 누락·articles 컬럼 누락)였음 → 코드 기준으로 재정렬, 파일을 source of truth로 동기화
+- 기사 적재는 RLS상 service_role 키 권장(anon은 `--allow-anon-insert` + 임시정책 명시 필요). 이번 세션은 임시 anon 정책으로 적재 후 즉시 제거
+- Figma 라이브 빌드는 승인 기반 인터랙티브 작업이라 무인 실행하지 않음 — `FIGMA_UI_TASK.md`에 신규 스코프만 반영
+
+---
+
 ## 2026-06-04 — Figma 디자인 시스템 구축 (웹 화면 재현 + 컴포넌트화)
 
 ### 완료 항목

@@ -56,11 +56,29 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    // Allowlist the thumbnail CDNs our RSS sources actually use. We intentionally
+    // do NOT use hostname:"**" — that would turn the Next image optimizer
+    // (/_next/image?url=) into an open proxy / SSRF vector that can fetch any
+    // https URL server-side. Add new source hosts here as feeds are added.
+    dangerouslyAllowSVG: false,
+    // NOTE: Next's "**." wildcard matches subdomains only, NOT the bare apex
+    // host, so apex hosts (e.g. the-decoder.com serves images from its root)
+    // need an explicit entry alongside the subdomain wildcard.
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
+      { protocol: "https", hostname: "**.arstechnica.net" },
+      { protocol: "https", hostname: "**.ctfassets.net" },
+      { protocol: "https", hostname: "storage.googleapis.com" },
+      { protocol: "https", hostname: "the-decoder.com" },
+      { protocol: "https", hostname: "**.the-decoder.com" },
+      { protocol: "https", hostname: "the-decoder.de" },
+      { protocol: "https", hostname: "**.the-decoder.de" },
+      { protocol: "https", hostname: "**.technologyreview.com" },
+      { protocol: "https", hostname: "techcrunch.com" },
+      { protocol: "https", hostname: "**.techcrunch.com" },
+      { protocol: "https", hostname: "**.wp.com" },
+      { protocol: "https", hostname: "venturebeat.com" },
+      { protocol: "https", hostname: "**.venturebeat.com" },
+      { protocol: "https", hostname: "placehold.co" },
     ],
   },
   async headers() {

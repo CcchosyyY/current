@@ -1,12 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter } from "@/lib/security";
+
+const articleLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
+
+const ParamsSchema = z.object({ id: z.string().uuid() });
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    if (!articleLimiter.check(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
+      );
+    }
+
+    const parsed = ParamsSchema.safeParse(await params);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid article ID" }, { status: 400 });
+    }
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -16,7 +34,7 @@ export async function GET(
         categories(name, slug, color),
         ai_models(name, slug, company, brand_color, logo_url)
       `)
-      .eq("id", id)
+      .eq("id", parsed.data.id)
       .single();
 
     if (error || !data) {

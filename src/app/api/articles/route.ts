@@ -56,6 +56,15 @@ export async function GET(request: NextRequest) {
         .eq("slug", category)
         .single();
       if (catData) categoryId = catData.id;
+
+      // A category was requested but does not exist → return an empty page
+      // rather than silently falling through to an unfiltered (all-articles) query.
+      if (!categoryId) {
+        return NextResponse.json({
+          data: [],
+          pagination: { page, limit, total: 0, totalPages: 0 },
+        });
+      }
     }
 
     let query = supabase
@@ -80,15 +89,30 @@ export async function GET(request: NextRequest) {
       query = query.eq("ai_model_id", ai_model);
     }
 
-    // Full-text search
+    // Full-text search.
+    // Escape LIKE metacharacters, then strip PostgREST `.or()` grammar
+    // characters (comma, parentheses, double-quote) so a crafted search term
+    // cannot inject additional filter clauses into the or() expression.
     if (search) {
       const escaped = search
         .replace(/\\/g, "\\\\")
         .replace(/%/g, "\\%")
-        .replace(/_/g, "\\_");
-      query = query.or(
-        `title.ilike.%${escaped}%,summary.ilike.%${escaped}%`,
-      );
+        .replace(/_/g, "\\_")
+        .replace(/[,()"]/g, " ")
+        .trim();
+      if (escaped) {
+        query = query.or(
+          `title.ilike.%${escaped}%,summary.ilike.%${escaped}%`,
+        );
+      } else {
+        // A non-empty search that reduced entirely to stripped/whitespace
+        // characters (e.g. "()", ",") must not fall through to an unfiltered
+        // all-articles query — return an empty page instead.
+        return NextResponse.json({
+          data: [],
+          pagination: { page, limit, total: 0, totalPages: 0 },
+        });
+      }
     }
 
     // Sort order

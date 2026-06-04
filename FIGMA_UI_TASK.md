@@ -46,6 +46,16 @@ DashboardShell(Header+Sidebar+Main slot), AuthLayout(로그인용). 기존 `2:2`
 - 구현 예정 페이지는 "코드 구현 시 참조용 스펙"임을 명시한 요약 표를 남긴다.
 - 캔버스 정리: Atoms→Molecules→Organisms→Templates→Pages 순으로 라벨링된 섹션 정렬.
 
+## 2026-06-04 업데이트 (코드 변경 → Figma에 반영 필요)
+
+> 이 항목들은 코드에 이미 반영됐고, 다음 Figma 세션에서 디자인에도 반영해야 한다.
+> (Figma 라이브 빌드는 위 Phase 규칙대로 **승인 기반 인터랙티브**로 진행 — 무인 자동 실행하지 않음.)
+
+- **AI 모델 24 → 37개**: `src/lib/constants.ts`에 13개 추가(sora, veo, kling, elevenlabs, manus, genspark, qwen, kimi-k2, ideogram, recraft, glean, cline, higgsfield). Phase 1의 모델 브랜드색 토큰과 Phase 2의 AIModelCard 인스턴스를 37개로 확장. 아이콘은 임시 monogram SVG(`public/icons/models/*.svg`) — 추후 실제 브랜드 로고로 교체 권장.
+- **신규 컴포넌트 `ModelCard`(hover 상세 팝오버)**: 모델 타일에 마우스 hover/포커스 시 설명·카테고리·Website/Blog 링크 팝오버가 뜸. Phase 2 Molecule로 "AIModelCard / Hovered" variant 추가 필요.
+- **신규 페이지 `/models`(See-All Models)**: 카테고리 필터 + 카테고리별 그룹 그리드. Phase 5 "All Models" 시안을 이 실제 구현과 1:1 대조.
+- **폴리시 변경**: 전역 focus-visible 링(globals.css), Toast `aria-live`, Header kbd `⌘K`, newsletter 성공 체크 아이콘(lucide CheckCircle)·`text-error` 토큰. Phase 1/3 atom·organism에 반영.
+
 ## 완료 기준
 - 왼쪽 컴포넌트 라이브러리(5개 아토믹 섹션) + 오른쪽 페이지 시안(구현 5 + 예정 8) 전부 존재.
 - 구현된 5개 페이지는 실제 dev 서버 렌더와 시각적으로 일치 확인 완료.

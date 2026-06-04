@@ -11,9 +11,16 @@ import UserMenu from "./UserMenu";
 export default function Header() {
   const pathname = usePathname();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // Resolve the platform after mount so the keyboard hint matches reality
+  // (Ctrl on Windows/Linux, ⌘ on Mac) without an SSR hydration mismatch.
+  const [isMac, setIsMac] = useState(false);
 
   const openSearch = useCallback(() => setIsSearchOpen(true), []);
   const closeSearch = useCallback(() => setIsSearchOpen(false), []);
+
+  useEffect(() => {
+    setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent));
+  }, []);
 
   // Global Cmd+K / Ctrl+K shortcut
   useEffect(() => {
@@ -79,7 +86,7 @@ export default function Header() {
           {/* Search trigger - desktop */}
           <button
             onClick={openSearch}
-            aria-label="Search (Ctrl+K)"
+            aria-label={isMac ? "Search (Cmd+K)" : "Search (Ctrl+K)"}
             className="hidden md:flex items-center gap-2 bg-bg-card border border-border-subtle rounded-md px-2.5 py-1.5 w-[180px] cursor-pointer hover:border-border-strong transition-colors"
           >
             <Search size={14} className="text-text-tertiary" aria-hidden="true" />
@@ -87,7 +94,7 @@ export default function Header() {
               Search news...
             </span>
             <kbd className="bg-bg-surface border border-border-subtle rounded px-1.5 py-0.5 text-[10px] text-text-tertiary font-mono">
-              &nbsp;K
+              {isMac ? "⌘K" : "Ctrl K"}
             </kbd>
           </button>
 

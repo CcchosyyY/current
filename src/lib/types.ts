@@ -62,7 +62,21 @@ export type AIModelSlug =
   | "bolt"
   | "lovable"
   | "windsurf"
-  | "notebooklm";
+  | "notebooklm"
+  // Trending 2026 additions
+  | "sora"
+  | "veo"
+  | "kling"
+  | "elevenlabs"
+  | "manus"
+  | "genspark"
+  | "qwen"
+  | "kimi-k2"
+  | "ideogram"
+  | "recraft"
+  | "glean"
+  | "cline"
+  | "higgsfield";
 
 export interface Category {
   slug: CategorySlug;
