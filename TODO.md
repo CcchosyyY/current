@@ -1,33 +1,19 @@
 # TODO — Current by Jyos
 
 > AI 뉴스 큐레이션 플랫폼 (Next.js 16 + Supabase)
-> Last updated: 2026-06-04
+> Last updated: 2026-06-06
 
 ---
 
-## ✅ 데이터 복구 (2026-06-04 완료)
+## Phase: 모델 모달 & 로고 (진행 중)
 
-> Supabase `zlpdtswbgteufzszjigy` 재가동 → 코드 정합 스키마 재구축 + 기사 63건 크롤링 적재
-
-- [x] Supabase 프로젝트 복구 + 코드 정합 스키마 적용(`schema.sql` 동기화) + `.env.local` 갱신
-- [x] DB 카테고리 seed를 코드 14개와 일치 (ai_models 24개도 정합, `ai_models.slug` 추가)
-- [x] RSS 크롤러(`scripts/crawl-articles.mjs`)로 6개 피드 크롤링 → 기사 63건 적재, 클릭→상세 동작 검증
-
----
-
-## ✅ 코드 점검 · UI · 신규 모델 · 보안 (2026-06-04)
-
-> 멀티에이전트 감사(코드/보안/UI/분류) + 트렌드 리서치 → 구현 → 적대적 리뷰 후 수정
-
-- [x] **AI 모델 24 → 37개**: 2025–26 트렌드 모델 13개 추가(Sora, Veo, Kling, ElevenLabs, Manus, Genspark, Qwen, Kimi K2, Ideogram, Recraft, Glean, Cline, Higgsfield) + monogram 아이콘 + DB/스키마 시드
-- [x] **모델 hover 상세 모달**(`ModelCard`): 설명·카테고리·Website/Blog 링크. portal+fixed 위치(클리핑 방지)·키보드 접근성
-- [x] **"See All Models" `/models` 페이지** 신규 (카테고리 필터)
-- [x] **기사 분류 정확도 개선**: 부분일치 오탐 제거(coding 16→4), intent 우선순위, 신규 모델 트리거, 재크롤
-- [x] **보안 수정**: `.or()` 검색 인젝션 차단, 이미지 `**` 와일드카드 → CDN 허용목록(SSRF 차단), 크롤러 anon 쓰기 가드, 기사 ID UUID 검증
-- [x] **정확성 수정**: 미존재 카테고리 빈 결과, bookmarks 모델 slug, 배열 가드, 트렌딩 NaN/기본기간
-- [x] **UI 정리**: 전역 focus-visible 링, Toast aria-live, 토큰 위반 수정, Header ⌘/Ctrl 분기, 죽은 코드 제거
-
----
+- [ ] 모델 상세 모달 Figma 상세 디자인 → 코드 반영 (localhost 러프 → Figma 다듬기 → 코드 워크플로)
+- [ ] Try 버튼: 밝은 브랜드색(노랑 등) 모델은 흰 글자 대비 보정 (대비 계산 후 글자색 토글)
+- [ ] 회사 로고 200개까지 보완 (현재 171) + `berkshire-hathaway` 로고 누락 대체
+- [ ] 큰 로고 최적화 (goldman 280KB·deepseek 208KB 등 `.ico` → 64px 리사이즈)
+- [ ] 기사 로고 fallback(모델→회사→사이트) Trending·Saved·기사 상세에도 적용
+- [ ] 모델→회사 명시 매핑(`companySlug`) — 현재는 회사명 문자열 매칭
+- [ ] 회사 상세(시총/창립/본사) 데이터 확장 — 현재 주요 18곳만
 
 ## Phase: 데이터 & 백엔드
 
@@ -44,7 +30,6 @@
 ## Phase: 페이지 & 기능 완성
 
 - [ ] Newsletter 상세("Read") 페이지
-- [x] "See All Models" 전용 페이지 (`/models`)
 - [ ] 대시보드 서버/클라이언트 컴포넌트 분리 (번들 최적화)
 - [ ] error.tsx / loading.tsx 추가
 - [ ] 페이지별 SEO 메타데이터 (generateMetadata)
@@ -68,6 +53,7 @@
 
 > 파일: `SwGySWU706nVMABEEK65hC`
 
+- [ ] 모델 상세 모달 시안(node `46:2`) 상세 다듬기 → 코드 반영
 - [ ] 5개 페이지 요소를 컴포넌트 인스턴스로 연결 (현재는 시각만 동일)
 - [ ] 화면 fill을 `Color` 변수에 바인딩 (테마 전환 대비)
 - [ ] 모바일 반응형 프레임 추가

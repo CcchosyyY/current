@@ -1,5 +1,36 @@
 # Done
 
+## 2026-06-06 — 모델 상세 모달 · 회사 로고 라이브러리 · 뉴스 스크롤
+
+### 완료 항목
+- **Today's AI News**: 처음 5개만 보이고 내부 스크롤 (5번째 기사 높이를 동적 측정해 컨테이너 높이 고정)
+- **기사 로고 fallback 체계**: AI 모델 → 본문에서 감지한 회사 → 사이트 로고(파란 삼각형) 우선순위
+- **회사 로고 라이브러리**: 미국 시총 상위 + AI 기업 171곳 데이터(`companies.ts`), 로고 170개 다운로드(DuckDuckGo→Google fallback, 로컬 저장)
+- **기사↔회사 자동 매칭**(`company-match`): 제목·매체명에서 회사 감지, 요약 제외로 오탐 차단
+- **모델 상세 모달**(`ModelDetailModal`): AI Models 카드 클릭 → 브랜드 글로우 헤더·로고·태그·시총/창립/본사 stat·About·링크. Figma에 먼저 디자인 후 코드 구현
+- **ModelCard**: hover popover 제거 → 클릭 모달 방식
+
+### 작업 방식
+- 디자인 리서치(앱스토어 anatomy·다크모드 모달 best practice) → Figma 모달 시안(브랜드 글로우 + surface 레이어) → 코드 구현
+- Figma 스크린샷 렌더 버그 발견 후 워크플로 전환: **localhost 러프 구현 → Figma 상세 → 코드 반영**
+- 검증: `tsc --noEmit` 통과, dev 런타임 `/`·`/models` 200
+
+### 변경 사항
+
+| 영역 | 변경 내용 |
+|------|-----------|
+| 모달 | `ModelDetailModal` 신규, `ModelCard` 클릭 모달로 재작성(hover 제거) |
+| 데이터 | `companies.ts`(171곳 + 상세 18곳), `company-logos.json`, `findCompany`/`COMPANY_DETAILS` |
+| 로고 | `scripts/fetch-company-logos.mjs`, `public/icons/companies` 170개, `google.svg` |
+| 기사 | `article-logo`·`company-match`, 대시보드 로고 fallback + Today's News 스크롤 |
+
+### 아키텍처 노트
+- 회사 로고는 ico/png/jpeg 혼합 포맷 → `company-logos.json` 맵으로 확장자 관리, `<img>` 렌더(외부 의존 0, 로컬 저장)
+- Figma MCP `get_screenshot`이 굵은 텍스트를 흰 박스로 렌더하는 버그 → 실제 파일/웹은 정상. 이후 localhost 우선 작업으로 전환
+- Figma 모달 시안: node `46:2` (fileKey `SwGySWU706nVMABEEK65hC`)
+
+---
+
 ## 2026-06-04 — 코드 점검 · UI 정리 · 신규 모델 · 분류 개선 · 보안 (멀티에이전트)
 
 ### 완료 항목
@@ -80,31 +111,3 @@
 - 14개 카테고리 중 12개는 기사 데이터 0건 (mock 보충 필요)
 - Nunito에 한글 글리프 없음 (Noto Sans KR 폴백 추가 필요)
 - 사이드바 220px → 태블릿 반응형 튜닝 필요
-
----
-
-## 2026-03-23 — AI 뉴스 큐레이션 플랫폼 MVP 구현
-
-### 완료 항목
-- MVP 전체 구현 (대시보드, 트렌딩, 북마크, 뉴스레터, 기사 상세 5개 페이지)
-- API 4개 엔드포인트 구축 (articles, ai-models, bookmarks, newsletter)
-- 보안 인프라 적용 (Rate Limiting, CSRF, Zod, 보안 헤더)
-- 모바일 반응형 + Framer Motion 애니메이션 전면 적용
-- Command Palette 검색 (Cmd+K), 북마크/공유, 토스트 알림 구현
-- PPT 초안용 프로젝트 상세 정리
-
-### 변경 사항
-
-| 영역 | 변경 내용 |
-|------|-----------|
-| 대시보드 | 뉴스 피드, AI 모델 디렉토리(24개), 전문가 인사이트, 카테고리 필터 |
-| 페이지 | 트렌딩(기간 필터), 북마크(Saved), 뉴스레터(구독), 기사 상세 |
-| 컴포넌트 | Header, Sidebar, NewsCard, AIModelCard 등 11개 + 스켈레톤 2개 |
-| API/보안 | Rate Limiting, CSRF, Zod 검증, Cache-Control, 보호 라우트 |
-| UX | Command Palette, 사이드바 접기/펼치기, 모바일 오버레이, 토스트 |
-| 커스텀 훅 | useBookmarks, useShare, useToast 3개 |
-
-### 아키텍처 노트
-- Server Component 우선 설계, 인터랙션 필요 시에만 Client Component 분리
-- Mock 데이터로 전체 흐름 완성 후 DB 연동 전략 채택
-- Claude Code 병렬 에이전트 12개 팀 활용, 2회 세션(약 30분)으로 구현 완료
