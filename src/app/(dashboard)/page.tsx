@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AI_MODELS } from "@/lib/constants";
 import ModelCard from "@/components/ModelCard";
 import { useArticles } from "@/lib/hooks/useArticles";
+import { resolveArticleLogo } from "@/lib/article-logo";
 import { getRelativeTimeShort, formatDate } from "@/lib/utils";
 import type { AIModelFilter } from "@/lib/types";
 
@@ -17,6 +18,9 @@ const MODEL_TABS: { value: AIModelFilter; label: string }[] = [
   { value: "llm", label: "LLM" },
   { value: "image", label: "Image" },
 ];
+
+// 처음 열었을 때 보여줄 기사 수 — 나머지는 컨테이너 내부 스크롤로 노출
+const VISIBLE_NEWS_COUNT = 5;
 
 const FEATURED_SLUGS = [
   "chatgpt",
@@ -36,7 +40,24 @@ export default function DashboardPage() {
   const [newsOpen, setNewsOpen] = useState(true);
   const [modelFilter, setModelFilter] = useState<AIModelFilter>("all");
 
+  const newsListRef = useRef<HTMLDivElement>(null);
+  const [newsMaxHeight, setNewsMaxHeight] = useState<number | null>(null);
+
   const { articles, isLoading } = useArticles({ category });
+
+  // 5번째 기사까지의 실제 높이를 측정해 스크롤 영역 높이로 고정
+  useEffect(() => {
+    const el = newsListRef.current;
+    if (!el) return;
+    const items = el.children;
+    if (items.length > VISIBLE_NEWS_COUNT) {
+      const first = items[0] as HTMLElement;
+      const last = items[VISIBLE_NEWS_COUNT - 1] as HTMLElement;
+      setNewsMaxHeight(last.offsetTop + last.offsetHeight - first.offsetTop);
+    } else {
+      setNewsMaxHeight(null);
+    }
+  }, [articles, isLoading, newsOpen]);
 
   const featuredModels = useMemo(() => {
     const featured = FEATURED_SLUGS.map((slug) =>
@@ -106,8 +127,17 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 ) : (
-                  <div>
-                    {articles.map((article, idx) => (
+                  <div
+                    ref={newsListRef}
+                    className="max-h-[200px] overflow-y-auto pr-1"
+                    style={
+                      newsMaxHeight ? { maxHeight: newsMaxHeight } : undefined
+                    }
+                  >
+                    {articles.map((article, idx) => {
+                      // 로고 우선순위: AI 모델 → 본문에서 감지한 회사 → 사이트 로고(파란 삼각형)
+                      const logo = resolveArticleLogo(article);
+                      return (
                       <Link
                         key={article.id}
                         href={`/article/${article.id}`}
@@ -117,14 +147,40 @@ export default function DashboardPage() {
                             : ""
                         }`}
                       >
-                        {article.aiModel && (
+                        {logo.kind === "model" ? (
                           <Image
-                            src={`/icons/models/${article.aiModel}.svg`}
-                            alt={article.aiModel}
+                            src={logo.src}
+                            alt={logo.alt}
                             width={18}
                             height={18}
                             className="shrink-0"
                           />
+                        ) : logo.kind === "company" ? (
+                          // 회사 로고는 ico/png/jpeg 등 혼합 포맷 → 일반 img 사용
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logo.src}
+                            alt={logo.alt}
+                            width={18}
+                            height={18}
+                            className="shrink-0 rounded-sm object-contain"
+                          />
+                        ) : (
+                          // 매칭되는 로고가 없으면 사이트 로고(파란 삼각형)
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            className="shrink-0 text-primary"
+                            aria-hidden
+                          >
+                            <path
+                              d="M10.5 2L4 20h16L10.5 2z"
+                              fill="currentColor"
+                              opacity="0.9"
+                            />
+                          </svg>
                         )}
 
                         <span className="flex-1 min-w-0 text-[11px] font-medium truncate group-hover:text-primary transition-colors">
@@ -143,7 +199,8 @@ export default function DashboardPage() {
                           {getRelativeTimeShort(article.publishedAt)}
                         </span>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
