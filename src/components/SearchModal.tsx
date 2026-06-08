@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, FileText, Cpu, Compass, X } from "lucide-react";
+import { Search, ArrowRight, FileText, Cpu, Compass } from "lucide-react";
 import { AI_MODELS, NAV_LINKS } from "@/lib/constants";
 import type { Article } from "@/lib/types";
 import { dbArticleToArticle } from "@/lib/transforms";
@@ -34,6 +34,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 포털 렌더용 마운트 감지 (SSR 안전)
     setMounted(true);
   }, []);
 
@@ -43,6 +44,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   useEffect(() => {
     const q = query.trim();
     if (!q) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 검색어 비면 결과 초기화 (디바운스 fetch effect의 일부)
       setSearchArticles([]);
       return;
     }
@@ -144,6 +146,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 모달 열릴 때 입력/선택 초기화 (열림 상태 변화에 대한 정당한 동기화)
       setQuery("");
       setActiveIndex(0);
       // Focus input on next frame
@@ -224,6 +227,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   // Reset active index when results change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 검색어 변경 시 선택 인덱스 초기화 (정당한 입력 동기화)
     setActiveIndex(0);
   }, [query]);
 

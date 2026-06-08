@@ -37,6 +37,7 @@ export default function SavedPage() {
     } else {
       // No user — show articles from localStorage bookmarks via API
       if (bookmarkedIds.size === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 북마크 없을 때 빈 목록으로 즉시 종료 (정당한 데이터 동기화 effect)
         setArticles([]);
         setIsLoading(false);
         return;

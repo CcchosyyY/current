@@ -32,6 +32,7 @@ export function useModelArticles(
 
   // Reset to a clean first page whenever the model changes.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- slug(prop) 변경 시 페이지네이션 상태 리셋 (입력 변화에 따른 정당한 재동기화)
     setArticles([]);
     setPage(1);
     setTotalPages(0);
@@ -41,6 +42,7 @@ export function useModelArticles(
 
   useEffect(() => {
     if (!slug) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- slug 없을 때 로딩 종료 (정당한 effect)
       setIsLoading(false);
       return;
     }

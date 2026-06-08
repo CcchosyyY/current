@@ -20,6 +20,7 @@ export function useBookmarks(): UseBookmarksReturn {
   // Load bookmarks: from API if logged in, else from localStorage
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 로그인 시 북마크 fetch 전 로딩 표시 (정당한 데이터 동기화 effect)
       setIsLoading(true);
       fetch("/api/bookmarks")
         .then((res) => (res.ok ? res.json() : null))
@@ -51,7 +52,8 @@ export function useBookmarks(): UseBookmarksReturn {
       // Optimistic update
       setBookmarkedIds((prev) => {
         const next = new Set(prev);
-        wasBookmarked ? next.delete(articleId) : next.add(articleId);
+        if (wasBookmarked) next.delete(articleId);
+        else next.add(articleId);
         return next;
       });
 
@@ -67,7 +69,8 @@ export function useBookmarks(): UseBookmarksReturn {
             // Revert on error
             setBookmarkedIds((prev) => {
               const reverted = new Set(prev);
-              wasBookmarked ? reverted.add(articleId) : reverted.delete(articleId);
+              if (wasBookmarked) reverted.add(articleId);
+              else reverted.delete(articleId);
               return reverted;
             });
           }

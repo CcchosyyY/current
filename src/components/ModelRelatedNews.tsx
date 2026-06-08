@@ -31,6 +31,7 @@ export default function ModelRelatedNews({
 
   useEffect(() => {
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- slug 변경 시 fetch 전 로딩 상태로 리셋 (정당한 데이터 동기화 effect)
     setArticles(null);
     fetch(`/api/articles?ai_model=${encodeURIComponent(slug)}&limit=2`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))

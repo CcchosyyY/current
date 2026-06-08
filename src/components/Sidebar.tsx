@@ -61,6 +61,7 @@ export function useSidebarState() {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage는 마운트 후에만 읽음 (SSR엔 없음 → 하이드레이션 불일치 방지)
       setCollapsed(true);
     }
   }, []);

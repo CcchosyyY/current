@@ -19,6 +19,7 @@ export default function Header() {
   const closeSearch = useCallback(() => setIsSearchOpen(false), []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 후 플랫폼 감지 (SSR 하이드레이션 불일치 방지 위해 의도적으로 effect에서 설정)
     setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent));
   }, []);
 

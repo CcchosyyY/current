@@ -42,9 +42,10 @@ function formatViews(n: number): string {
 export default function TrendingPage() {
   const [period, setPeriod] = useState<TrendingPeriod>("this-week");
   const { articles, isLoading } = useArticles({ limit: 50 });
+  // "지금"을 마운트 시 1회만 계산 (render 중 Date.now() 직접 호출 = impure 방지)
+  const [nowMs] = useState(() => Date.now());
 
   const sorted = useMemo(() => {
-    const nowMs = Date.now();
     const hourMs = 1000 * 60 * 60;
 
     const maxAgeMs =
@@ -61,7 +62,7 @@ export default function TrendingPage() {
         return Number.isNaN(t) || nowMs - t <= maxAgeMs;
       })
       .sort((a, b) => b.viewCount - a.viewCount);
-  }, [period, articles]);
+  }, [period, articles, nowMs]);
 
   return (
     <div className="space-y-6">
