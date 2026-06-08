@@ -109,6 +109,15 @@ export default function Sidebar({
     onMobileClose();
   }, [pathname, searchParams, onMobileClose]);
 
+  // 모바일 드로어 열림 중 배경 본문 스크롤 잠금 (ModelDetailModal과 동일 패턴)
+  useEffect(() => {
+    if (!mobileOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   function renderCategoryItem(cat: (typeof CATEGORIES)[number], isActive: boolean) {
     const Icon = ICON_MAP[cat.icon] || Brain;
     const count = cat.slug === "all" ? total : categoryCounts[cat.slug] ?? 0;
