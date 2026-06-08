@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bookmark, BookmarkCheck, Share2, Clock } from "lucide-react";
 import type { Article } from "@/lib/types";
+import { AI_MODELS } from "@/lib/constants";
 import ArticleLogo from "@/components/ArticleLogo";
 import { getRelativeTime } from "@/lib/utils";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
@@ -14,6 +15,31 @@ import { useToast } from "@/lib/hooks/useToast";
 interface NewsCardProps {
   article: Article;
   variant?: "list" | "card";
+}
+
+// Branded fallback shown when a card article has no thumbnail. Fills the same
+// 2:1 header block (using the linked AI model's accent color, or the app blue)
+// so a card without an image keeps the same height and the title/body start at
+// the same place as cards that do have one.
+function ArticlePlaceholder({ article }: { article: Article }) {
+  const model = article.aiModel
+    ? AI_MODELS.find((m) => m.slug === article.aiModel)
+    : null;
+  const c1 = model?.color ?? "#3B82F6";
+  const c2 = model?.colorSecondary ?? c1;
+  return (
+    <div
+      className="absolute inset-0 flex flex-col items-center justify-center gap-2"
+      style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}
+    >
+      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 shadow-sm">
+        <ArticleLogo article={article} size={26} />
+      </span>
+      <span className="max-w-[80%] truncate text-xs font-medium text-white/90">
+        {article.source}
+      </span>
+    </div>
+  );
 }
 
 function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
@@ -56,9 +82,10 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
         href={`/article/${article.id}`}
         className="group block bg-bg-card border border-border-subtle rounded-xl overflow-hidden hover:border-border-strong hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200"
       >
-        {/* Image */}
-        {article.imageUrl && (
-          <div className="aspect-[2/1] w-full overflow-hidden relative">
+        {/* Image — falls back to a branded placeholder so every card keeps the
+            same 2:1 header and the title/body line up across the grid. */}
+        <div className="aspect-[2/1] w-full overflow-hidden relative">
+          {article.imageUrl ? (
             <Image
               src={article.imageUrl}
               alt={article.title}
@@ -66,8 +93,10 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
-          </div>
-        )}
+          ) : (
+            <ArticlePlaceholder article={article} />
+          )}
+        </div>
 
         {/* Content */}
         <div className="p-4">
