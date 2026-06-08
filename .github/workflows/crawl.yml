@@ -1,0 +1,39 @@
+name: Crawl articles
+
+# Runs the RSS crawler on a schedule so the DB stays fresh without manual runs.
+# NOTE: GitHub only fires `schedule` for workflow files on the DEFAULT branch
+# (main). On a feature branch you can still trigger it manually via
+# "Run workflow" (workflow_dispatch); the cron starts once this is merged to main.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours (UTC) → KST 03:00 / 09:00 / 15:00 / 21:00
+  workflow_dispatch: {} # manual "Run workflow" button in the Actions tab
+
+# Never let two crawls overlap (a slow run + the next tick).
+concurrency:
+  group: crawl-articles
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Crawl + upsert into Supabase
+        env:
+          # The crawler reads these from process.env (falls back to .env.local
+          # locally, which doesn't exist on the runner — so these are required).
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/crawl-articles.mjs
