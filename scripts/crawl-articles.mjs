@@ -7,10 +7,16 @@
 // Usage:
 //   node scripts/crawl-articles.mjs          # crawl + upsert into Supabase
 //   node scripts/crawl-articles.mjs --dry    # crawl + write JSON only (no DB write)
+//   node scripts/crawl-articles.mjs --no-llm # skip the LLM second pass (keyword only)
 //
 // Auth: uses SUPABASE_SERVICE_ROLE_KEY if present (recommended for production /
 // cron), otherwise falls back to the public anon key from .env.local. The anon
 // path needs a temporary `articles INSERT` RLS policy for anon (see README).
+//
+// Classification is hybrid: fast keyword rules first, then a Claude Haiku pass
+// over only the AMBIGUOUS items (cheap — see classify()/crawl() below). The LLM
+// pass is enabled automatically when ANTHROPIC_API_KEY is set; disable with
+// --no-llm. Without a key the crawler runs keyword-only, exactly as before.
 
 import Parser from "rss-parser";
 import { readFileSync, writeFileSync } from "fs";
@@ -51,6 +57,14 @@ const DRY = process.argv.includes("--dry");
 // public anon key requires a temporary anon INSERT policy and is a foot-gun, so
 // it must be opted into explicitly.
 const ALLOW_ANON = process.argv.includes("--allow-anon-insert");
+
+// Hybrid LLM second pass: keyword rules first, then Claude Haiku on the
+// ambiguous cases only. Enabled automatically when an ANTHROPIC_API_KEY is
+// present; turn off with --no-llm.
+const ANTHROPIC_KEY =
+  process.env.ANTHROPIC_API_KEY || fileEnv.ANTHROPIC_API_KEY || "";
+const NO_LLM = process.argv.includes("--no-llm");
+const LLM_ENABLED = !NO_LLM && !!ANTHROPIC_KEY;
 
 // ── Feeds ──────────────────────────────────────────────────────────────────
 const FEEDS = [
@@ -180,6 +194,17 @@ const INDUSTRY_CATEGORIES = new Set([
   "business", "infrastructure", "policy", "hardware", "security",
 ]);
 
+// Keywords that signal an industry/business story (funding, data centers,
+// policy, chips, security). The ambiguity detector uses this: when a KEPT
+// article also trips an industry keyword, keyword rules alone may be leaking a
+// business story into a tech category — hand it to the LLM to adjudicate.
+const INDUSTRY_KWS = CATEGORY_RULES
+  .filter(([slug]) => INDUSTRY_CATEGORIES.has(slug))
+  .flatMap(([, kws]) => kws);
+function hasIndustrySignal(full) {
+  return INDUSTRY_KWS.some((k) => full.includes(k));
+}
+
 // ── Text helpers ───────────────────────────────────────────────────────────
 function decodeEntities(s) {
   return s
@@ -223,8 +248,9 @@ function firstImage(html) {
 //   3) a single body mention  → ignored (passing reference)
 // LIMITATION: keyword rules can't separate a passing tool mention from the
 // subject when an industry story is misclassified into a tech category, so a few
-// business articles still leak through the scope filter. Planned follow-up: an
-// LLM (Claude Haiku) classification pass for semantic accuracy.
+// business articles can still leak through the scope filter. These leaks are now
+// flagged as "ambiguous" (see crawl()) and adjudicated by a Claude Haiku second
+// pass for semantic accuracy when ANTHROPIC_API_KEY is set.
 const BODY_MENTION_THRESHOLD = 2;
 
 function classify(title, body) {
@@ -268,7 +294,7 @@ function classify(title, body) {
     category = MODEL_CAT_TO_ARTICLE[MODEL_CATEGORY[model]] || "llm";
   }
   if (!category) category = "ai-ml";
-  return { model, category };
+  return { model, category, titleMatched };
 }
 function tagsFrom(text, model, category) {
   const tags = new Set();
@@ -279,6 +305,104 @@ function tagsFrom(text, model, category) {
     if (t.includes(kw)) tags.add(kw.replace(/\s+/g, "-"));
   }
   return [...tags].slice(0, 5);
+}
+
+// ── LLM second pass (Claude Haiku) ───────────────────────────────────────────
+// Only the AMBIGUOUS items reach this — keyword rules handle the clear majority
+// for free. We send a single batched request (title + summary per item) and ask
+// Haiku to decide keep/drop, the primary model, and the best category. Output is
+// constrained to our vocab via a JSON schema (structured outputs).
+// The LLM may only output categories that actually exist as rows in the DB
+// `categories` table (the 13 tech categories + the ai-ml catch-all). Industry
+// slugs like "business"/"policy"/"security" have no category row and no sidebar
+// section, so in-scope company news is folded into the best-fitting tech
+// category, or "ai-ml" when nothing fits.
+const ALL_CATEGORIES = [...TECH_CATEGORIES, "ai-ml"];
+const ALL_MODELS = MODEL_RULES.map(([slug]) => slug);
+
+const LLM_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          i: { type: "integer" },
+          keep: { type: "boolean" },
+          model: { anyOf: [{ type: "string", enum: ALL_MODELS }, { type: "null" }] },
+          category: { type: "string", enum: ALL_CATEGORIES },
+        },
+        required: ["i", "keep", "model", "category"],
+      },
+    },
+  },
+  required: ["results"],
+};
+
+function llmPrompt(items) {
+  const list = items.map((c, i) => ({ i, title: c.title, summary: truncate(c.summary, 220) }));
+  return [
+    'You are classifying news items for an AI-focused news site. Decide what is IN scope.',
+    '',
+    'IN SCOPE (keep: true):',
+    '  1. AI products, model releases, AI technology, capabilities, tools, and how-to.',
+    '  2. News directly about a SPECIFIC AI company — its vision, strategy, goals,',
+    '     earnings/results, funding, roadmap, or concrete launches/plans.',
+    '',
+    'OUT OF SCOPE (keep: false):',
+    '  - Generic AI opinion, think-pieces, analysis, or "AI in general" commentary',
+    '    not anchored to a specific product, model, or company.',
+    '  - Society/culture takes, labor-market or jobs commentary, ethics essays.',
+    '  - A hack, breach, lawsuit, fine, or regulatory order — even one involving a',
+    "    major AI company — UNLESS the article is really about that company's own",
+    '    product or strategy.',
+    '',
+    'For each item return:',
+    '- keep: true only if it fits IN SCOPE above; otherwise false.',
+    '- model: the AI product/company the article centers on (one allowed slug), or null',
+    '  if none is the clear subject. A passing mention is NOT the subject.',
+    `- category: the single best slug from this exact list: ${ALL_CATEGORIES.join(", ")}.`,
+    '  Use "ai-ml" as the catch-all for in-scope company news with no obvious tech fit.',
+    '',
+    `Allowed model slugs: ${ALL_MODELS.join(", ")}`,
+    '',
+    'Items (JSON):',
+    JSON.stringify(list),
+  ].join("\n");
+}
+
+async function llmClassifyBatch(items) {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic({ apiKey: ANTHROPIC_KEY });
+  const resp = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: Math.min(8000, 256 + items.length * 60),
+    output_config: { format: { type: "json_schema", schema: LLM_SCHEMA } },
+    messages: [{ role: "user", content: llmPrompt(items) }],
+  });
+
+  const text = resp.content.find((b) => b.type === "text")?.text || "{}";
+  const parsed = JSON.parse(text);
+
+  const u = resp.usage || {};
+  const cost = ((u.input_tokens || 0) / 1e6) * 1 + ((u.output_tokens || 0) / 1e6) * 5;
+  console.log(
+    `  LLM usage: ${u.input_tokens || 0} in / ${u.output_tokens || 0} out tokens → ~$${cost.toFixed(4)}`,
+  );
+
+  // index → validated verdict (reject anything outside our vocab)
+  const map = new Map();
+  for (const r of parsed.results || []) {
+    if (typeof r.i !== "number") continue;
+    const model = r.model && ALL_MODELS.includes(r.model) ? r.model : null;
+    const category = ALL_CATEGORIES.includes(r.category) ? r.category : null;
+    if (!category) continue;
+    map.set(r.i, { keep: !!r.keep, model, category });
+  }
+  return map;
 }
 
 // ── Crawl ──────────────────────────────────────────────────────────────────
@@ -306,14 +430,14 @@ function pickImage(item) {
 
 async function crawl() {
   const seen = new Set();
-  const rows = [];
-  let dropped = 0;
+  const candidates = [];
+  // ── Pass 1: fetch + keyword-classify every item, flag the ambiguous ones ──
   for (const feed of FEEDS) {
     try {
       const parsed = await parser.parseURL(feed.url);
       let n = 0;
       for (const item of parsed.items || []) {
-        if (n >= PER_FEED || rows.length >= TOTAL_CAP) break;
+        if (n >= PER_FEED || candidates.length >= TOTAL_CAP) break;
         const link = (item.link || "").trim();
         const title = (item.title || "").trim();
         if (!link || !title || seen.has(link)) continue;
@@ -325,30 +449,33 @@ async function crawl() {
         let content = toParagraphs(html, 1600);
         if (content.length < 80) content = snippet || summary;
         const blob = `${title} ${snippet}`;
-        const { model, category } = classify(title, `${snippet} ${content}`);
+        const body = `${snippet} ${content}`;
+        const kw = classify(title, body);
 
-        // Scope filter: keep only model-tagged OR AI-tech articles. Industry /
-        // peripheral news (funding, policy, data centers, hardware, security)
-        // and uncategorized general news are excluded from the site.
-        if (!model && !TECH_CATEGORIES.has(category)) {
-          dropped++;
-          continue;
-        }
+        // Keyword keep decision: model-tagged OR an in-scope tech category.
+        const keepByKeyword = !!kw.model || TECH_CATEGORIES.has(kw.category);
+        // Trust only clear product/model news: a model named in the TITLE with no
+        // industry signal. Every other kept candidate goes to the LLM — including
+        // model-less tech-category hits, which is where generic AI commentary
+        // (jobs/society/opinion think-pieces) slips through keyword rules.
+        const full = " " + (title + " " + body).toLowerCase() + " ";
+        const trusted = kw.titleMatched && !hasIndustrySignal(full);
+        const ambiguous = keepByKeyword && !trusted;
+
         const words = content.split(/\s+/).length;
-
-        rows.push({
+        candidates.push({
           title: truncate(title, 280),
           summary,
           content,
           source_url: link,
           source_name: feed.source,
           image_url: pickImage(item),
-          category_slug: category,
-          ai_model_slug: model,
           read_time: Math.max(1, Math.ceil(words / 200)),
-          tags: tagsFrom(blob, model, category),
-          is_trending: false,
           published_at: item.isoDate || item.pubDate || null,
+          blob,
+          kw,
+          keepByKeyword,
+          ambiguous,
         });
         n++;
       }
@@ -357,7 +484,59 @@ async function crawl() {
       console.log(`  ✗ ${feed.source}: ${e.message}`);
     }
   }
+
+  // ── Pass 2: send only the ambiguous items to Claude Haiku (one batch) ──
+  const ambiguous = candidates.filter((c) => c.ambiguous);
+  let verdicts = new Map();
+  if (LLM_ENABLED && ambiguous.length > 0) {
+    console.log(`  LLM pass: ${ambiguous.length}/${candidates.length} ambiguous → Haiku…`);
+    try {
+      verdicts = await llmClassifyBatch(ambiguous);
+    } catch (e) {
+      console.log(`  ⚠ LLM pass failed (${e.message}) — falling back to keyword results`);
+      verdicts = new Map();
+    }
+  } else if (ambiguous.length > 0) {
+    console.log(`  (LLM off — ${ambiguous.length} ambiguous items kept by keyword rules)`);
+  }
+
+  // ── Finalize: apply verdicts, run the scope filter, build rows ──
+  const rows = [];
+  let dropped = 0, changed = 0, ai = 0;
+  for (const c of candidates) {
+    let { model, category } = c.kw;
+    let keep = c.keepByKeyword;
+    if (c.ambiguous) {
+      const v = verdicts.get(ai);
+      ai++;
+      if (v) {
+        if (v.keep !== keep || v.model !== model || v.category !== category) changed++;
+        keep = v.keep;
+        model = v.model;
+        category = v.category;
+      }
+    }
+    if (!keep) {
+      dropped++;
+      continue;
+    }
+    rows.push({
+      title: c.title,
+      summary: c.summary,
+      content: c.content,
+      source_url: c.source_url,
+      source_name: c.source_name,
+      image_url: c.image_url,
+      category_slug: category,
+      ai_model_slug: model,
+      read_time: c.read_time,
+      tags: tagsFrom(c.blob, model, category),
+      is_trending: false,
+      published_at: c.published_at,
+    });
+  }
   if (dropped > 0) console.log(`  (excluded ${dropped} off-topic / industry items)`);
+  if (changed > 0) console.log(`  (LLM adjusted ${changed} ambiguous items)`);
   return rows;
 }
 
