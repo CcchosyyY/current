@@ -4,17 +4,40 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { supabasePublic } from "@/lib/supabase/public";
 import { dbArticleToArticle } from "@/lib/transforms";
 import { getRelativeTime } from "@/lib/utils";
 import type { DBArticleRow } from "@/lib/transforms";
 import ArticleActions from "@/components/ArticleActions";
 import ArticleLogo from "@/components/ArticleLogo";
 
+// ISR: 기사 본문은 발행 후 거의 안 바뀌므로 60초 동안 렌더 결과를 캐시한다.
+// → 클릭마다 일어나던 Supabase 왕복이 사라지고(첫 요청만 조회 후 캐시),
+//   재방문/타 사용자 요청은 캐시 히트가 된다.
+// 전제: 쿠키 없는 supabasePublic 사용 (server.ts createClient는 cookies()로
+//       라우트를 강제 동적화해 revalidate를 무효화하므로 여기선 쓰면 안 됨).
+export const revalidate = 60;
+export const dynamicParams = true; // 프리렌더 안 된 기사도 첫 방문 시 생성 후 캐시
+
+// 최근 기사 일부는 빌드 시 미리 생성해 즉시 서빙(가장 많이 보는 콘텐츠).
+// 나머지/신규 기사는 dynamicParams=true 로 첫 방문 시 ISR 생성된다.
+export async function generateStaticParams() {
+  try {
+    const { data } = await supabasePublic
+      .from("articles")
+      .select("id")
+      .order("published_at", { ascending: false })
+      .limit(20);
+    return (data ?? []).map((row: { id: string }) => ({ id: row.id }));
+  } catch {
+    // 빌드 환경에서 DB 접근 불가해도 빌드를 깨지 않음 — 전부 on-demand ISR로 폴백
+    return [];
+  }
+}
+
 // generateMetadata와 페이지가 같은 요청 내에서 1번만 조회하도록 cache로 메모이즈
 const getArticle = cache(async (id: string) => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data, error } = await supabasePublic
     .from("articles")
     .select(`
       *,
