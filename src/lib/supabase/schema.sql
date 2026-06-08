@@ -57,12 +57,20 @@ CREATE TABLE IF NOT EXISTS articles (
   is_trending BOOLEAN DEFAULT false,
   tags TEXT[] DEFAULT '{}',
   published_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  -- Full-text search vector (weighted: title > summary > content).
+  -- Queried via websearch_to_tsquery in /api/articles.
+  search_vector tsvector GENERATED ALWAYS AS (
+    setweight(to_tsvector('english', coalesce(title, '')),   'A') ||
+    setweight(to_tsvector('english', coalesce(summary, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(content, '')), 'C')
+  ) STORED
 );
 
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category_id);
 CREATE INDEX IF NOT EXISTS idx_articles_ai_model ON articles(ai_model_id);
+CREATE INDEX IF NOT EXISTS idx_articles_search ON articles USING GIN (search_vector);
 
 -- ============================================================
 -- 4. BOOKMARKS (requires auth — protected by RLS)

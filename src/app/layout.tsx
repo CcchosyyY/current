@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Nunito, Nunito_Sans } from "next/font/google";
+import { Nunito, Nunito_Sans, Noto_Sans_KR } from "next/font/google";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -15,6 +15,16 @@ const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700"],
+});
+
+// 한글 폴백 — 라틴 폰트(Nunito)가 못 그리는 글자만 이 폰트로 떨어짐.
+// CJK는 파일이 크므로 preload는 끄고 swap으로 점진 표시.
+const notoSansKr = Noto_Sans_KR({
+  variable: "--font-noto-kr",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "700"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -44,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="dark">
       <body
-        className={`${nunito.variable} ${nunitoSans.variable} antialiased bg-bg-page text-text-primary font-body`}
+        className={`${nunito.variable} ${nunitoSans.variable} ${notoSansKr.variable} antialiased bg-bg-page text-text-primary font-body`}
       >
         {children}
       </body>

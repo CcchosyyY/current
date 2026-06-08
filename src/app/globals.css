@@ -56,15 +56,15 @@ html {
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  --font-heading: var(--font-nunito);
-  --font-body: var(--font-nunito-sans);
+  --font-heading: var(--font-nunito), var(--font-noto-kr), system-ui, sans-serif;
+  --font-body: var(--font-nunito-sans), var(--font-noto-kr), system-ui, sans-serif;
 }
 
 /* Global base styles */
 body {
   background-color: var(--bg-page);
   color: var(--text-primary);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-nunito-sans), var(--font-noto-kr), system-ui, sans-serif;
 }
 
 /* Scrollbar styling for dark theme */
