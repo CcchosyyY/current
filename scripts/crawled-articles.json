@@ -1,75 +1,147 @@
 [
   {
-    "title": "How courts are coping with a flood of AI-generated lawsuits",
-    "summary": "Most days in her chambers, Judge Maritza Braswell, a federal magistrate judge in Colorado, sifts through stacks of documents written by people without a lawyer. Many of them can’t afford to hire a lawyer, and others have cases too weak or too small to…",
-    "content": "Most days in her chambers, Judge Maritza Braswell, a federal magistrate judge in Colorado, sifts through stacks of documents written by people without a lawyer. Many of them can’t afford to hire a lawyer, and others have cases too weak or too small to interest one. She reads each one carefully, mindful of how daunting it is to walk into the courtroom alone.\n\nLately, like many judges across the US, she has seen a noticeable uptick in such filings. According to a new study that examined 4.5 million federal civil cases from 2005 to 2026, the share of lawsuits brought by self-represented people increased from 11% in 2022 to 16.8% in 2025. Within those cases, the number of filings made more than doubled compared to before 2023.\n\nJudge Braswell puts that jump down to AI.\n\n“I do correlate that to AI in part because I see AI use,” she says. As a tech-savvy judge who uses AI to vet court documents, she’s learned to recognize how large language models write. She can tell based on its prose and at times, hallucinated cases and fabricated quotes.\n\n“I’m also actually seeing better-drafted pleadings,” says Judge Braswell.",
-    "source_url": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/",
+    "title": "Meta made its own AI-generated clickbait news feed",
+    "summary": "An AI-generated image of the royal family featuring two Queen Elizabeth IIs. | ﻿Image: Meta AI\t\n\nFacebook has long been filled with feeds of clickbait articles. Now, Meta is making its own clickbait articles with AI.\nThe standalone Meta AI app now has a \"For…",
+    "content": "An AI-generated image of the royal family featuring two Queen Elizabeth IIs. | ﻿Image: Meta AI\n\nFacebook has long been filled with feeds of clickbait articles. Now, Meta is making its own clickbait articles with AI.\n\nThe standalone Meta AI app now has a \"For You\" section that populates a list of clickbait-style stories for you to read. But the topics, images, and text are all AI-generated - and as questionable as you'd expect from AI-created works.\n\nThe Meta AI app first launched in April 2025 with its focus on a public \"Discover\" feed that showed AI-generated images and conversations from other users (who frequently seemed unaware that they were being made public). That's all disappeared. The app now has a standard chatbot interface, …\n\nRead the full story at The Verge.",
+    "source_url": "https://www.theverge.com/ai-artificial-intelligence/944235/meta-app-ai-clickbait-articles",
+    "source_name": "The Verge",
+    "image_url": "https://platform.theverge.com/wp-content/uploads/sites/2/2026/06/ai-label-14.png?quality=90&#038;strip=all&#038;crop=0,0,100,100",
+    "category_slug": "llm",
+    "ai_model_slug": "meta-ai",
+    "read_time": 1,
+    "tags": [
+      "meta-ai",
+      "llm",
+      "launch"
+    ],
+    "is_trending": true,
+    "published_at": "2026-06-06T14:00:00.000Z",
+    "view_count": 22625
+  },
+  {
+    "title": "The Meta hack shows there’s more to AI security than Mythos",
+    "summary": "On June 5, 404 Media reported that attackers had been using Meta’s AI customer support agent to steal Instagram accounts. Their approach was simple: They asked the agent to link the accounts to email addresses that they controlled, and the agent complied. One…",
+    "content": "On June 5, 404 Media reported that attackers had been using Meta’s AI customer support agent to steal Instagram accounts. Their approach was simple: They asked the agent to link the accounts to email addresses that they controlled, and the agent complied. One attacker broke into the dormant Obama White House account and made pro-Iran posts; others took over accounts with valuable, single-word handles, possibly in order to sell them.\n\nAI cybersecurity concerns are nothing new. Since Anthropic announced in April that its Mythos model was too good at hacking to be released to the general public, commentators, researchers, and federal officials alike have fixated on the idea that superpowered AI systems could lay waste to our computer infrastructure. That’s not quite what this Instagram hack was: There, AI was the target rather than the attacker, and the method was far simpler than anything Mythos would cook up. But as companies offload more work to AI, these comparatively unsophisticated attacks could wreak their own havoc.\n\n“As AI becomes more and more widely used—especially when AI is more and more widely used to automate our work flows, like account recovery—I think attackers are going to be more and more motivated to attack AI itself,” says Neil Gong, a professor of electrical and computer engineering at Duke University.",
+    "source_url": "https://www.technologyreview.com/2026/06/05/1138437/the-meta-hack-shows-theres-more-to-ai-security-than-mythos/",
     "source_name": "MIT Technology Review",
     "image_url": null,
-    "category_slug": "ai-ml",
+    "category_slug": "education",
+    "ai_model_slug": null,
+    "read_time": 2,
+    "tags": [
+      "education"
+    ],
+    "is_trending": true,
+    "published_at": "2026-06-05T09:00:00.000Z",
+    "view_count": 21478
+  },
+  {
+    "title": "Airbnb’s Brian Chesky plans to launch a new AI lab",
+    "summary": "The Airbnb CEO said last year it hasn't struck an LLM partnership because existing products weren't quite ready.",
+    "content": "The Airbnb CEO said last year it hasn't struck an LLM partnership because existing products weren't quite ready.",
+    "source_url": "https://techcrunch.com/2026/06/04/airbnbs-brian-chesky-plans-to-launch-a-new-ai-lab/",
+    "source_name": "TechCrunch",
+    "image_url": null,
+    "category_slug": "llm",
     "ai_model_slug": null,
     "read_time": 1,
     "tags": [
-      "ai-ml"
+      "llm",
+      "launch"
     ],
     "is_trending": true,
-    "published_at": "2026-06-04T10:50:18.000Z",
-    "view_count": 27638
+    "published_at": "2026-06-04T22:29:50.000Z",
+    "view_count": 21284
   },
   {
-    "title": "AI can now coach amateur virologists, and top tech leaders want Congress to act on DNA security",
-    "summary": "Sam Altman, Dario Amodei, Demis Hassabis, and other tech leaders are urging the US government to make screening of synthetic DNA orders a legal requirement. AI systems already outperform PhD-level virologists on lab procedures, the signatories warn, raising…",
-    "content": "Sam Altman, Dario Amodei, Demis Hassabis, and other tech leaders are urging the US government to make screening of synthetic DNA orders a legal requirement. AI systems already outperform PhD-level virologists on lab procedures, the signatories warn, raising the risk of misuse for biological weapons.\n\nThe article AI can now coach amateur virologists, and top tech leaders want Congress to act on DNA security appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/ai-can-now-coach-amateur-virologists-and-top-tech-leaders-want-congress-to-act-on-dna-security/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2023/06/Matthias_a_dangerous_bio_virus_emerging_from_a_computer.png",
+    "title": "The skeptic’s guide to humanoid robots going viral on the Internet",
+    "summary": "Robot demonstrations can distort public perceptions of robotic capabilities.",
+    "content": "It may appear that humanoid robots capable of handling any task have almost arrived—especially when tech companies showcase them performing acrobatic feats or handling household chores. But there is still a significant gap between these robot demonstrations and proving that the same robots can reliably and repeatedly manage such tasks in the real world.\n\nThe latest wave of robot videos can be particularly tricky, given the human tendency to anthropomorphize objects with a humanoid figure. A robot arm doing a dance move may simply seem “cool,” but a humanoid robot doing the same dance move can trigger more misleading assumptions, said Jonathan Hurst, cofounder of Agility Robotics and a robotics researcher at Oregon State University.\n\n“People automatically extrapolate and assume that the robot that looks like a person can do all the things that a person who can dance could do—which is not true,” Hurst told Ars. “But a lot of the startup companies do kind of prey on that for being able to raise a lot of money.”\n\nRead full article\n\nComments",
+    "source_url": "https://arstechnica.com/ai/2026/06/the-skeptics-guide-to-humanoid-robots-going-viral-on-the-internet/",
+    "source_name": "Ars Technica",
+    "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/GettyImages-2279229514-1152x648.jpg",
+    "category_slug": "3d-spatial",
+    "ai_model_slug": null,
+    "read_time": 1,
+    "tags": [
+      "3d-spatial"
+    ],
+    "is_trending": true,
+    "published_at": "2026-06-04T22:23:36.000Z",
+    "view_count": 23296
+  },
+  {
+    "title": "These LLMs are the best at resisting Russian propaganda",
+    "summary": "Estonian government benchmark shows how dozens of models combat Russia's \"strategic narratives.\"",
+    "content": "As more people rely on large language models to provide pat answers to complex questions, state governments are understandably worried about those LLMs spouting what they see as dangerous propaganda promoted by foreign adversaries. To help combat this problem, the government-sponsored Estonian Language Institute (ELI) has released a new \"Propaganda Resistance\" benchmark ranking dozens of LLMs on their ability to avoid \"tak[ing] positions on topics that the Russian Federation uses in its strategic narratives.\"\n\nAs a former member of the Soviet Union that has been independent for just a few decades, many Estonians are particularly alert to what they see as false narratives being promoted from their large and often belligerent neighbor to the east. Alongside volunteer-run Estonian defense collective Propastop, the ELI identified 14 broad categories in which it sees Russian influence operations trying to sway public discussion. These range from narratives on the current status of Crimea and justifications for the war in Ukraine to the history of NATO and justification for Russia's annexation of Baltic states during World War II.",
+    "source_url": "https://arstechnica.com/ai/2026/06/these-llms-are-the-best-at-resisting-russian-propaganda/",
+    "source_name": "Ars Technica",
+    "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/GettyImages-2271282507-1024x648.jpg",
     "category_slug": "llm",
-    "ai_model_slug": "chatgpt",
+    "ai_model_slug": null,
     "read_time": 1,
     "tags": [
-      "chatgpt",
-      "llm"
+      "llm",
+      "benchmark"
     ],
     "is_trending": true,
-    "published_at": "2026-06-04T10:07:51.000Z",
-    "view_count": 26641
+    "published_at": "2026-06-04T20:44:31.000Z",
+    "view_count": 21833
   },
   {
-    "title": "xAI updates Grok Imagine to 1.5 with image-to-video generation at 720p resolution",
-    "summary": "xAI has released \"grok-imagine-video-1.5-preview,\" an image-to-video model that turns still images into cinematic videos at up to 720p based on text prompts. Multiple clips can be stitched together into longer scenes.\nThe article xAI updates Grok Imagine to…",
-    "content": "xAI has released \"grok-imagine-video-1.5-preview,\" an image-to-video model that turns still images into cinematic videos at up to 720p based on text prompts. Multiple clips can be stitched together into longer scenes.\n\nThe article xAI updates Grok Imagine to 1.5 with image-to-video generation at 720p resolution appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/xai-updates-grok-imagine-to-1-5-with-image-to-video-generation-at-720p-resolution/",
-    "source_name": "The Decoder",
-    "image_url": "http://the-decoder.com/wp-content/uploads/2026/06/prompt-to-video.mp4",
-    "category_slug": "video-gen",
-    "ai_model_slug": "grok",
-    "read_time": 1,
-    "tags": [
-      "grok",
-      "video-gen",
-      "release"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-04T08:04:48.000Z",
-    "view_count": 23602
-  },
-  {
-    "title": "Lovable signs multiyear deal with Google Cloud to up usage 5x, source says",
-    "summary": "Lovable and Google signed an expanded multiyear deal that involves a 5x expansion of Lovable's footprint on Google Cloud, and expanded access to Anthropic Claude.",
-    "content": "Lovable and Google signed an expanded multiyear deal that involves a 5x expansion of Lovable's footprint on Google Cloud, and expanded access to Anthropic Claude.",
-    "source_url": "https://techcrunch.com/2026/06/03/lovable-signs-multi-year-deal-with-google-cloud-to-up-usage-5x-source-says/",
+    "title": "Apple approves Poke as the first AI agent on its Messages for Business platform",
+    "summary": "Poke, the startup that lets people use AI agents through simple text messages, has become the first AI agent approved for Apple’s Messages for Business platform.",
+    "content": "Poke, the startup that lets people use AI agents through simple text messages, has become the first AI agent approved for Apple’s Messages for Business platform.",
+    "source_url": "https://techcrunch.com/2026/06/04/apple-approves-poke-as-the-first-ai-agent-on-its-messages-for-business-platform/",
     "source_name": "TechCrunch",
     "image_url": null,
-    "category_slug": "coding",
-    "ai_model_slug": "lovable",
+    "category_slug": "ai-agent",
+    "ai_model_slug": null,
     "read_time": 1,
     "tags": [
-      "lovable",
-      "coding"
+      "ai-agent"
     ],
     "is_trending": true,
-    "published_at": "2026-06-03T22:56:51.000Z",
-    "view_count": 24747
+    "published_at": "2026-06-04T19:20:58.000Z",
+    "view_count": 23539
+  },
+  {
+    "title": "Elon Musk is steamrolling Wall Street to become a trillionaire",
+    "summary": "Today on Decoder, I’m talking to Ryan Mac, a technology reporter at The New York Times and coauthor of the excellent book Character Limit: How Elon Musk Destroyed Twitter, which came out in 2024. I can’t recommend it enough. \nI wanted to have Ryan on the show…",
+    "content": "Today on Decoder, I’m talking to Ryan Mac, a technology reporter at The New York Times and coauthor of the excellent book Character Limit: How Elon Musk Destroyed Twitter, which came out in 2024. I can’t recommend it enough.\n\nI wanted to have Ryan on the show because we’re on the cusp of the SpaceX IPO, which promises to be one of the most consequential public offerings in history for a variety of reasons — its biggest-ever size, of course, at nearly $2 trillion dollars, but also because all kinds of rules that keep our markets fair are being bent, if not outright broken, along the way. I also wanted to talk to Ryan because buried somewhere inside SpaceX is X, the social platform formerly known as Twitter, which Musk purchased in 2022. That’s what Ryan cowrote that book about.\n\nI was very confident that Musk would come to regret buying Twitter back then. I wrote a piece called “Welcome To hell, Elon,” which is probably the single most-read thing I’ve ever written. My thesis was that there would be no way to grow Twitter users and revenue without moderating the platform well and, ultimately, that Elon buying Twitter would destroy his reputation and cause damage to his other companies.\n\nNow, we have the numbers from the SpaceX IPO filing to see how right my prediction was. X is shrinking by every major metric, but it may not matter, as Ryan points out. Take a listen, and let me know what you think.",
+    "source_url": "https://www.theverge.com/podcast/942586/elon-musk-spacex-ipo-x-xai-index-funds",
+    "source_name": "The Verge",
+    "image_url": "https://platform.theverge.com/wp-content/uploads/sites/2/2026/06/VRG_DCD_0604_Musk_IPO_AParkin.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100",
+    "category_slug": "3d-spatial",
+    "ai_model_slug": "grok",
+    "read_time": 2,
+    "tags": [
+      "grok",
+      "3d-spatial",
+      "funding",
+      "launch",
+      "enterprise"
+    ],
+    "is_trending": true,
+    "published_at": "2026-06-04T14:00:00.000Z",
+    "view_count": 23642
+  },
+  {
+    "title": "OpenAI and Anthropic Sign Letter to Prevent AI-Developed Biological Weapons",
+    "summary": "Leading AI labs, executives, and scientists are sending a letter to lawmakers urging them to improve tracking of synthetic DNA sequences that could be used for bioweapons.",
+    "content": "Leading AI labs, executives, and scientists are sending a letter to lawmakers urging them to improve tracking of synthetic DNA sequences that could be used for bioweapons.",
+    "source_url": "https://www.wired.com/story/openai-anthropic-letter-ai-biological-weapons/",
+    "source_name": "Wired",
+    "image_url": "https://media.wired.com/photos/6a1f6447234d4b89dad80277/master/pass/science_anthropic_final.jpg",
+    "category_slug": "education",
+    "ai_model_slug": null,
+    "read_time": 1,
+    "tags": [
+      "education"
+    ],
+    "is_trending": true,
+    "published_at": "2026-06-04T01:01:00.000Z",
+    "view_count": 20110
   },
   {
     "title": "Google ordered to put clearer links in AI search and let UK publishers opt out",
@@ -86,60 +158,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-06-03T20:26:51.000Z",
-    "view_count": 20132
-  },
-  {
-    "title": "Google Deepmind's Gemma 4 12B squeezes multimodal AI onto a laptop with just 16 GB of RAM",
-    "summary": "Google Deepmind's Gemma 4 12B is an open-source model that processes text, images, and audio natively and runs on laptops with just 16 GB of RAM. It nearly matches the twice-as-large 26B model in benchmarks and ships under an Apache 2.0 license for commercial…",
-    "content": "Google Deepmind's Gemma 4 12B is an open-source model that processes text, images, and audio natively and runs on laptops with just 16 GB of RAM. It nearly matches the twice-as-large 26B model in benchmarks and ships under an Apache 2.0 license for commercial use.\n\nThe article Google Deepmind's Gemma 4 12B squeezes multimodal AI onto a laptop with just 16 GB of RAM appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/google-deepminds-gemma-4-12b-squeezes-multimodal-ai-onto-a-laptop-with-just-16-gb-of-ram/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2026/06/gemma4.webp",
-    "category_slug": "llm",
-    "ai_model_slug": "gemini",
-    "read_time": 1,
-    "tags": [
-      "gemini",
-      "llm",
-      "benchmark"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T19:54:13.000Z",
-    "view_count": 22330
-  },
-  {
-    "title": "Alphabet’s record-breaking $85B raise for Google’s AI business is a helluva good signal",
-    "summary": "If Alphabet's record-breaking $85 billion stock sale signals investor appetite for AI-related offerings, we can see that investors are ready to chow.",
-    "content": "If Alphabet's record-breaking $85 billion stock sale signals investor appetite for AI-related offerings, we can see that investors are ready to chow.",
-    "source_url": "https://techcrunch.com/2026/06/03/alphabets-record-breaking-85b-raise-for-googles-ai-business-is-a-helluva-good-signal/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T19:38:32.000Z",
-    "view_count": 23845
-  },
-  {
-    "title": "Google lets sites opt out of AI search results, knowing most have nowhere else to go",
-    "summary": "For the first time, Google is giving website operators an opt-out toggle in Search Console for AI search features like AI Overviews and AI Mode, which together already reach more than 3.5 billion monthly users. New performance reports break out impressions…",
-    "content": "For the first time, Google is giving website operators an opt-out toggle in Search Console for AI search features like AI Overviews and AI Mode, which together already reach more than 3.5 billion monthly users. New performance reports break out impressions separately. The move was prompted by the UK's Competition and Markets Authority (CMA), which sees website operators at a severe disadvantage.\n\nThe article Google lets sites opt out of AI search results, knowing most have nowhere else to go appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/google-lets-sites-opt-out-of-ai-search-results-knowing-most-have-nowhere-else-to-go/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2026/05/google_logo_wall.png",
-    "category_slug": "ai-search",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-search"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T19:28:29.000Z",
-    "view_count": 25242
+    "view_count": 16775
   },
   {
     "title": "Google's new Gemma 4 12B model is designed to run on any laptop with 16GB of RAM",
@@ -148,52 +167,16 @@
     "source_url": "https://arstechnica.com/google/2026/06/googles-new-gemma-4-open-ai-model-is-sized-for-your-laptop/",
     "source_name": "Ars Technica",
     "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2025/11/Gemma-social-share.width-1300-1152x648.jpg",
-    "category_slug": "llm",
+    "category_slug": "ai-search",
     "ai_model_slug": "gemini",
     "read_time": 2,
     "tags": [
       "gemini",
-      "llm"
+      "ai-search"
     ],
     "is_trending": false,
     "published_at": "2026-06-03T19:10:03.000Z",
-    "view_count": 17045
-  },
-  {
-    "title": "Google’s Dreambeans, its weirdest-named AI tool to date, will turn your life into a cartoon",
-    "summary": "Dreambeans is a curated list of AI-illustrated \"stories\" culled from the personal data in your Google account.",
-    "content": "Dreambeans is a curated list of AI-illustrated \"stories\" culled from the personal data in your Google account.",
-    "source_url": "https://techcrunch.com/2026/06/03/googles-dreambeans-its-weirdest-named-ai-tool-to-date-will-turn-your-life-into-a-cartoon/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T19:07:42.000Z",
-    "view_count": 23735
-  },
-  {
-    "title": "Ideogram 4.0 drops as an open-weight model with native 2K resolution and improved text rendering",
-    "summary": "Ideogram releases version 4.0 of its text-to-image model as an open-weight model with native 2K resolution, bounding box control, and improved text rendering. On the DesignArena leaderboard, it ranks first among all open models; only closed systems from…",
-    "content": "Ideogram releases version 4.0 of its text-to-image model as an open-weight model with native 2K resolution, bounding box control, and improved text rendering. On the DesignArena leaderboard, it ranks first among all open models; only closed systems from OpenAI and Google score higher. Commercial use requires a paid license.\n\nThe article Ideogram 4.0 drops as an open-weight model with native 2K resolution and improved text rendering appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/ideogram-4-0-drops-as-an-open-weight-model-with-native-2k-resolution-and-improved-text-rendering/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2026/06/ideogram_4_astronaut-2.webp",
-    "category_slug": "image-gen",
-    "ai_model_slug": "ideogram",
-    "read_time": 1,
-    "tags": [
-      "ideogram",
-      "image-gen",
-      "release"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T18:34:36.000Z",
-    "view_count": 16483
+    "view_count": 14269
   },
   {
     "title": "Trump plan to test AI models has a problem—US security teams were gutted by DOGE",
@@ -210,111 +193,7 @@
     ],
     "is_trending": true,
     "published_at": "2026-06-03T18:11:15.000Z",
-    "view_count": 24117
-  },
-  {
-    "title": "Trump's new executive order wants AI companies to voluntarily submit models for government safety reviews",
-    "summary": "The White House has issued an executive order requiring agencies like the Pentagon and CISA to strengthen cyber defense with AI tools within 30 days. AI developers can voluntarily submit models for security testing, but the order explicitly rules out…",
-    "content": "The White House has issued an executive order requiring agencies like the Pentagon and CISA to strengthen cyber defense with AI tools within 30 days. AI developers can voluntarily submit models for security testing, but the order explicitly rules out mandatory approval. Given recent government pressure on AI companies, how voluntary this cooperation really is remains an open question.\n\nThe article Trump's new executive order wants AI companies to voluntarily submit models for government safety reviews appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/trumps-new-executive-order-wants-ai-companies-to-voluntarily-submit-models-for-government-safety-reviews/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2026/03/us_flag_neural_network-2.png",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T17:55:21.000Z",
-    "view_count": 24335
-  },
-  {
-    "title": "Amazon will show AI product images when you search for some reason",
-    "summary": "Amazon will use visual search and AI to show AI-generated product images that match your search queries. The retailer says it will help guide users to products.",
-    "content": "Amazon will use visual search and AI to show AI-generated product images that match your search queries. The retailer says it will help guide users to products.",
-    "source_url": "https://techcrunch.com/2026/06/03/amazon-will-show-ai-product-images-when-you-search-for-some-reason/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T15:50:26.000Z",
-    "view_count": 23978
-  },
-  {
-    "title": "These two founders left Goldman and Meta to build voice AI for markets everyone else overlooked",
-    "summary": "The startup's own stack for Africa and Middle East is now handling more than 17,000 calls per day.",
-    "content": "The startup's own stack for Africa and Middle East is now handling more than 17,000 calls per day.",
-    "source_url": "https://techcrunch.com/2026/06/03/these-two-founders-left-goldman-and-meta-to-build-voice-ai-for-markets-everyone-else-overlooked/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "music-audio",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "music-audio"
-    ],
-    "is_trending": true,
-    "published_at": "2026-06-03T15:00:00.000Z",
-    "view_count": 21559
-  },
-  {
-    "title": "Publishers will be able to opt out of AI Search, thanks to new regulation",
-    "summary": "U.K. regulators are requiring Google offer a tool allowing website publishers to opt-out of generative AI search features. The option will be tested in the U.K. then rolled out globally.",
-    "content": "U.K. regulators are requiring Google offer a tool allowing website publishers to opt-out of generative AI search features. The option will be tested in the U.K. then rolled out globally.",
-    "source_url": "https://techcrunch.com/2026/06/03/publishers-will-be-able-to-opt-out-of-ai-search-thanks-to-new-regulation/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-search",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-search",
-      "regulation"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T14:58:33.000Z",
-    "view_count": 19149
-  },
-  {
-    "title": "Perplexity announces hybrid AI system that decides what runs locally or in the cloud",
-    "summary": "Perplexity has announced an orchestrator that combines AI models running on your own computer with powerful cloud models and automatically decides which task gets processed where.\nThe article Perplexity announces hybrid AI system that decides what runs…",
-    "content": "Perplexity has announced an orchestrator that combines AI models running on your own computer with powerful cloud models and automatically decides which task gets processed where.\n\nThe article Perplexity announces hybrid AI system that decides what runs locally or in the cloud appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/perplexity-announces-hybrid-ai-system-that-decides-what-runs-locally-or-in-the-cloud/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2026/02/perplexity_computer.png",
-    "category_slug": "ai-search",
-    "ai_model_slug": "perplexity",
-    "read_time": 1,
-    "tags": [
-      "perplexity",
-      "ai-search"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T13:40:16.000Z",
-    "view_count": 19827
-  },
-  {
-    "title": "Meta’s AI agent for WhatsApp Business is now available globally",
-    "summary": "WhatsApp will charge businesses for using its AI agent based on token usage.",
-    "content": "WhatsApp will charge businesses for using its AI agent based on token usage.",
-    "source_url": "https://techcrunch.com/2026/06/03/metas-ai-agent-for-whatsapp-business-is-now-available-globally/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-agent",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-agent"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T13:40:00.000Z",
-    "view_count": 19262
+    "view_count": 21635
   },
   {
     "title": "Inside Meta's attempts to play catch-up with AI",
@@ -323,172 +202,15 @@
     "source_url": "https://arstechnica.com/ai/2026/06/inside-metas-attempts-to-play-catch-up-with-ai/",
     "source_name": "Ars Technica",
     "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/bluealexandr-1152x648.jpg",
-    "category_slug": "ai-ml",
+    "category_slug": "ai-search",
     "ai_model_slug": null,
     "read_time": 1,
     "tags": [
-      "ai-ml"
+      "ai-search"
     ],
-    "is_trending": false,
+    "is_trending": true,
     "published_at": "2026-06-03T13:35:58.000Z",
-    "view_count": 18634
-  },
-  {
-    "title": "Coralogix raises $200M on bet that someone needs to watch the AI agents",
-    "summary": "Coralogix is among a growing number of infrastructure firms betting that as AI systems move into production, demand will rise for tools that can monitor their behavior, troubleshoot failures, and provide the operational data needed to keep them running…",
-    "content": "Coralogix is among a growing number of infrastructure firms betting that as AI systems move into production, demand will rise for tools that can monitor their behavior, troubleshoot failures, and provide the operational data needed to keep them running reliably.",
-    "source_url": "https://techcrunch.com/2026/06/03/coralogix-raises-200m-in-race-to-build-the-monitoring-layer-for-ai-agents/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-agent",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-agent"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T13:02:51.000Z",
-    "view_count": 17898
-  },
-  {
-    "title": "5 ways Google Search can level up your thrift and vintage shopping",
-    "summary": "Uncover second-hand scores with AI tools in Google Search and Shopping.",
-    "content": "Uncover second-hand scores with AI tools in Google Search and Shopping.",
-    "source_url": "https://blog.google/products-and-platforms/products/search/thrifting-tips/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Google_Thrifting_Header.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T13:00:00.000Z",
-    "view_count": 15768
-  },
-  {
-    "title": "AI music startup Suno doubles its valuation to $5.4 billion while fighting major record labels in court",
-    "summary": "AI music startup Suno has raised $400 million at a $5.4 billion valuation.\nThe article AI music startup Suno doubles its valuation to $5.4 billion while fighting major record labels in court appeared first on The Decoder.",
-    "content": "AI music startup Suno has raised $400 million at a $5.4 billion valuation.\n\nThe article AI music startup Suno doubles its valuation to $5.4 billion while fighting major record labels in court appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/ai-music-startup-suno-doubles-its-valuation-to-5-4-billion-while-fighting-major-record-labels-in-court/",
-    "source_name": "The Decoder",
-    "image_url": "https://the-decoder.com/wp-content/uploads/2024/05/suno_ai_noise-e1716716082736.png",
-    "category_slug": "music-audio",
-    "ai_model_slug": "suno",
-    "read_time": 1,
-    "tags": [
-      "suno",
-      "music-audio"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T11:21:11.000Z",
-    "view_count": 19874
-  },
-  {
-    "title": "Nous Research releases Hermes Desktop, an open-source AI agent for every platform",
-    "summary": "Nous Research has released Hermes Desktop, an open-source AI agent app under the MIT license. \nThe article Nous Research releases Hermes Desktop, an open-source AI agent for every platform appeared first on The Decoder.",
-    "content": "Nous Research has released Hermes Desktop, an open-source AI agent app under the MIT license.\n\nThe article Nous Research releases Hermes Desktop, an open-source AI agent for every platform appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/nous-research-releases-hermes-desktop-an-open-source-ai-agent-for-every-platform/",
-    "source_name": "The Decoder",
-    "image_url": "http://the-decoder.com/wp-content/uploads/2026/06/hermes-desktop.mp4",
-    "category_slug": "ai-agent",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-agent",
-      "release",
-      "research"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T10:56:38.000Z",
-    "view_count": 16492
-  },
-  {
-    "title": "Build 2026: Microsoft tops Google in image generation while playing catch-up on reasoning",
-    "summary": "At Build 2026, Microsoft announced seven new AI models developed in-house, including its first reasoning model. The company also introduced a new tuning method and an autonomous background agent.\nThe article Build 2026: Microsoft tops Google in image…",
-    "content": "At Build 2026, Microsoft announced seven new AI models developed in-house, including its first reasoning model. The company also introduced a new tuning method and an autonomous background agent.\n\nThe article Build 2026: Microsoft tops Google in image generation while playing catch-up on reasoning appeared first on The Decoder.",
-    "source_url": "https://the-decoder.com/build-2026-microsoft-tops-google-in-image-generation-while-playing-catch-up-on-reasoning/",
-    "source_name": "The Decoder",
-    "image_url": "http://the-decoder.de/wp-content/uploads/2026/06/Edit-with-AI-using-MAI_2.mp4",
-    "category_slug": "image-gen",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "image-gen"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-03T10:48:19.000Z",
-    "view_count": 16711
-  },
-  {
-    "title": "Cyera eyes $12B valuation at 80x ARR multiple despite operating losses",
-    "summary": "The cybersecurity company is nearing a $300 million round led by Evolution Equity Partners.",
-    "content": "The cybersecurity company is nearing a $300 million round led by Evolution Equity Partners.",
-    "source_url": "https://techcrunch.com/2026/06/02/cyera-eyes-12b-valuation-at-80x-arr-multiple-despite-operating-losses/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-02T22:50:56.000Z",
-    "view_count": 15993
-  },
-  {
-    "title": "Microsoft's Project Solara is an Android OS designed for agents instead of apps",
-    "summary": "Microsoft missed the boat on apps, so get ready for agents.",
-    "content": "Microsoft has been deeply committed to the growth of generative AI technology in recent years through its now-fragmented partnership with OpenAI. At Build 2026, the company remains all-in on AI, and it's looking toward the future with a new software platform. The new Android-based OS is called Project Solara, and Microsoft says Solara is designed to run agents instead of apps.\n\nProject Solara is not something you'll have to worry about killing your apps anytime soon. It's limited to a few pieces of concept hardware and software that are awaiting the magical agents of the future. The vision is for Solara to run on myriad specialized devices with interfaces generated on the spot, and it's all powered by the explosive intelligence of models that Microsoft and others insist will soon exist.\n\nAccording to Microsoft, Solara is a chip-to-cloud platform intended to free agents from reliance on single interfaces. Much of Microsoft's messaging around AI is speculative and self-serving, but the company rightly points out that new computing form factors have always required specialization, and that process is complex and expensive. The shift to mobile computing, for example, tripped Microsoft up multiple times as it fell behind on app availability, security, and long-term support.\n\nRead full article\n\nComments",
-    "source_url": "https://arstechnica.com/gadgets/2026/06/microsofts-project-solara-is-an-android-os-designed-for-agents-instead-of-apps/",
-    "source_name": "Ars Technica",
-    "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/00_Title-Page-scaled-1-1152x648.png",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 2,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-02T20:47:54.000Z",
-    "view_count": 17453
-  },
-  {
-    "title": "Uber caps employee AI spending after blowing through budget in 4 months",
-    "summary": "Uber's cutback has occurred after the company had reportedly encouraged staff to use AI as much as possible.",
-    "content": "Uber's cutback has occurred after the company had reportedly encouraged staff to use AI as much as possible.",
-    "source_url": "https://techcrunch.com/2026/06/02/uber-caps-employee-ai-spending-after-blowing-through-budget-in-four-months/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-02T19:11:48.000Z",
-    "view_count": 19921
-  },
-  {
-    "title": "New Microsoft tool lets devs spin up AI behavior tests using text descriptions",
-    "summary": "Microsoft on Tuesday took the wraps off Adaptive Spec-driven Scoring for Evaluation and Regression Testing, an open source framework for spinning up AI evaluations.",
-    "content": "Microsoft on Tuesday took the wraps off Adaptive Spec-driven Scoring for Evaluation and Regression Testing, an open source framework for spinning up AI evaluations.",
-    "source_url": "https://techcrunch.com/2026/06/02/new-microsoft-tool-lets-devs-spin-up-ai-behavior-tests-using-text-descriptions/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml",
-      "open-source"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-02T19:02:21.000Z",
-    "view_count": 11572
+    "view_count": 17590
   },
   {
     "title": "Mathematicians warn of AI threats to profession as industry encroaches",
@@ -497,32 +219,15 @@
     "source_url": "https://arstechnica.com/tech-policy/2026/06/mathematicians-warn-of-ai-threats-to-profession-as-industry-encroaches/",
     "source_name": "Ars Technica",
     "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/Mathematics-formula-1152x648.jpg",
-    "category_slug": "education",
+    "category_slug": "ai-search",
     "ai_model_slug": null,
     "read_time": 1,
     "tags": [
-      "education"
+      "ai-search"
     ],
     "is_trending": false,
     "published_at": "2026-06-02T18:19:06.000Z",
-    "view_count": 12852
-  },
-  {
-    "title": "Martin Scorsese becomes the latest — and most unlikely — Hollywood voice for AI",
-    "summary": "The caveat is that one of the world's most famous living directors is using the tech solely for storyboarding.",
-    "content": "The caveat is that one of the world's most famous living directors is using the tech solely for storyboarding.",
-    "source_url": "https://techcrunch.com/2026/06/02/martin-scorsese-becomes-the-latest-and-most-unlikely-hollywood-voice-for-ai/",
-    "source_name": "TechCrunch",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-02T18:16:53.000Z",
-    "view_count": 18506
+    "view_count": 14102
   },
   {
     "title": "Android phones will soon be able to detect spoofed calls and impersonation scams",
@@ -531,15 +236,15 @@
     "source_url": "https://arstechnica.com/gadgets/2026/06/google-announces-deepfake-call-detection-for-android-new-airdrop-device-support/",
     "source_name": "Ars Technica",
     "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2025/06/Android-IO-1152x648.jpg",
-    "category_slug": "ai-ml",
+    "category_slug": "music-audio",
     "ai_model_slug": null,
     "read_time": 2,
     "tags": [
-      "ai-ml"
+      "music-audio"
     ],
     "is_trending": false,
     "published_at": "2026-06-02T18:00:46.000Z",
-    "view_count": 10589
+    "view_count": 11848
   },
   {
     "title": "Rehumanizing global health care with agentic AI",
@@ -554,9 +259,9 @@
     "tags": [
       "ai-agent"
     ],
-    "is_trending": false,
+    "is_trending": true,
     "published_at": "2026-06-02T11:23:34.000Z",
-    "view_count": 16837
+    "view_count": 17819
   },
   {
     "title": "How small businesses can leverage AI",
@@ -565,16 +270,16 @@
     "source_url": "https://www.technologyreview.com/2026/06/02/1138227/how-small-businesses-can-leverage-ai/",
     "source_name": "MIT Technology Review",
     "image_url": null,
-    "category_slug": "llm",
+    "category_slug": "ai-search",
     "ai_model_slug": null,
     "read_time": 2,
     "tags": [
-      "llm",
+      "ai-search",
       "research"
     ],
     "is_trending": false,
     "published_at": "2026-06-02T09:00:00.000Z",
-    "view_count": 10773
+    "view_count": 11479
   },
   {
     "title": "AI costs how much? GitHub Copilot users react to new usage-based pricing system.",
@@ -592,7 +297,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-06-01T22:18:09.000Z",
-    "view_count": 13637
+    "view_count": 14066
   },
   {
     "title": "Hackers duped Meta AI support chatbot to steal celebrity Instagram accounts",
@@ -608,9 +313,9 @@
       "meta-ai",
       "llm"
     ],
-    "is_trending": false,
+    "is_trending": true,
     "published_at": "2026-06-01T20:44:37.000Z",
-    "view_count": 17249
+    "view_count": 17401
   },
   {
     "title": "Florida sues OpenAI, Sam Altman after multiple ChatGPT-linked murders",
@@ -619,16 +324,16 @@
     "source_url": "https://arstechnica.com/tech-policy/2026/06/florida-sues-openai-sam-altman-after-multiple-chatgpt-linked-murders/",
     "source_name": "Ars Technica",
     "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/GettyImages-2265991640-1024x648.jpg",
-    "category_slug": "llm",
+    "category_slug": "education",
     "ai_model_slug": "chatgpt",
     "read_time": 1,
     "tags": [
       "chatgpt",
-      "llm"
+      "education"
     ],
     "is_trending": false,
     "published_at": "2026-06-01T18:52:19.000Z",
-    "view_count": 13885
+    "view_count": 13760
   },
   {
     "title": "From 15 hours to one minute: How AI/ML is speeding up GM's development",
@@ -637,138 +342,15 @@
     "source_url": "https://arstechnica.com/cars/2026/06/from-15-hours-to-one-minute-how-ai-ml-is-speeding-up-gms-development/",
     "source_name": "Ars Technica",
     "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/CoSim-SG1-1152x648.jpeg",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 2,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-01T17:41:47.000Z",
-    "view_count": 12789
-  },
-  {
-    "title": "Allegedly trashing Airbnbs to test robots puts startup in legal trouble",
-    "summary": "Lawsuit seeks $12,000 from startup that allegedly damaged home in robot tests.",
-    "content": "A San Francisco robotics startup is being taken to court by an Airbnb host who claims the company’s “robotic prototype testing” caused extensive damage to his home.\n\nIn the lawsuit filed on May 26, 2026, Sean Donovan is seeking more than $12,000 in damages from the Bay Area startup The Bot Company. The court case was first reported by SFGate, which also interviewed Donovan about the unprecedented mess he encountered after the startup’s employees supposedly rented his former childhood home through Airbnb.\n\nThe first clue that the guests were not typical tech startup employees needing a temporary crash pad came when Donovan was taking care of the trash during the guests’ stay. He told SFGate about seeing “bundles of wires” throughout the house and a robot he described as a 6-foot-tall “Roomba with treads” that also resembled the cybernetic Borg from the Star Trek universe.\n\nRead full article\n\nComments",
-    "source_url": "https://arstechnica.com/ai/2026/06/allegedly-trashing-airbnbs-to-test-robots-puts-startup-in-legal-trouble/",
-    "source_name": "Ars Technica",
-    "image_url": "https://cdn.arstechnica.net/wp-content/uploads/2026/06/GettyImages-2248542588-1152x648.jpg",
     "category_slug": "3d-spatial",
     "ai_model_slug": null,
-    "read_time": 1,
+    "read_time": 2,
     "tags": [
       "3d-spatial"
     ],
     "is_trending": false,
-    "published_at": "2026-06-01T17:17:55.000Z",
-    "view_count": 10713
-  },
-  {
-    "title": "How we used Gemini to build Google I/O 2026",
-    "summary": "Learn how Googlers used AI to produce Google I/O 2026.",
-    "content": "Learn how Googlers used AI to produce Google I/O 2026.",
-    "source_url": "https://blog.google/innovation-and-ai/technology/ai/io-2026-google-ai/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/AI_IO.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": "gemini",
-    "read_time": 1,
-    "tags": [
-      "gemini",
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-06-01T16:00:00.000Z",
-    "view_count": 15980
-  },
-  {
-    "title": "Take our I/O 2026 quiz, vibe coded in Google AI Studio.",
-    "summary": "We used Google AI Studio to vibe code a quiz about our top I/O 2026 announcements.",
-    "content": "We used Google AI Studio to vibe code a quiz about our top I/O 2026 announcements.",
-    "source_url": "https://blog.google/innovation-and-ai/technology/ai/io-2026-vibe-coded-quiz/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/IOQuiz2026_social.max-600x600.format-webp.webp",
-    "category_slug": "coding",
-    "ai_model_slug": "gemini",
-    "read_time": 1,
-    "tags": [
-      "gemini",
-      "coding"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-29T19:00:00.000Z",
-    "view_count": 13696
-  },
-  {
-    "title": "9 demos of Gemini Omni and Gemini 3.5 in action",
-    "summary": "Watch 9 videos showing the capabilities of Gemini Omni and Gemini 3.5, announced at Google I/O 2026.",
-    "content": "Watch 9 videos showing the capabilities of Gemini Omni and Gemini 3.5, announced at Google I/O 2026.",
-    "source_url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-omni-3-5-videos/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Gemini_Omni_and_Gemini_3.5_hero.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": "gemini",
-    "read_time": 1,
-    "tags": [
-      "gemini",
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-29T17:30:00.000Z",
-    "view_count": 12114
-  },
-  {
-    "title": "Check out real-life AI prototypes from the Futures Lab.",
-    "summary": "University of Waterloo students develop AI prototypes like sign language tutors to reshape the future of education and work.",
-    "content": "University of Waterloo students develop AI prototypes like sign language tutors to reshape the future of education and work.",
-    "source_url": "https://blog.google/innovation-and-ai/technology/ai/university-waterloo-labs/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/FutureLabs_social.max-600x600.format-webp.webp",
-    "category_slug": "education",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "education"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-29T12:00:00.000Z",
-    "view_count": 9552
-  },
-  {
-    "title": "How the Pope’s Magnifica Humanitas offers a template for individuals to meet the AI moment",
-    "summary": "Pope Leo XIV’s new encyclical on artificial intelligence includes a statement that warrants serious attention from technologists and policymakers: “Technology is never neutral.” Magnifica Humanitas (“Magnificent Humanity”) is a clarion call to all people to…",
-    "content": "Pope Leo XIV’s new encyclical on artificial intelligence includes a statement that warrants serious attention from technologists and policymakers: “Technology is never neutral.” Magnifica Humanitas (“Magnificent Humanity”) is a clarion call to all people to act with courage and solidarity as we enter an age already being transformed by artificial intelligence, the greatest change in human life since the Industrial Revolution. As the pope says, the choice before us—the choice AI presents—is one between the Tower of Babel and the rebuilding of our common humanity.\n\nIn the biblical story of the Tower of Babel, humans sought to build a massive structure that reached all the way to Heaven, only to have their project thwarted when God made those involved unable to understand one another. It was a pursuit fixated on relentless growth, divorced from any concern about God’s commandments or the human cost. It resulted in failure and atomization.\n\nThe Book of Nehemiah, however, offers a contrasting narrative, in which the rebuilding of Jerusalem after a period of violence and displacement becomes an opportunity for humanity to show its collaborative resilience. As the encyclical puts it, “The city is reborn, not through the initiative of one man, but through the shared responsibility of all: men, women, priests, artisans, heads of households and young people all play a part. It is an undertaking with God at the center, which rebuilds relationships before rebuilding with stones.”",
-    "source_url": "https://www.technologyreview.com/2026/05/29/1138107/how-the-popes-magnifica-humanitas-offers-a-template-for-individuals-to-meet-the-ai-moment/",
-    "source_name": "MIT Technology Review",
-    "image_url": null,
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 2,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-29T10:00:00.000Z",
-    "view_count": 15503
-  },
-  {
-    "title": "Catch up on 12 major I/O 2026 moments",
-    "summary": "Here are 12 of the biggest Google I/O 2026 keynote moments, including news about Gemini Omni, Gemini 3.5 Flash and more.",
-    "content": "Here are 12 of the biggest Google I/O 2026 keynote moments, including news about Gemini Omni, Gemini 3.5 Flash and more.",
-    "source_url": "https://blog.google/innovation-and-ai/technology/ai/io-2026-keynote-moment-videos/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/KW_KNH.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": "gemini",
-    "read_time": 1,
-    "tags": [
-      "gemini",
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-28T15:00:00.000Z",
-    "view_count": 14002
+    "published_at": "2026-06-01T17:41:47.000Z",
+    "view_count": 12388
   },
   {
     "title": "The AI Hype Index: AI gets booed in graduation season",
@@ -785,7 +367,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-05-28T09:51:11.000Z",
-    "view_count": 10810
+    "view_count": 12131
   },
   {
     "title": "Rethinking organizational design in the age of agentic AI",
@@ -803,7 +385,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-05-26T14:54:10.000Z",
-    "view_count": 10632
+    "view_count": 11677
   },
   {
     "title": "A reality check on the AI jobs hysteria",
@@ -820,7 +402,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-05-26T09:00:00.000Z",
-    "view_count": 12938
+    "view_count": 13706
   },
   {
     "title": "It’s time to address the looming crisis in entry-level work",
@@ -829,32 +411,15 @@
     "source_url": "https://www.technologyreview.com/2026/05/26/1137865/its-time-to-address-the-looming-crisis-in-entry-level-work/",
     "source_name": "MIT Technology Review",
     "image_url": null,
-    "category_slug": "ai-ml",
+    "category_slug": "coding",
     "ai_model_slug": null,
     "read_time": 2,
     "tags": [
-      "ai-ml"
+      "coding"
     ],
     "is_trending": false,
     "published_at": "2026-05-26T09:00:00.000Z",
-    "view_count": 13039
-  },
-  {
-    "title": "Catch up on the Dialogues stage at Google I/O 2026.",
-    "summary": "A recap of the 2026 I/O Dialogues, where leaders discuss the future of AI, quantum computing, robotics and creativity.",
-    "content": "A recap of the 2026 I/O Dialogues, where leaders discuss the future of AI, quantum computing, robotics and creativity.",
-    "source_url": "https://blog.google/innovation-and-ai/technology/ai/io-2026-dialogues-recap/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/IO26_Dialogues_3z680sK.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-22T18:00:00.000Z",
-    "view_count": 7858
+    "view_count": 13531
   },
   {
     "title": "Google I/O showed how the path for AI-driven science is shifting",
@@ -863,85 +428,16 @@
     "source_url": "https://www.technologyreview.com/2026/05/22/1137813/google-i-o-showed-how-the-path-for-ai-science-is-shifting/",
     "source_name": "MIT Technology Review",
     "image_url": null,
-    "category_slug": "ai-ml",
+    "category_slug": "ai-agent",
     "ai_model_slug": "gemini",
     "read_time": 1,
     "tags": [
       "gemini",
-      "ai-ml"
+      "ai-agent"
     ],
     "is_trending": false,
     "published_at": "2026-05-22T10:00:00.000Z",
-    "view_count": 10587
-  },
-  {
-    "title": "Roundtables: Can AI Learn to Understand the World?",
-    "summary": "Listen to the session or watch below AI companies want to build systems that understand the external world and overcome the limitations of LLMs. Recent developments have brought world models to the forefront of the AI discussion. Watch a conversation with…",
-    "content": "Listen to the session or watch below\n\nAI companies want to build systems that understand the external world and overcome the limitations of LLMs. Recent developments have brought world models to the forefront of the AI discussion.\n\nWatch a conversation with editor in chief Mat Honan, senior AI editor Will Douglas Heaven, and AI reporter Grace Huckins exploring how AI might enter the physical world.\n\nSpeakers: Mat Honan, Editor in Chief, Will Douglas Heaven, AI Senior Editor, and Grace Huckins, AI Reporter\n\nRecorded on May 21, 2026\n\nRelated Stories:\n\nHow Pokémon Go is giving delivery robots an inch-perfect view of the world\n\n10 Things That Matter in AI Right Now: World Models\n\nYann LeCun has a bold new vision for the future of AI",
-    "source_url": "https://www.technologyreview.com/2026/05/21/1137756/roundtables-can-ai-learn-to-understand-the-world/",
-    "source_name": "MIT Technology Review",
-    "image_url": null,
-    "category_slug": "3d-spatial",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "3d-spatial"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-21T20:41:05.000Z",
-    "view_count": 11723
-  },
-  {
-    "title": "We’re announcing new community investments in Missouri.",
-    "summary": "We’re helping build the state’s next-generation workforce and investing in energy programs.",
-    "content": "We’re helping build the state’s next-generation workforce and investing in energy programs.",
-    "source_url": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/missouri-programs/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/MissouriSocial.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-20T20:40:00.000Z",
-    "view_count": 13220
-  },
-  {
-    "title": "100 things we announced at I/O 2026",
-    "summary": "We've been busy! Here’s a rundown of the top announcements, launches and demos at I/O 2026.",
-    "content": "We've been busy! Here’s a rundown of the top announcements, launches and demos at I/O 2026.",
-    "source_url": "https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/100_things_Social.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml",
-      "launch"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-20T19:30:00.000Z",
-    "view_count": 11449
-  },
-  {
-    "title": "A new experiment brings better group meetings to Google Beam",
-    "summary": "See and hear your colleagues in true-to-life size and sound, making hybrid meetings feel more inclusive and connected.",
-    "content": "See and hear your colleagues in true-to-life size and sound, making hybrid meetings feel more inclusive and connected.",
-    "source_url": "https://blog.google/innovation-and-ai/models-and-research/google-research/google-beam-group-meetings/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Screenshot_2026-05-15_at_4.21.2.max-600x600.format-webp.webp",
-    "category_slug": "ai-ml",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-ml"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-20T16:45:00.000Z",
-    "view_count": 8931
+    "view_count": 11087
   },
   {
     "title": "Google just redesigned the search box for the first time in 25 years — here’s why it matters more than you think.",
@@ -962,42 +458,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-05-19T17:45:00.000Z",
-    "view_count": 4397
-  },
-  {
-    "title": "How AI Mode is changing the way people search in the U.S.",
-    "summary": "One year after launch, see how AI Mode’s users are shifting from keywords to natural language queries.",
-    "content": "One year after launch, see how AI Mode’s users are shifting from keywords to natural language queries.",
-    "source_url": "https://blog.google/products-and-platforms/products/search/ai-mode-us-insights/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/AI_Mode_US.max-600x600.format-webp.webp",
-    "category_slug": "ai-search",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "ai-search",
-      "launch"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-19T17:45:00.000Z",
-    "view_count": 11969
-  },
-  {
-    "title": "New ways to create and get things done in Google Workspace",
-    "summary": "Announcing new voice capabilities in Gmail, Docs and Keep, a new design tool called Google Pics and updates to AI Inbox.",
-    "content": "Announcing new voice capabilities in Gmail, Docs and Keep, a new design tool called Google Pics and updates to AI Inbox.",
-    "source_url": "https://blog.google/products-and-platforms/products/workspace/workspace-updates/",
-    "source_name": "Google AI",
-    "image_url": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/GoogleWorkspace-IO.max-600x600.format-webp.webp",
-    "category_slug": "design-ui",
-    "ai_model_slug": null,
-    "read_time": 1,
-    "tags": [
-      "design-ui"
-    ],
-    "is_trending": false,
-    "published_at": "2026-05-19T17:45:00.000Z",
-    "view_count": 9109
+    "view_count": 5764
   },
   {
     "title": "Railway secures $100 million to challenge AWS with AI-native cloud infrastructure",
@@ -1018,7 +479,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-01-22T14:00:00.000Z",
-    "view_count": 8211
+    "view_count": 9872
   },
   {
     "title": "Claude Code costs up to $200 a month. Goose does the same thing for free.",
@@ -1028,10 +489,10 @@
     "source_name": "VentureBeat",
     "image_url": "https://images.ctfassets.net/jdtwqhzvc2n1/1U9H8GLIqoGqKpitVfgw3T/ba56292f99409eca709dac0b176ec245/nuneybits_Vector_art_of_white_goose_silhouette_flying_through_c_8100d5a7-9e36-4ed6-a188-016470e1d0e1.webp?w=300&q=30",
     "category_slug": "ai-search",
-    "ai_model_slug": "qwen",
+    "ai_model_slug": "claude",
     "read_time": 2,
     "tags": [
-      "qwen",
+      "claude",
       "ai-search",
       "open-source",
       "benchmark",
@@ -1039,7 +500,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-01-19T14:00:00.000Z",
-    "view_count": 6711
+    "view_count": 8095
   },
   {
     "title": "Listen Labs raises $69M after viral billboard hiring stunt to scale AI customer interviews",
@@ -1049,18 +510,18 @@
     "source_name": "VentureBeat",
     "image_url": "https://images.ctfassets.net/jdtwqhzvc2n1/4gD12ThOmNHZuosqC4xCTz/277b1e8968da602108a29fae2eaca440/nuneybits_Vector_art_of_billboard_with_cryptic_code_dbe5b0ff-7644-45e6-a1ca-4a5dceeff986.webp?w=300&q=30",
     "category_slug": "ai-search",
-    "ai_model_slug": "claude",
+    "ai_model_slug": null,
     "read_time": 2,
     "tags": [
-      "claude",
       "ai-search",
       "funding",
       "launch",
-      "research"
+      "research",
+      "enterprise"
     ],
     "is_trending": false,
     "published_at": "2026-01-16T14:01:00.000Z",
-    "view_count": 8324
+    "view_count": 9431
   },
   {
     "title": "Salesforce rolls out new Slackbot AI agent as it battles Microsoft and Google in workplace AI",
@@ -1081,7 +542,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-01-13T13:00:00.000Z",
-    "view_count": 3601
+    "view_count": 4432
   },
   {
     "title": "Anthropic launches Cowork, a Claude Desktop agent that works in your files — no coding required",
@@ -1102,7 +563,7 @@
     ],
     "is_trending": false,
     "published_at": "2026-01-12T11:30:00.000Z",
-    "view_count": 9471
+    "view_count": 10025
   },
   {
     "title": "Nous Research's NousCoder-14B is an open-source coding model landing right in the Claude Code moment",
@@ -1112,10 +573,10 @@
     "source_name": "VentureBeat",
     "image_url": "https://images.ctfassets.net/jdtwqhzvc2n1/66Tw6dMGGoSZZOK6XB6gm6/0fafc7520898e26c88edf1de9e74e863/nuneybits_Vector_art_of_radiant_skull_emitting_code_beams_deep__17d19acc-0af7-41ad-ac28-16f09ef5234b.webp?w=300&q=30",
     "category_slug": "ai-agent",
-    "ai_model_slug": "qwen",
+    "ai_model_slug": "claude",
     "read_time": 1,
     "tags": [
-      "qwen",
+      "claude",
       "ai-agent",
       "funding",
       "benchmark",
@@ -1123,6 +584,6 @@
     ],
     "is_trending": false,
     "published_at": "2026-01-07T20:00:00.000Z",
-    "view_count": 9366
+    "view_count": 9643
   }
 ]

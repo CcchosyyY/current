@@ -55,11 +55,11 @@ const ALLOW_ANON = process.argv.includes("--allow-anon-insert");
 // ── Feeds ──────────────────────────────────────────────────────────────────
 const FEEDS = [
   { url: "https://techcrunch.com/category/artificial-intelligence/feed/", source: "TechCrunch" },
-  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat" },
+  { url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", source: "The Verge" },
+  { url: "https://www.wired.com/feed/tag/ai/latest/rss", source: "Wired" },
   { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica" },
-  { url: "https://the-decoder.com/feed/", source: "The Decoder" },
+  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat" },
   { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Technology Review" },
-  { url: "https://blog.google/technology/ai/rss/", source: "Google AI" },
 ];
 
 const PER_FEED = 12; // cap items per feed
@@ -132,6 +132,14 @@ const CATEGORY_RULES = [
   ["coding", ["ai coding", "coding model", "coding assistant", "coding tool", "code generation", "code completion", "ai pair programmer", "vibe code", "vibe-coded", "github copilot", "claude code", "software developer", "writing code", "developer tool", "competitive programming", "code editor"]],
   ["education", ["research paper", "study finds", "working paper", "university", "scientists", "mathematicians", "education", "tutor", "ai for science"]],
   ["productivity", ["productivity", "workflow automation", "enterprise ai", "back-office", "automate complex", "workplace ai", "operating model", "expense report"]],
+  // Industry / business topics — placed before the generic `llm` bucket so AI
+  // industry news (funding, data centers, regulation) is captured. Ordered
+  // specific → broad (business' funding/investor terms are widest, so it's last).
+  ["infrastructure", ["data center", "data centers", "datacenter", "data-center", " compute ", "gpu cluster", "h100", "h200", "blackwell", "power grid", "electricity demand", "energy demand", "water use", "cooling system", "server farm", "cloud capacity", "cloud infrastructure", "ai-native", "ai infrastructure", "supercomputer"]],
+  ["security", ["data breach", "hacked", " hack ", "hacker", "cyberattack", "cybersecurity", "vulnerability", "exploit", "malware", "ransomware", "phishing", "ai security", "jailbreak", "prompt injection", "leaked data", "security flaw"]],
+  ["hardware", ["chipmaker", "semiconductor", "tsmc", "ai chip", "gpu shortage", "wearable", "airpods", "smart glasses", "laptop", "smartphone", "neural processing", "silicon foundry", "foundry"]],
+  ["policy", ["regulation", "regulator", "regulatory", "lawsuit", " sues ", " sued ", " court ", "courts ", "lawmaker", "legislation", "ban on", "white house", "congress", "senate", "eu ai act", " ftc ", "antitrust", "executive order", "copyright suit", "privacy law"]],
+  ["business", [" ipo ", "raises $", "raised $", "secures $", "funding round", "series a", "series b", "series c", "venture capital", "valuation", "acquisition", "acquires", "merger", "equity stake", "stake in", "investor", "investment", "stock market", "wall street", "trillionaire", "billionaire", "share price", "s&p 500", "market cap", "earnings", "going public", " funding "]],
   ["llm", ["language model", "large language model", " llm ", " llms ", "chatbot", "reasoning model", "frontier model", "foundation model", "open-weight", "open-source model", "multimodal model", "gemma", "ai model"]],
 ];
 
@@ -156,6 +164,21 @@ const MODEL_CATEGORY = {
   manus: "multimodal", higgsfield: "multimodal", genspark: "search", glean: "search",
   qwen: "open-source", "kimi-k2": "open-source", ideogram: "image", recraft: "image", cline: "code",
 };
+
+// Article categories considered "AI model / AI tech" — these are KEPT by the
+// scope filter. The site is scoped to model + AI-tech news, so anything else is
+// dropped at crawl time unless the article is tagged with a specific model.
+const TECH_CATEGORIES = new Set([
+  "llm", "image-gen", "video-gen", "music-audio", "coding", "ai-search",
+  "ai-agent", "subtitle-translation", "design-ui", "writing", "productivity",
+  "3d-spatial", "education",
+]);
+// Industry / peripheral topics (funding, data centers, regulation, chips,
+// security). Classified ONLY so the scope filter can exclude them — they have no
+// sidebar category and never reach the DB unless the article is model-tagged.
+const INDUSTRY_CATEGORIES = new Set([
+  "business", "infrastructure", "policy", "hardware", "security",
+]);
 
 // ── Text helpers ───────────────────────────────────────────────────────────
 function decodeEntities(s) {
@@ -193,17 +216,57 @@ function firstImage(html) {
   const m = String(html || "").match(/<img[^>]+src=["']([^"']+)["']/i);
   return m ? m[1] : null;
 }
-function classify(text) {
-  const t = " " + text.toLowerCase() + " ";
+// Model attribution favors PRECISION: a model is attributed only when the
+// article is actually about it, not when it's mentioned in passing as a tool.
+//   1) title match           → definitely the subject
+//   2) body mentions it >= 2x → the article centers on it (title may omit it)
+//   3) a single body mention  → ignored (passing reference)
+// LIMITATION: keyword rules can't separate a passing tool mention from the
+// subject when an industry story is misclassified into a tech category, so a few
+// business articles still leak through the scope filter. Planned follow-up: an
+// LLM (Claude Haiku) classification pass for semantic accuracy.
+const BODY_MENTION_THRESHOLD = 2;
+
+function classify(title, body) {
+  const t = " " + title.toLowerCase() + " ";
+  const full = " " + (title + " " + body).toLowerCase() + " ";
+
   let model = null;
+  let titleMatched = false;
   for (const [slug, kws] of MODEL_RULES) {
-    if (kws.some((k) => t.includes(k))) { model = slug; break; }
+    if (kws.some((k) => t.includes(k))) { model = slug; titleMatched = true; break; }
   }
+  if (!model) {
+    // No title hit — attribute the most-mentioned model that clears the
+    // threshold, so a body that centers on one model still gets tagged.
+    let best = null, bestCount = 0;
+    for (const [slug, kws] of MODEL_RULES) {
+      let count = 0;
+      for (const k of kws) count += full.split(k).length - 1;
+      if (count >= BODY_MENTION_THRESHOLD && count > bestCount) {
+        best = slug;
+        bestCount = count;
+      }
+    }
+    model = best;
+  }
+
   let category = null;
   for (const [slug, kws] of CATEGORY_RULES) {
-    if (kws.some((k) => t.includes(k))) { category = slug; break; }
+    if (kws.some((k) => full.includes(k))) { category = slug; break; }
   }
-  if (!category && model) category = MODEL_CAT_TO_ARTICLE[MODEL_CATEGORY[model]] || "ai-ml";
+
+  // A body-only model hit inside an industry story is a passing mention of a
+  // vendor/tool, not the subject (e.g. "Railway raises $100M ... AI-native"
+  // repeating "Claude", or an Elon Musk markets story repeating "Grok").
+  // Drop the attribution so it's treated as the industry news it actually is.
+  if (model && !titleMatched && INDUSTRY_CATEGORIES.has(category)) {
+    model = null;
+  }
+  // A genuine model article belongs in a tech category, never an industry/empty one.
+  if (model && (!category || INDUSTRY_CATEGORIES.has(category))) {
+    category = MODEL_CAT_TO_ARTICLE[MODEL_CATEGORY[model]] || "llm";
+  }
   if (!category) category = "ai-ml";
   return { model, category };
 }
@@ -244,6 +307,7 @@ function pickImage(item) {
 async function crawl() {
   const seen = new Set();
   const rows = [];
+  let dropped = 0;
   for (const feed of FEEDS) {
     try {
       const parsed = await parser.parseURL(feed.url);
@@ -261,7 +325,15 @@ async function crawl() {
         let content = toParagraphs(html, 1600);
         if (content.length < 80) content = snippet || summary;
         const blob = `${title} ${snippet}`;
-        const { model, category } = classify(blob);
+        const { model, category } = classify(title, `${snippet} ${content}`);
+
+        // Scope filter: keep only model-tagged OR AI-tech articles. Industry /
+        // peripheral news (funding, policy, data centers, hardware, security)
+        // and uncategorized general news are excluded from the site.
+        if (!model && !TECH_CATEGORIES.has(category)) {
+          dropped++;
+          continue;
+        }
         const words = content.split(/\s+/).length;
 
         rows.push({
@@ -285,6 +357,7 @@ async function crawl() {
       console.log(`  ✗ ${feed.source}: ${e.message}`);
     }
   }
+  if (dropped > 0) console.log(`  (excluded ${dropped} off-topic / industry items)`);
   return rows;
 }
 
