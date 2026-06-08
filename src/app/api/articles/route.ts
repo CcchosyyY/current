@@ -67,6 +67,34 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Resolve the AI model filter. Accept either a UUID (ai_model_id) or a slug
+    // — the model detail modal only knows the slug, so we look it up the same way
+    // categories are resolved above.
+    let aiModelId: string | null = null;
+    if (ai_model) {
+      const UUID_RE =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (UUID_RE.test(ai_model)) {
+        aiModelId = ai_model;
+      } else {
+        const { data: modelData } = await supabase
+          .from("ai_models")
+          .select("id")
+          .eq("slug", ai_model)
+          .single();
+        if (modelData) aiModelId = modelData.id;
+
+        // A model was requested but does not exist → return an empty page rather
+        // than falling through to an unfiltered (all-articles) query.
+        if (!aiModelId) {
+          return NextResponse.json({
+            data: [],
+            pagination: { page, limit, total: 0, totalPages: 0 },
+          });
+        }
+      }
+    }
+
     let query = supabase
       .from("articles")
       .select(
@@ -84,9 +112,9 @@ export async function GET(request: NextRequest) {
       query = query.eq("category_id", categoryId);
     }
 
-    // Filter by AI model id
-    if (ai_model) {
-      query = query.eq("ai_model_id", ai_model);
+    // Filter by AI model (resolved from slug or UUID above)
+    if (aiModelId) {
+      query = query.eq("ai_model_id", aiModelId);
     }
 
     // Full-text search.

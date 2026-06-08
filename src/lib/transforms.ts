@@ -1,4 +1,5 @@
 import type { Article, CategorySlug, AIModelSlug } from "./types";
+import { isRenderableImageUrl } from "./image-config";
 
 // Shape returned by Supabase articles query with joined relations
 export interface DBArticleRow {
@@ -27,7 +28,10 @@ export function dbArticleToArticle(row: DBArticleRow): Article {
     content: row.content ?? "",
     source: row.source_name,
     sourceUrl: row.source_url,
-    imageUrl: row.image_url,
+    // Crawled image_urls are untrusted: drop anything next/image would reject
+    // (http://, video files, non-allowlisted hosts) so <Image> never throws and
+    // crashes the page — the consumer just renders without an image instead.
+    imageUrl: isRenderableImageUrl(row.image_url) ? row.image_url : null,
     category: (row.categories?.slug ?? "ai-ml") as CategorySlug,
     aiModel: (row.ai_models?.slug ?? null) as AIModelSlug | null,
     publishedAt: row.published_at ?? row.created_at,
