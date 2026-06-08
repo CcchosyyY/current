@@ -117,25 +117,21 @@ export async function GET(request: NextRequest) {
       query = query.eq("ai_model_id", aiModelId);
     }
 
-    // Full-text search.
-    // Escape LIKE metacharacters, then strip PostgREST `.or()` grammar
-    // characters (comma, parentheses, double-quote) so a crafted search term
-    // cannot inject additional filter clauses into the or() expression.
+    // Full-text search over the weighted `search_vector` column
+    // (title > summary > content). `websearch` parses the term with
+    // websearch_to_tsquery — it handles multi-word, "quoted phrases",
+    // and -exclusions, and is passed as a bound parameter so there is no
+    // injection surface (unlike the previous ilike + .or() string).
     if (search) {
-      const escaped = search
-        .replace(/\\/g, "\\\\")
-        .replace(/%/g, "\\%")
-        .replace(/_/g, "\\_")
-        .replace(/[,()"]/g, " ")
-        .trim();
-      if (escaped) {
-        query = query.or(
-          `title.ilike.%${escaped}%,summary.ilike.%${escaped}%`,
-        );
+      const trimmed = search.trim();
+      if (trimmed) {
+        query = query.textSearch("search_vector", trimmed, {
+          type: "websearch",
+          config: "english",
+        });
       } else {
-        // A non-empty search that reduced entirely to stripped/whitespace
-        // characters (e.g. "()", ",") must not fall through to an unfiltered
-        // all-articles query — return an empty page instead.
+        // Whitespace-only search must not fall through to an unfiltered
+        // (all-articles) query — return an empty page instead.
         return NextResponse.json({
           data: [],
           pagination: { page, limit, total: 0, totalPages: 0 },

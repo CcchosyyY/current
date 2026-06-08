@@ -3,13 +3,12 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Minus, ChevronUp, LayoutGrid, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AI_MODELS } from "@/lib/constants";
 import ModelCard from "@/components/ModelCard";
 import { useArticles } from "@/lib/hooks/useArticles";
-import { resolveArticleLogo } from "@/lib/article-logo";
+import ArticleLogo from "@/components/ArticleLogo";
 import { getRelativeTimeShort, formatDate } from "@/lib/utils";
 import type { AIModelFilter } from "@/lib/types";
 
@@ -135,8 +134,6 @@ export default function DashboardPage() {
                     }
                   >
                     {articles.map((article, idx) => {
-                      // 로고 우선순위: AI 모델 → 본문에서 감지한 회사 → 사이트 로고(파란 삼각형)
-                      const logo = resolveArticleLogo(article);
                       return (
                       <Link
                         key={article.id}
@@ -147,41 +144,7 @@ export default function DashboardPage() {
                             : ""
                         }`}
                       >
-                        {logo.kind === "model" ? (
-                          <Image
-                            src={logo.src}
-                            alt={logo.alt}
-                            width={18}
-                            height={18}
-                            className="shrink-0"
-                          />
-                        ) : logo.kind === "company" ? (
-                          // 회사 로고는 ico/png/jpeg 등 혼합 포맷 → 일반 img 사용
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={logo.src}
-                            alt={logo.alt}
-                            width={18}
-                            height={18}
-                            className="shrink-0 rounded-sm object-contain"
-                          />
-                        ) : (
-                          // 매칭되는 로고가 없으면 사이트 로고(파란 삼각형)
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            className="shrink-0 text-primary"
-                            aria-hidden
-                          >
-                            <path
-                              d="M10.5 2L4 20h16L10.5 2z"
-                              fill="currentColor"
-                              opacity="0.9"
-                            />
-                          </svg>
-                        )}
+                        <ArticleLogo article={article} size={18} />
 
                         <span className="flex-1 min-w-0 text-[11px] font-medium truncate group-hover:text-primary transition-colors">
                           {article.aiModel && (

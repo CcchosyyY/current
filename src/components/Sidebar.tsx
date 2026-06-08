@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain,
   MessageSquare,
@@ -19,6 +20,7 @@ import {
   Box,
   GraduationCap,
   LayoutGrid,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
@@ -250,42 +252,67 @@ export default function Sidebar({
         {sidebarContent}
       </aside>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={onMobileClose}
-            aria-hidden="true"
-          />
+      {/* Mobile overlay — fade backdrop + slide-in drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="lg:hidden fixed inset-0 z-40 flex"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div
+              className="fixed inset-0 bg-black/50"
+              onClick={onMobileClose}
+              aria-hidden="true"
+            />
 
-          <aside className="relative z-50 w-[260px] h-full bg-bg-sidebar border-r border-border-subtle flex flex-col py-5 px-4 shrink-0 overflow-y-auto">
-            <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
-              Main
-            </h3>
+            <motion.aside
+              className="relative z-50 w-[260px] h-full bg-bg-sidebar border-r border-border-subtle flex flex-col py-5 px-4 shrink-0 overflow-y-auto overscroll-contain"
+              role="dialog"
+              aria-modal="true"
+              aria-label="카테고리 메뉴"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
+            >
+              <button
+                onClick={onMobileClose}
+                aria-label="메뉴 닫기"
+                className="self-end mb-1 p-1.5 rounded-md text-text-tertiary hover:text-text-primary hover:bg-white/[0.04] transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
 
-            <nav aria-label="Core category navigation" className="flex flex-col gap-0.5">
-              {coreCategories.map((cat) =>
-                renderCategoryItem(cat, activeCategory === cat.slug)
-              )}
-            </nav>
+              <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
+                Main
+              </h3>
 
-            <div className="my-3 mx-2.5">
-              <div className="h-px bg-border-subtle" />
-            </div>
+              <nav aria-label="Core category navigation" className="flex flex-col gap-0.5">
+                {coreCategories.map((cat) =>
+                  renderCategoryItem(cat, activeCategory === cat.slug)
+                )}
+              </nav>
 
-            <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
-              More
-            </h3>
+              <div className="my-3 mx-2.5">
+                <div className="h-px bg-border-subtle" />
+              </div>
 
-            <nav aria-label="Extended category navigation" className="flex flex-col gap-0.5 flex-1">
-              {extendedCategories.map((cat) =>
-                renderCategoryItem(cat, activeCategory === cat.slug)
-              )}
-            </nav>
-          </aside>
-        </div>
-      )}
+              <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
+                More
+              </h3>
+
+              <nav aria-label="Extended category navigation" className="flex flex-col gap-0.5 flex-1">
+                {extendedCategories.map((cat) =>
+                  renderCategoryItem(cat, activeCategory === cat.slug)
+                )}
+              </nav>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
