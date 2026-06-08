@@ -36,7 +36,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="h-[48px] w-full bg-bg-page border-b border-border-subtle grid grid-cols-3 items-center pl-4 md:pl-6 lg:pl-10 pr-12 md:pr-20 lg:pr-28">
+      <header className="h-[48px] w-full bg-bg-page border-b border-border-subtle grid grid-cols-3 items-center pl-4 md:pl-6 lg:pl-10 pr-16 md:pr-28 lg:pr-40">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0 justify-self-start">
           <svg

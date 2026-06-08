@@ -111,19 +111,38 @@ export function createRateLimiter(opts: { windowMs: number; max: number }) {
 export function verifyOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   // For mutation requests, require at least Origin or Referer
   const source = origin || referer;
   if (!source) return false;
 
+  let sourceHost: string;
   try {
-    const sourceUrl = new URL(source);
-    const expectedUrl = new URL(siteUrl);
-    return sourceUrl.host === expectedUrl.host;
+    sourceHost = new URL(source).host;
   } catch {
     return false;
   }
+
+  // Primary check: the source host must match the host the request was
+  // actually sent to. This works on any port/domain (dev or prod) without
+  // hardcoding, and still blocks cross-origin requests. Behind a proxy the
+  // public host arrives in x-forwarded-host.
+  const requestHost =
+    request.headers.get("x-forwarded-host") || request.headers.get("host");
+  if (requestHost && sourceHost === requestHost) return true;
+
+  // Fallback: an explicitly configured site URL (covers setups where the
+  // Host header is rewritten and x-forwarded-host is unavailable).
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) {
+    try {
+      if (sourceHost === new URL(siteUrl).host) return true;
+    } catch {
+      // ignore malformed config
+    }
+  }
+
+  return false;
 }
 
 /** Safely parse JSON body, returning null on failure. */

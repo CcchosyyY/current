@@ -45,7 +45,7 @@ export function useArticles(params: UseArticlesParams = {}): UseArticlesReturn {
       setError(null);
 
       const searchParams = new URLSearchParams();
-      if (category && category !== "ai-ml") searchParams.set("category", category);
+      if (category && category !== "all") searchParams.set("category", category);
       if (search) searchParams.set("search", search);
       searchParams.set("sort", sort);
       searchParams.set("page", String(page));

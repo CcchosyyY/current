@@ -74,6 +74,12 @@ export default async function ArticleDetailPage({
         </div>
       </div>
 
+      <ArticleActions
+        articleId={article.id}
+        articleTitle={article.title}
+        sourceUrl={article.sourceUrl}
+      />
+
       {article.imageUrl && (
         <div className="w-full aspect-video rounded-xl overflow-hidden mb-8 bg-bg-card border border-border-subtle relative">
           <Image
@@ -114,12 +120,6 @@ export default async function ArticleDetailPage({
           </div>
         )}
       </article>
-
-      <ArticleActions
-        articleId={article.id}
-        articleTitle={article.title}
-        sourceUrl={article.sourceUrl}
-      />
     </div>
   );
 }

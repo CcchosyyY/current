@@ -40,7 +40,7 @@ export default function ArticleActions({
   const BookmarkIcon = bookmarked ? BookmarkCheck : Bookmark;
 
   return (
-    <div className="flex items-center gap-3 mt-8 pt-6 border-t border-border-subtle">
+    <div className="flex flex-wrap items-center gap-3 mb-8 pb-6 border-b border-border-subtle">
       <button
         aria-label="Save article"
         className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border rounded-lg transition-colors cursor-pointer ${

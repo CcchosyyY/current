@@ -3,6 +3,7 @@ import type { AIModel, Category, NewsletterIssue } from "./types";
 // Sidebar navigation categories (matches the Pencil design)
 export const CATEGORIES: Category[] = [
   // Core
+  { slug: "all", name: "전체", icon: "layout-grid", color: "#94A3B8", group: "core" },
   { slug: "ai-ml", name: "AI / ML", icon: "brain", color: "#3B82F6", group: "core" },
   { slug: "llm", name: "LLM / 챗봇", icon: "message-square", color: "#10B981", group: "core" },
   { slug: "image-gen", name: "이미지 생성", icon: "image", color: "#A855F7", group: "core" },

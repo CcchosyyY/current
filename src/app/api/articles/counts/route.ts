@@ -7,14 +7,19 @@ export async function GET() {
 
     const { data: articles, error } = await supabase
       .from("articles")
-      .select("category_id, categories(slug)");
+      .select("category_id, categories(slug), published_at, created_at");
 
     if (error) {
       return NextResponse.json({ error: "Failed to fetch counts" }, { status: 500 });
     }
 
     const counts: Record<string, number> = {};
+    const fresh: Record<string, number> = {};
     let total = 0;
+    let freshTotal = 0;
+
+    // "New" = published (falling back to collected) within the last 6 hours
+    const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
 
     for (const article of articles ?? []) {
       total++;
@@ -22,9 +27,15 @@ export async function GET() {
       if (slug) {
         counts[slug] = (counts[slug] ?? 0) + 1;
       }
+
+      const ts = article.published_at ?? article.created_at;
+      if (ts && new Date(ts).getTime() >= sixHoursAgo) {
+        freshTotal++;
+        if (slug) fresh[slug] = (fresh[slug] ?? 0) + 1;
+      }
     }
 
-    const response = NextResponse.json({ data: counts, total });
+    const response = NextResponse.json({ data: counts, total, fresh, freshTotal });
     response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
     return response;
   } catch {

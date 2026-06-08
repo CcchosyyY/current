@@ -79,7 +79,7 @@ export type AIModelSlug =
   | "higgsfield";
 
 export interface Category {
-  slug: CategorySlug;
+  slug: CategorySlug | "all";
   name: string;
   icon: string; // lucide-react icon name
   color: string; // hex color for icon background

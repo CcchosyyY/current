@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { User, Settings, LogOut } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LogOut, LogIn, Bookmark, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function UserMenu() {
+  const { user, isLoading } = useAuth();
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Close on outside click
   useEffect(() => {
@@ -30,6 +37,60 @@ export default function UserMenu() {
     return () => document.removeEventListener("keydown", handleKey);
   }, [open]);
 
+  async function handleSignIn() {
+    setBusy(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    // On success the browser navigates away to Google; only reset on failure.
+    if (error) setBusy(false);
+  }
+
+  async function handleSignOut() {
+    setBusy(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setOpen(false);
+    setBusy(false);
+    router.refresh();
+  }
+
+  // While resolving the session, show a neutral placeholder.
+  if (isLoading) {
+    return (
+      <div className="w-8 h-8 rounded-full bg-bg-surface border border-border-subtle animate-pulse" />
+    );
+  }
+
+  // Not signed in → a button that kicks off Google OAuth directly.
+  if (!user) {
+    return (
+      <button
+        onClick={handleSignIn}
+        disabled={busy}
+        aria-label="Sign in with Google"
+        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary border border-border-subtle hover:border-border-strong rounded-lg px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {busy ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <LogIn size={16} />
+        )}
+        <span className="hidden sm:inline">Sign in</span>
+      </button>
+    );
+  }
+
+  // Signed in → avatar + dropdown.
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ||
+    user.email ||
+    "User";
+  const initial = (displayName[0] || "U").toUpperCase();
+
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -37,7 +98,19 @@ export default function UserMenu() {
         aria-label="User menu"
         className="w-8 h-8 rounded-full bg-bg-surface border border-border-subtle overflow-hidden flex items-center justify-center cursor-pointer"
       >
-        <span className="text-xs font-medium text-text-secondary">U</span>
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span className="text-xs font-medium text-text-secondary">
+            {initial}
+          </span>
+        )}
       </button>
 
       <AnimatePresence>
@@ -51,38 +124,41 @@ export default function UserMenu() {
           >
             {/* User info */}
             <div className="px-4 py-3">
-              <p className="text-sm font-medium text-text-primary">Guest</p>
-              <p className="text-xs text-text-tertiary">guest@current.app</p>
+              <p className="text-sm font-medium text-text-primary truncate">
+                {displayName}
+              </p>
+              <p className="text-xs text-text-tertiary truncate">
+                {user.email}
+              </p>
             </div>
 
             <div className="border-t border-border-subtle" />
 
             {/* Menu items */}
             <div className="py-1">
-              <button
-                disabled
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary opacity-50 cursor-not-allowed hover:bg-bg-surface transition-colors"
+              <Link
+                href="/saved"
+                onClick={() => setOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-surface hover:text-text-primary transition-colors"
               >
-                <User size={16} />
-                Profile
-              </button>
-              <button
-                disabled
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary opacity-50 cursor-not-allowed hover:bg-bg-surface transition-colors"
-              >
-                <Settings size={16} />
-                Settings
-              </button>
+                <Bookmark size={16} />
+                Saved
+              </Link>
             </div>
 
             <div className="border-t border-border-subtle" />
 
             <div className="py-1">
               <button
-                disabled
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary opacity-50 cursor-not-allowed hover:bg-bg-surface transition-colors"
+                onClick={handleSignOut}
+                disabled={busy}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-surface hover:text-text-primary transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <LogOut size={16} />
+                {busy ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <LogOut size={16} />
+                )}
                 Sign Out
               </button>
             </div>

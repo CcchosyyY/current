@@ -18,6 +18,7 @@ import {
   Bot,
   Box,
   GraduationCap,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
@@ -41,6 +42,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   bot: Bot,
   box: Box,
   "graduation-cap": GraduationCap,
+  "layout-grid": LayoutGrid,
 };
 
 interface SidebarProps {
@@ -86,9 +88,10 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeCategory = searchParams.get("category") || "ai-ml";
+  const activeCategory = searchParams.get("category") || "all";
 
-  const { counts: categoryCounts, total } = useCategoryCounts();
+  const { counts: categoryCounts, total, fresh: freshCounts, freshTotal } =
+    useCategoryCounts();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -106,14 +109,17 @@ export default function Sidebar({
 
   function renderCategoryItem(cat: (typeof CATEGORIES)[number], isActive: boolean) {
     const Icon = ICON_MAP[cat.icon] || Brain;
+    const count = cat.slug === "all" ? total : categoryCounts[cat.slug] ?? 0;
+    const hasFresh =
+      (cat.slug === "all" ? freshTotal : freshCounts[cat.slug] ?? 0) > 0;
 
     return (
       <Link
         key={cat.slug}
         href={`${pathname}?category=${cat.slug}`}
         title={collapsed ? cat.name : undefined}
-        className={`group flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg transition-all duration-150 ${
-          collapsed ? "justify-center" : ""
+        className={`group relative flex items-center gap-3 py-[7px] rounded-lg transition-all duration-150 ${
+          collapsed ? "justify-center px-2.5" : "pl-3.5 pr-2.5"
         } ${
           isActive
             ? "text-white"
@@ -121,16 +127,38 @@ export default function Sidebar({
         }`}
         style={
           isActive
-            ? { backgroundColor: `${cat.color}20`, }
-            : undefined
+            ? ({ backgroundColor: `${cat.color}20`, "--cat-color": cat.color } as React.CSSProperties)
+            : ({ "--cat-color": cat.color } as React.CSSProperties)
         }
       >
-        {/* Colored icon */}
-        <Icon
-          size={16}
-          className="shrink-0 transition-transform duration-150 group-hover:scale-110"
-          style={{ color: cat.color }}
-        />
+        {/* Active accent bar */}
+        {isActive && (
+          <span
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full"
+            style={{ backgroundColor: cat.color }}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Icon: text color by default, category color on hover/active */}
+        <span className="relative shrink-0">
+          <Icon
+            size={16}
+            className={`transition-all duration-150 group-hover:scale-110 ${
+              isActive
+                ? "[color:var(--cat-color)]"
+                : "text-text-secondary group-hover:[color:var(--cat-color)]"
+            }`}
+          />
+          {/* NEW indicator (collapsed view) */}
+          {hasFresh && collapsed && (
+            <span
+              className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-bg-sidebar animate-pulse"
+              style={{ backgroundColor: cat.color }}
+              aria-hidden="true"
+            />
+          )}
+        </span>
 
         {!collapsed && (
           <>
@@ -143,14 +171,24 @@ export default function Sidebar({
             >
               {cat.name}
             </span>
-            {(cat.slug === "ai-ml" ? total : categoryCounts[cat.slug]) > 0 && (
+            {/* NEW indicator (expanded view) */}
+            {hasFresh && (
               <span
-                className={`text-[10px] font-bold tabular-nums ${
-                  isActive ? "" : "opacity-50"
+                className="h-1.5 w-1.5 rounded-full animate-pulse"
+                style={{ backgroundColor: cat.color }}
+                title="최근 6시간 내 새 글"
+                aria-label="새 글 있음"
+              />
+            )}
+            {count > 0 && (
+              <span
+                className={`text-[10px] font-bold tabular-nums transition-colors duration-150 ${
+                  isActive
+                    ? "[color:var(--cat-color)]"
+                    : "text-text-secondary group-hover:[color:var(--cat-color)]"
                 }`}
-                style={{ color: cat.color }}
               >
-                {cat.slug === "ai-ml" ? total : categoryCounts[cat.slug]}
+                {count}
               </span>
             )}
           </>

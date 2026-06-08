@@ -5,10 +5,14 @@ import { useState, useEffect } from "react";
 export function useCategoryCounts(): {
   counts: Record<string, number>;
   total: number;
+  fresh: Record<string, number>;
+  freshTotal: number;
   isLoading: boolean;
 } {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [total, setTotal] = useState(0);
+  const [fresh, setFresh] = useState<Record<string, number>>({});
+  const [freshTotal, setFreshTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +23,8 @@ export function useCategoryCounts(): {
         const json = await res.json();
         setCounts(json.data);
         setTotal(json.total);
+        setFresh(json.fresh ?? {});
+        setFreshTotal(json.freshTotal ?? 0);
       } catch {
         // Silently fail — counts are non-critical
       } finally {
@@ -29,5 +35,5 @@ export function useCategoryCounts(): {
     fetchCounts();
   }, []);
 
-  return { counts, total, isLoading };
+  return { counts, total, fresh, freshTotal, isLoading };
 }
