@@ -67,6 +67,16 @@ CREATE TABLE IF NOT EXISTS articles (
   ) STORED
 );
 
+-- 기존 articles 테이블이 이미 있는 환경에선 위 CREATE TABLE이 no-op이라
+-- search_vector 컬럼이 안 생긴다. 이 멱등 ALTER가 그 경우 컬럼을 추가한다
+-- (신규 환경에선 컬럼이 이미 있어 no-op). 아래 GIN 인덱스보다 반드시 먼저 와야 한다.
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('english', coalesce(title, '')),   'A') ||
+    setweight(to_tsvector('english', coalesce(summary, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(content, '')), 'C')
+  ) STORED;
+
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category_id);
 CREATE INDEX IF NOT EXISTS idx_articles_ai_model ON articles(ai_model_id);
