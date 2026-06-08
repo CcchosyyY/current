@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { resolveArticleLogo } from "@/lib/article-logo";
 
 interface ArticleLogoProps {
@@ -25,8 +24,10 @@ export default function ArticleLogo({
   const logo = resolveArticleLogo(article);
 
   if (logo.kind === "model") {
+    // 로컬 정적 SVG → next/image 최적화 이득 0 (dangerouslyAllowSVG:false), plain img가 더 가벼움
     return (
-      <Image
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
         src={logo.src}
         alt={logo.alt}
         width={size}

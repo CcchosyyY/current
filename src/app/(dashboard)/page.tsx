@@ -133,8 +133,7 @@ export default function DashboardPage() {
                       newsMaxHeight ? { maxHeight: newsMaxHeight } : undefined
                     }
                   >
-                    {articles.map((article, idx) => {
-                      return (
+                    {articles.map((article, idx) => (
                       <Link
                         key={article.id}
                         href={`/article/${article.id}`}
@@ -162,8 +161,7 @@ export default function DashboardPage() {
                           {getRelativeTimeShort(article.publishedAt)}
                         </span>
                       </Link>
-                      );
-                    })}
+                    ))}
                   </div>
                 )}
               </div>
