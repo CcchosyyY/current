@@ -9,6 +9,7 @@
 ## 🔥 Now — 지금 (1~3개만)
 
 - [ ] (사용자) 로그인 → 북마크 → `/saved` end-to-end 1회 확인
+- [ ] 크롤러 자동 실행 — GitHub Actions cron으로 N시간마다 (현재 수동 `node scripts/crawl-articles.mjs`) · 브랜치 `feat/trending`
 
 ## ⏭️ Next — 다음
 
@@ -32,12 +33,19 @@
 - [ ] error.tsx / loading.tsx, 페이지별 SEO 메타데이터(generateMetadata)
 - [ ] 대시보드 서버/클라이언트 컴포넌트 분리 (번들 최적화)
 
+**Trending 페이지 개편** (현재: `view_count` 내림차순 정렬 + 기간 클라 필터뿐)
+- [ ] 실제 조회수 추적 — 기사 열람 시 `view_count` +1 (RPC/API). 현재는 크롤마다 합성값 재계산 (`crawl-articles.mjs:638-649`)
+- [ ] `is_trending` 실제화 — 크롤러 합성 플래그 → 조회수 + 최신성 신호 기반으로
+- [ ] UI/UX 개선 — 순위 변동(▲▼) 실제 데이터화(지금은 isTrending→고정 ↗/−), 1~3위 강조, 빈상태·스켈레톤 다듬기, 모바일 레이아웃
+- [ ] 기간 필터 서버화 — 현재 마운트 시점 `Date.now()` 기준 클라 필터(부정확) → 쿼리로 이관
+- [ ] 기사 로고 fallback(모델→회사→사이트) Trending에도 적용 (위 Next 항목과 동일)
+
 **폴리싱 / 인프라**
 - [ ] Nunito 한글 폴백(Noto Sans KR), 사이드바 반응형, 라이트/다크 토글
 - [ ] CSP unsafe-inline/eval 제거(nonce 기반), 페이지 전환 애니메이션
 - [ ] Rate limiter 인메모리 → Upstash Redis
 - [ ] Vercel 배포+Cron / CI·CD(GitHub Actions) / E2E(Playwright)
-- [ ] 크롤러 Claude API 요약 + 자동 실행(Cron)
+- [ ] 크롤러 Claude API 기사 요약 (현재 RSS snippet 그대로 사용) — 자동 실행(Cron)은 Now로 이동
 
 **Figma 디자인 시스템** (파일 `SwGySWU706nVMABEEK65hC`)
 - [ ] 모델 모달 시안(node 46:2) 다듬기 → 코드 / 5개 페이지 컴포넌트 인스턴스화
