@@ -25,6 +25,7 @@ export const CATEGORIES: Category[] = [
 export const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/trending", label: "Trending" },
+  { href: "/models", label: "Models" },
   { href: "/saved", label: "Saved" },
   { href: "/newsletter", label: "Newsletter" },
 ] as const;
