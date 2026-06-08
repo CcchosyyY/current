@@ -1,5 +1,8 @@
 # Done
 
+> **블로그 발행 대기 버퍼** — 직전 1개 세션 섹션만 유지하고, 블로그 발행 후 비웁니다.
+> 영구 기록: `git log --oneline`(한 일) · `docs/worklog/<기능>.md`(왜/어떻게)
+
 ## 2026-06-08 — Google 로그인 완성 · 모델 페이지/모달 개편 · 크롤러 스코프 (멀티에이전트)
 
 > 같은 워킹트리에서 3개 컨텍스트 병렬 작업. 영역별 상세는 `docs/worklog/{auth-and-ui,ai-model-pages,crawler}.md` 참고.
@@ -33,98 +36,3 @@
 - `constants.ts`의 `/models` NAV 한 줄은 다른 컨텍스트의 `all` 카테고리 추가와 섞여 별도 커밋(0f19fe5)으로 정리됨.
 
 ---
-
-## 2026-06-06 — 모델 상세 모달 · 회사 로고 라이브러리 · 뉴스 스크롤
-
-### 완료 항목
-- **Today's AI News**: 처음 5개만 보이고 내부 스크롤 (5번째 기사 높이를 동적 측정해 컨테이너 높이 고정)
-- **기사 로고 fallback 체계**: AI 모델 → 본문에서 감지한 회사 → 사이트 로고(파란 삼각형) 우선순위
-- **회사 로고 라이브러리**: 미국 시총 상위 + AI 기업 171곳 데이터(`companies.ts`), 로고 170개 다운로드(DuckDuckGo→Google fallback, 로컬 저장)
-- **기사↔회사 자동 매칭**(`company-match`): 제목·매체명에서 회사 감지, 요약 제외로 오탐 차단
-- **모델 상세 모달**(`ModelDetailModal`): AI Models 카드 클릭 → 브랜드 글로우 헤더·로고·태그·시총/창립/본사 stat·About·링크. Figma에 먼저 디자인 후 코드 구현
-- **ModelCard**: hover popover 제거 → 클릭 모달 방식
-
-### 작업 방식
-- 디자인 리서치(앱스토어 anatomy·다크모드 모달 best practice) → Figma 모달 시안(브랜드 글로우 + surface 레이어) → 코드 구현
-- Figma 스크린샷 렌더 버그 발견 후 워크플로 전환: **localhost 러프 구현 → Figma 상세 → 코드 반영**
-- 검증: `tsc --noEmit` 통과, dev 런타임 `/`·`/models` 200
-
-### 변경 사항
-
-| 영역 | 변경 내용 |
-|------|-----------|
-| 모달 | `ModelDetailModal` 신규, `ModelCard` 클릭 모달로 재작성(hover 제거) |
-| 데이터 | `companies.ts`(171곳 + 상세 18곳), `company-logos.json`, `findCompany`/`COMPANY_DETAILS` |
-| 로고 | `scripts/fetch-company-logos.mjs`, `public/icons/companies` 170개, `google.svg` |
-| 기사 | `article-logo`·`company-match`, 대시보드 로고 fallback + Today's News 스크롤 |
-
-### 아키텍처 노트
-- 회사 로고는 ico/png/jpeg 혼합 포맷 → `company-logos.json` 맵으로 확장자 관리, `<img>` 렌더(외부 의존 0, 로컬 저장)
-- Figma MCP `get_screenshot`이 굵은 텍스트를 흰 박스로 렌더하는 버그 → 실제 파일/웹은 정상. 이후 localhost 우선 작업으로 전환
-- Figma 모달 시안: node `46:2` (fileKey `SwGySWU706nVMABEEK65hC`)
-
----
-
-## 2026-06-04 — 코드 점검 · UI 정리 · 신규 모델 · 분류 개선 · 보안 (멀티에이전트)
-
-### 완료 항목
-- **데이터 복구**: Supabase `zlpdtswbgteufzszjigy` 재가동 → 코드 정합 스키마 재구축(카테고리 14·모델 37), RSS 크롤러 신규 작성 → 기사 63건 적재, 클릭→상세 end-to-end 검증
-- **신규 AI 모델 13개**(2025–26 트렌드, 웹 리서치 검증): Sora·Veo·Kling·ElevenLabs·Manus·Genspark·Qwen·Kimi K2·Ideogram·Recraft·Glean·Cline·Higgsfield → constants/types/DB/스키마 + monogram 아이콘
-- **모델 hover 상세 모달**(`ModelCard`) + **`/models` See-All 페이지**(카테고리 필터)
-- **기사 분류 정확도 개선**: 부분일치 오탐 제거(coding 16→4), intent(검색/에이전트) 우선, 신규 모델 트리거 → 재크롤
-- **보안**: `.or()` 검색 인젝션 차단, 이미지 `**`→CDN 허용목록(SSRF/오픈프록시 차단), 크롤러 anon 쓰기 가드, 기사 ID UUID 검증
-- **정확성/UI**: 미존재 카테고리 빈결과, bookmarks 모델 slug, 배열 가드, 트렌딩 기본기간/NaN, 전역 focus-visible 링, Toast aria-live, Header ⌘/Ctrl 분기 등
-
-### 작업 방식
-- Claude Code 워크플로 2회: ① 감사+리서치(5 에이전트, 코드/보안/UI/분류/트렌드) → 구현 → ② 적대적 리뷰(17 에이전트, 변경분 회귀/보안/접근성 검증) → 확정 결함 9건 수정
-- 검증: `tsc --noEmit` 통과, `next build` 통과, 런타임 HTTP(이미지 최적화/검색/페이지) 확인
-
-### 변경 사항
-| 영역 | 변경 내용 |
-|------|-----------|
-| 모델 | AI_MODELS 24→37, AIModelSlug 13개 추가, 아이콘 13 SVG, DB/schema.sql 시드 동기화 |
-| 컴포넌트/페이지 | `ModelCard`(hover 모달, portal), `/models` 페이지, 대시보드 모델 그리드 교체 |
-| 크롤러 | `scripts/crawl-articles.mjs` — MODEL/CATEGORY 규칙 개선, view_count/is_trending, service_role 가드 |
-| 보안/API | articles 검색 sanitize·미존재카테고리, articles/[id] UUID, bookmarks slug, next.config 이미지 허용목록 |
-| UI | globals focus 링, Toast aria-live, newsletter 토큰, Header kbd, Sidebar 정리 |
-
-### 아키텍처 노트
-- 기존 schema.sql이 코드와 불일치(카테고리 슬러그·`ai_models.slug` 누락·articles 컬럼 누락)였음 → 코드 기준으로 재정렬, 파일을 source of truth로 동기화
-- 기사 적재는 RLS상 service_role 키 권장(anon은 `--allow-anon-insert` + 임시정책 명시 필요). 이번 세션은 임시 anon 정책으로 적재 후 즉시 제거
-- Figma 라이브 빌드는 승인 기반 인터랙티브 작업이라 무인 실행하지 않음 — `FIGMA_UI_TASK.md`에 신규 스코프만 반영
-
----
-
-## 2026-06-04 — Figma 디자인 시스템 구축 (웹 화면 재현 + 컴포넌트화)
-
-### 완료 항목
-- 실서버(dev)를 띄워 5개 페이지를 스크린샷 → Figma에 1:1 데스크톱 프레임으로 재현 (Dashboard / Trending / Saved / Newsletter / Article)
-- 사이드바 카테고리 아이콘을 컬러 사각형 → 실제 lucide 아이콘으로 교체 (5프레임 × 14개 = 70항목)
-- Figma Variables `Color` 컬렉션(29 토큰) 생성 — scope + WEB code syntax(실제 CSS 변수명) 설정
-- 대시보드 왼쪽에 디자인 시스템 보드 구축: 색상 스와치 / 아이콘 세트 / 컴포넌트
-- 실제 Figma 컴포넌트 생성: Logo, Button(3 variant), Category Pill, Avatar, Search Field, Category Nav Item(2 variant), Model Card, News Card
-- (작업 중 발견) Supabase 프로젝트 다운 → 스크린샷용 mock fallback 임시 적용 후 git 원복
-
-### 변경 사항
-
-| 영역 | 변경 내용 |
-|------|-----------|
-| Figma 화면 | 5개 페이지 데스크톱 프레임(1440) — 다크+블루, 모델 브랜드 SVG, 한글 Noto Sans KR |
-| 아이콘 | 사이드바 14 카테고리 실제 lucide 벡터화 (lucide-react에서 path 추출) |
-| 색상 토큰 | Color Variables 29개 (bg/border/text/accent/status + 카테고리 14) |
-| 컴포넌트 | 8종 컴포넌트 + Button·NavItem variant set |
-| 코드 | 변경 없음 (산출물은 Figma 파일에 존재) |
-
-### 아키텍처 노트
-- 코드 토큰(globals.css / constants.ts)을 Figma Variables로 이관, code syntax를 `var(--…)` CSS 변수명에 맞춰 디자인-코드 동기화 기반 마련
-- Supabase 프로젝트(`zlpdtswbgteufzszjigy`) DNS 미해석 → 라이브 실데이터 미연동 상태
-- Figma fileKey: `SwGySWU706nVMABEEK65hC`
-
----
-
-## 2026-03-27 — UI/UX 리디자인 (카테고리 + 사이드바 + 폰트)
-
-- 카테고리 5→14개(Core 7 + Extended 7), 사이드바 A안 리디자인(컬러 아이콘·Main/More 그룹·220px)
-- 폰트 Space Grotesk/Inter → Nunito/Nunito Sans(둥근 산세리프), 기사 텍스트 13→11px
-- `Category` 타입에 color/group 추가, mock 카테고리 슬러그 매핑
-- 당시 미해결(→ TODO 이관): 한글 글리프 폴백(Noto Sans KR), 사이드바 태블릿 반응형
