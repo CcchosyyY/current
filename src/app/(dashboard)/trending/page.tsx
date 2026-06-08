@@ -6,6 +6,7 @@ import Image from "next/image";
 import { TrendingUp, ArrowUpRight, ArrowDownRight, Minus, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { useArticles } from "@/lib/hooks/useArticles";
+import ArticleLogo from "@/components/ArticleLogo";
 import { getRelativeTime } from "@/lib/utils";
 import type { TrendingPeriod } from "@/lib/types";
 
@@ -132,6 +133,7 @@ export default function TrendingPage() {
                     {article.title}
                   </h3>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <ArticleLogo article={article} size={14} />
                     <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                       {article.category}
                     </span>

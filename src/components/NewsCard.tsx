@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bookmark, BookmarkCheck, Share2, Clock } from "lucide-react";
 import type { Article } from "@/lib/types";
+import ArticleLogo from "@/components/ArticleLogo";
 import { getRelativeTime } from "@/lib/utils";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
 import { useShare } from "@/lib/hooks/useShare";
@@ -89,8 +90,13 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
           </p>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs text-text-tertiary">{article.source}</span>
-            <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 min-w-0">
+              <ArticleLogo article={article} size={14} />
+              <span className="text-xs text-text-tertiary truncate">
+                {article.source}
+              </span>
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 aria-label={`Bookmark "${article.title}"`}
                 className={bookmarkClassName}
@@ -118,13 +124,9 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
       href={`/article/${article.id}`}
       className="group flex items-center gap-4 py-3 px-2 rounded-lg hover:bg-bg-surface/50 transition-colors"
     >
-      {/* Source logo (round placeholder) */}
-      <div
-        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white"
-        style={{ backgroundColor: article.aiModel ? "#3B82F6" : "#71717A" }}
-        aria-hidden="true"
-      >
-        {article.source.slice(0, 2).toUpperCase()}
+      {/* Source logo (model → company → site fallback) */}
+      <div className="w-9 h-9 rounded-full bg-bg-surface border border-border-subtle flex items-center justify-center shrink-0">
+        <ArticleLogo article={article} size={20} />
       </div>
 
       {/* Title + source */}

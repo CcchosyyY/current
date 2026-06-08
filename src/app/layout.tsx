@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito, Nunito_Sans } from "next/font/google";
+import { env } from "@/lib/env";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -17,11 +18,22 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Current — AI News Curation Platform",
+  metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
+  title: {
+    default: "Current — AI News Curation Platform",
+    template: "%s | Current",
+  },
   description:
     "AI 기술 뉴스를 자동 수집·요약하고 카드형 UI로 제공하는 뉴스 큐레이션 플랫폼",
   keywords: ["AI", "news", "Claude", "ChatGPT", "Gemini", "tech", "curation"],
   authors: [{ name: "Jyos" }],
+  openGraph: {
+    type: "website",
+    siteName: "Current",
+    title: "Current — AI News Curation Platform",
+    description:
+      "AI 기술 뉴스를 자동 수집·요약하고 카드형 UI로 제공하는 뉴스 큐레이션 플랫폼",
+  },
 };
 
 export default function RootLayout({

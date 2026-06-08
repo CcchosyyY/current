@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -7,15 +9,11 @@ import { dbArticleToArticle } from "@/lib/transforms";
 import { getRelativeTime } from "@/lib/utils";
 import type { DBArticleRow } from "@/lib/transforms";
 import ArticleActions from "@/components/ArticleActions";
+import ArticleLogo from "@/components/ArticleLogo";
 
-export default async function ArticleDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+// generateMetadata와 페이지가 같은 요청 내에서 1번만 조회하도록 cache로 메모이즈
+const getArticle = cache(async (id: string) => {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("articles")
     .select(`
@@ -26,11 +24,48 @@ export default async function ArticleDetailPage({
     .eq("id", id)
     .single();
 
-  if (error || !data) {
+  if (error || !data) return null;
+  return dbArticleToArticle(data as unknown as DBArticleRow);
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const article = await getArticle(id);
+  if (!article) return { title: "기사를 찾을 수 없어요" };
+
+  const description = (article.summary ?? "").slice(0, 160);
+  return {
+    title: article.title,
+    description,
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description,
+      images: article.imageUrl ? [article.imageUrl] : undefined,
+    },
+    twitter: {
+      card: article.imageUrl ? "summary_large_image" : "summary",
+      title: article.title,
+      description,
+    },
+  };
+}
+
+export default async function ArticleDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const article = await getArticle(id);
+
+  if (!article) {
     notFound();
   }
-
-  const article = dbArticleToArticle(data as unknown as DBArticleRow);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -61,8 +96,8 @@ export default async function ArticleDetailPage({
       </h1>
 
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-          {article.source.slice(0, 2).toUpperCase()}
+        <div className="w-8 h-8 rounded-full bg-bg-surface border border-border-subtle flex items-center justify-center shrink-0">
+          <ArticleLogo article={article} size={18} />
         </div>
         <div>
           <p className="text-sm font-medium text-text-primary">
