@@ -9,7 +9,6 @@
 ## 🔥 Now — 지금 (1~3개만)
 
 - [ ] (사용자) 로그인 → 북마크 → `/saved` end-to-end 1회 확인
-- [ ] 크롤러 자동 실행 — GitHub Actions cron으로 N시간마다 (현재 수동 `node scripts/crawl-articles.mjs`) · 브랜치 `feat/trending`
 
 ## ⏭️ Next — 다음
 
@@ -45,7 +44,8 @@
 - [ ] CSP unsafe-inline/eval 제거(nonce 기반), 페이지 전환 애니메이션
 - [ ] Rate limiter 인메모리 → Upstash Redis
 - [ ] Vercel 배포+Cron / CI·CD(GitHub Actions) / E2E(Playwright)
-- [ ] 크롤러 Claude API 기사 요약 (현재 RSS snippet 그대로 사용) — 자동 실행(Cron)은 Now로 이동
+- [ ] 크롤러 Claude API 기사 요약 (현재 RSS snippet 그대로 사용)
+- [ ] GitHub Actions Node 20 deprecation — `crawl.yml`의 `checkout@v4`·`setup-node@v4`가 Node 20에서 실행됨. **2026-06-16**부터 Node 24 강제(v4 액션은 지원해 계속 작동), **2026-09-16** Node 20 제거. 경고 끄려면 워크플로우에 `env: FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` 추가
 
 **Figma 디자인 시스템** (파일 `SwGySWU706nVMABEEK65hC`)
 - [ ] 모델 모달 시안(node 46:2) 다듬기 → 코드 / 5개 페이지 컴포넌트 인스턴스화
