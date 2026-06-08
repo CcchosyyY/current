@@ -45,8 +45,15 @@ function loadEnv() {
 const fileEnv = loadEnv();
 const SUPABASE_URL =
   process.env.SUPABASE_URL || fileEnv.NEXT_PUBLIC_SUPABASE_URL || "";
+// Accept either the new `sb_secret_…` key (SUPABASE_SECRET_KEY, preferred for
+// projects created/restored after Nov 2025) or a legacy service_role JWT
+// (SUPABASE_SERVICE_ROLE_KEY). Both bypass RLS so the crawler can write articles.
 const SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || fileEnv.SUPABASE_SERVICE_ROLE_KEY || "";
+  process.env.SUPABASE_SECRET_KEY ||
+  fileEnv.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  fileEnv.SUPABASE_SERVICE_ROLE_KEY ||
+  "";
 const ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   fileEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
@@ -546,11 +553,16 @@ async function crawl() {
 
 // ── Upsert into Supabase via REST ──────────────────────────────────────────
 async function sb(path, opts = {}) {
+  // Legacy JWT keys (anon / service_role) authenticate via `Authorization: Bearer`,
+  // but the new `sb_secret_…` / `sb_publishable_…` keys must be sent on the
+  // `apikey` header ONLY — passing them as a Bearer token makes the platform try
+  // to parse them as a JWT and reject the request. Detect by the `sb_` prefix.
+  const isNewKey = KEY.startsWith("sb_");
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
     headers: {
       apikey: KEY,
-      Authorization: `Bearer ${KEY}`,
+      ...(isNewKey ? {} : { Authorization: `Bearer ${KEY}` }),
       "Content-Type": "application/json",
       ...(opts.headers || {}),
     },
@@ -652,10 +664,10 @@ if (DRY) {
   console.log("\n⚠ Missing SUPABASE_URL / key — skipped DB write.");
 } else if (!SERVICE_KEY && !ALLOW_ANON) {
   console.log(
-    "\n⚠ No SUPABASE_SERVICE_ROLE_KEY found. Refusing to write articles with the public anon key.",
+    "\n⚠ No secret/service-role key found. Refusing to write articles with the public anon key.",
   );
   console.log(
-    "  → Set SUPABASE_SERVICE_ROLE_KEY (recommended), or re-run with --allow-anon-insert",
+    "  → Set SUPABASE_SECRET_KEY (sb_secret_…) or SUPABASE_SERVICE_ROLE_KEY, or re-run with --allow-anon-insert",
   );
   console.log(
     "    (which requires a temporary anon INSERT policy on `articles`).",
