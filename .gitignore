@@ -38,7 +38,7 @@ yarn-error.log*
 .vercel
 
 # local scratch / design / generated assets
-.claude/
+.claude
 a.out
 current.pen
 /images/
