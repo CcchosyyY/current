@@ -1,13 +1,15 @@
 # TODO — Current by Jyos
 
 > AI 뉴스 큐레이션 플랫폼 (Next.js 16 + Supabase)
-> Last updated: 2026-06-06
+> Last updated: 2026-06-08
+> 완료 항목은 `DID.md` 참조
 
 ---
 
-## Phase: 모델 모달 & 로고 (진행 중)
+## Phase: 모델 모달 & 페이지
 
-- [ ] 모델 상세 모달 Figma 상세 디자인 → 코드 반영 (localhost 러프 → Figma 다듬기 → 코드 워크플로)
+- [ ] 모델 상세 모달 Figma 상세 다듬기 → 코드 재반영 (현재 localhost 러프 단계)
+- [ ] `PAGE_FIRST_SLUGS` 전체 모델로 확장 (현재 `chatgpt`만 파일럿) — UX 확정 후
 - [ ] Try 버튼: 밝은 브랜드색(노랑 등) 모델은 흰 글자 대비 보정 (대비 계산 후 글자색 토글)
 - [ ] 회사 로고 200개까지 보완 (현재 171) + `berkshire-hathaway` 로고 누락 대체
 - [ ] 큰 로고 최적화 (goldman 280KB·deepseek 208KB 등 `.ico` → 64px 리사이즈)
@@ -17,13 +19,12 @@
 
 ## Phase: 데이터 & 백엔드
 
-- [ ] 북마크 localStorage → Supabase API 연결
-- [ ] 검색 Supabase 전문 검색 연동
+- [ ] 검색 Supabase 전문 검색 연동 (현재 title/summary ilike)
 - [ ] Rate limiter 인메모리 → Upstash Redis
 
 ## Phase: 인증 & 사용자
 
-- [ ] Supabase Auth Google OAuth 로그인/로그아웃
+- [ ] (사용자) 실제 로그인→북마크 저장→/saved 표시 end-to-end 1회 확인
 - [ ] Profile / Settings 페이지
 - [ ] 알림 벨 (드롭다운)
 
@@ -44,7 +45,11 @@
 
 ## Phase: 자동화 & 배포
 
-- [~] RSS 크롤러 완료(`scripts/crawl-articles.mjs`, Node). 남은 것: Claude API 요약 + service_role 키로 자동 실행
+- [~] RSS 크롤러(`scripts/crawl-articles.mjs`): 소스 6곳·AI 스코프 필터·태깅 정밀화 완료(dry-run). 남은 것:
+  - [ ] service_role 키로 실제 DB 반영 (현재 DB는 6/4 데이터 — 다음 크롤부터 적용)
+  - [ ] 기존 DB 기사 백필 (옛 분류/옛 소스 재분류)
+  - [ ] LLM(Claude Haiku) 분류 도입 — 키워드로 못 거르는 비즈니스 기사 누출 해결
+  - [ ] Claude API 요약 + 자동 실행(Cron)
 - [ ] Vercel 배포 + Cron Job
 - [ ] CI/CD (GitHub Actions)
 - [ ] E2E 테스트 (Playwright)
