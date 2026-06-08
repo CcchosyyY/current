@@ -683,3 +683,8 @@ if (DRY) {
     process.exitCode = 1;
   }
 }
+
+// fetch() keep-alive sockets keep Node's event loop alive after the work is done,
+// so the process would otherwise hang until killed (exit 124 under `timeout`).
+// Exit explicitly so cron / timeout wrappers get a prompt, clean termination.
+process.exit(process.exitCode ?? 0);
