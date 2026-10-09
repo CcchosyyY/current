@@ -36,6 +36,7 @@ export const imageRemotePatterns: ImageHostPattern[] = [
   { protocol: "https", hostname: "**.wp.com" },
   { protocol: "https", hostname: "venturebeat.com" },
   { protocol: "https", hostname: "**.venturebeat.com" },
+  { protocol: "https", hostname: "images.siliconangle.com" },
   { protocol: "https", hostname: "placehold.co" },
 ];
 

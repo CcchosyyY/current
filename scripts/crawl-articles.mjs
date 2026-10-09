@@ -93,7 +93,7 @@ const FEEDS = [
   { url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", source: "The Verge" },
   { url: "https://www.wired.com/feed/tag/ai/latest/rss", source: "Wired" },
   { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", paged: true },
-  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", paged: true },
+  { url: "https://siliconangle.com/category/ai/feed/", source: "SiliconANGLE", paged: true },
   { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Technology Review", paged: true },
 ];
 
