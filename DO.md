@@ -6,19 +6,41 @@
 
 ---
 
+## 📍 현황 (2026-10-09)
+
+- **B1 AI 모델 뉴스 대시보드: ~완성** — 메인/Trending/Models(37개)/Newsletter/Saved, Google 로그인+북마크, 크롤러(키워드+Haiku 하이브리드 분류)
+- **B2 주가 연동 · B3 ESP32 하드웨어 · Vercel 배포: 미착수**
+- 6/9 이후 4개월 휴면 → 10/9 복구 완료: Supabase 재개 + 키 교체(`.env.local`, GitHub Secrets), 크롤러 재가동(DB 390건, 10/9 수집 확인)
+- 크롤러 공백: 8/8 ~ 10/9 (GitHub 60일 비활성 → schedule 자동 비활성화). RSS에 남은 범위만 채워짐
+
+---
+
 ## 🔥 Now — 지금 (1~3개만)
 
 - [ ] (사용자) 로그인 → 북마크 → `/saved` end-to-end 1회 확인
+- [ ] 크롤러 자동 비활성화 방지 — 60일 커밋 없으면 GitHub이 schedule 끔 (keepalive 단계 추가)
+- [ ] 기사 제목 HTML 엔티티 미디코딩 버그 (`it&#8217;s` 그대로 노출)
 
 ## ⏭️ Next — 다음
 
-- [ ] LLM(Claude Haiku) 분류 도입 — 키워드로 못 거르는 비즈니스 기사 누출 해결
-- [ ] 기존 DB 기사 백필 (옛 분류·옛 소스 재분류) — LLM 도입 때 함께
-- [ ] 모델 상세 모달 Figma 다듬기 → 코드 반영
+- [ ] **B2 시작**: AI 모델 → 상장사 매핑(ChatGPT→MSFT, Gemini→GOOGL 등) + 주가 위젯
+- [ ] 분류 정확도 점검 — Haiku 2차 분류 코드는 있음, 비즈니스 기사 누출 여부 확인
+- [ ] 기존 DB 기사 백필 (옛 분류·옛 소스 재분류)
 - [ ] 기사 로고 fallback(모델→회사→사이트)을 Trending·Saved·상세에도 적용
 - [ ] 검색 Supabase 전문 검색 연동 (현재 title/summary ilike)
+- [ ] 모델 상세 모달 Figma 다듬기 → 코드 반영
+
+## 🧹 정리 — 잡일
+
+- [ ] `middleware` → `proxy` 파일 컨벤션 마이그레이션 (Next.js 16 deprecation 경고)
+- [ ] `package-lock.json` 미커밋 변경(13줄 삭제) 확인 후 커밋/폐기
+- [ ] GitHub Actions `checkout@v4`·`setup-node@v4` 버전 점검 (Node 20 제거 9/16 이후에도 10/9 실행 정상)
 
 ## 💡 Someday — 백로그
+
+**하드웨어 / 확장 (기본 목표 최종 산출물)**
+- [ ] B3: ESP32 + 4인치 TFT 디스플레이 — Wi-Fi로 뉴스·주가 수신
+- [ ] Vercel 배포
 
 **모델 / 회사**
 - [ ] `PAGE_FIRST_SLUGS` 전체 모델로 확장 (현재 chatgpt만 파일럿)
@@ -29,23 +51,21 @@
 **페이지 / 기능**
 - [ ] Newsletter 상세("Read") 페이지
 - [ ] Profile / Settings 페이지, 알림 벨(드롭다운)
-- [ ] error.tsx / loading.tsx, 페이지별 SEO 메타데이터(generateMetadata)
+- [ ] 페이지별 SEO 메타데이터(generateMetadata)
 - [ ] 대시보드 서버/클라이언트 컴포넌트 분리 (번들 최적화)
+- [ ] 크롤러 Claude API 기사 요약 (현재 RSS snippet 그대로 사용)
 
 **Trending 페이지 개편** (현재: `view_count` 내림차순 정렬 + 기간 클라 필터뿐)
 - [ ] 실제 조회수 추적 — 기사 열람 시 `view_count` +1 (RPC/API). 현재는 크롤마다 합성값 재계산 (`crawl-articles.mjs:638-649`)
 - [ ] `is_trending` 실제화 — 크롤러 합성 플래그 → 조회수 + 최신성 신호 기반으로
 - [ ] UI/UX 개선 — 순위 변동(▲▼) 실제 데이터화(지금은 isTrending→고정 ↗/−), 1~3위 강조, 빈상태·스켈레톤 다듬기, 모바일 레이아웃
 - [ ] 기간 필터 서버화 — 현재 마운트 시점 `Date.now()` 기준 클라 필터(부정확) → 쿼리로 이관
-- [ ] 기사 로고 fallback(모델→회사→사이트) Trending에도 적용 (위 Next 항목과 동일)
 
 **폴리싱 / 인프라**
 - [ ] Nunito 한글 폴백(Noto Sans KR), 사이드바 반응형, 라이트/다크 토글
 - [ ] CSP unsafe-inline/eval 제거(nonce 기반), 페이지 전환 애니메이션
 - [ ] Rate limiter 인메모리 → Upstash Redis
-- [ ] Vercel 배포+Cron / CI·CD(GitHub Actions) / E2E(Playwright)
-- [ ] 크롤러 Claude API 기사 요약 (현재 RSS snippet 그대로 사용)
-- [ ] GitHub Actions Node 20 deprecation — `crawl.yml`의 `checkout@v4`·`setup-node@v4`가 Node 20에서 실행됨. **2026-06-16**부터 Node 24 강제(v4 액션은 지원해 계속 작동), **2026-09-16** Node 20 제거. 경고 끄려면 워크플로우에 `env: FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` 추가
+- [ ] E2E 테스트(Playwright)
 
 **Figma 디자인 시스템** (파일 `SwGySWU706nVMABEEK65hC`)
 - [ ] 모델 모달 시안(node 46:2) 다듬기 → 코드 / 5개 페이지 컴포넌트 인스턴스화
