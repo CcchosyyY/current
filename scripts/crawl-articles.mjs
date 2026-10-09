@@ -11,6 +11,8 @@
 //   node scripts/crawl-articles.mjs --backfill --since=2026-08-08
 //       # page back through paginated (WordPress) feeds to recover articles
 //       # published since the given date (e.g. after the cron was down)
+//   node scripts/crawl-articles.mjs --fill-images
+//       # fill image_url on existing DB rows that have none (from og:image)
 //
 // Auth: uses SUPABASE_SERVICE_ROLE_KEY if present (recommended for production /
 // cron), otherwise falls back to the public anon key from .env.local. The anon
@@ -261,6 +263,61 @@ function truncate(s, n) {
 function firstImage(html) {
   const m = String(html || "").match(/<img[^>]+src=["']([^"']+)["']/i);
   return m ? m[1] : null;
+}
+
+// Some feeds (TechCrunch, most of MIT TR) ship no image in RSS. Fall back to
+// the article page's og:image so every card has a picture.
+async function fetchOgImage(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; CurrentBot/1.0)" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const tag =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]*>/i)?.[0] ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]*>/i)?.[0];
+    const img = cleanImageUrl(tag?.match(/content=["']([^"']+)["']/i)?.[1]);
+    if (!img) return null;
+    // Sites sometimes point og:image at a stale default (TechCrunch's old logo
+    // 404s) — only accept an image that actually loads.
+    const head = await fetch(img, {
+      method: "HEAD",
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; CurrentBot/1.0)" },
+      signal: AbortSignal.timeout(10000),
+    });
+    return head.ok && (head.headers.get("content-type") || "").startsWith("image/")
+      ? img
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// RSS/HTML attribute values arrive entity-encoded (`&#038;`, `&amp;`), which
+// corrupts query strings. Decode, and reject anything that isn't an https image.
+function cleanImageUrl(raw) {
+  if (!raw) return null;
+  const url = raw.replace(/&#0*38;|&amp;/gi, "&").trim();
+  if (!/^https:\/\//.test(url)) return null;
+  if (/\.(mp4|webm|mov|m4v)(\?|$)/i.test(url)) return null;
+  return url;
+}
+
+// Run `fn` over `items` with at most `limit` in flight (be polite to sites).
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    }),
+  );
+  return out;
 }
 // Model attribution favors PRECISION: a model is attributed only when the
 // article is actually about it, not when it's mentioned in passing as a tool.
@@ -520,7 +577,7 @@ async function crawl() {
           content,
           source_url: link,
           source_name: feed.source,
-          image_url: pickImage(item),
+          image_url: cleanImageUrl(pickImage(item)),
           read_time: Math.max(1, Math.ceil(words / 200)),
           published_at: item.isoDate || item.pubDate || null,
           blob,
@@ -591,6 +648,14 @@ async function crawl() {
   }
   if (dropped > 0) console.log(`  (excluded ${dropped} off-topic / industry items)`);
   if (changed > 0) console.log(`  (LLM adjusted ${changed} ambiguous items)`);
+
+  // Only kept rows get the extra page fetch.
+  const noImage = rows.filter((r) => !r.image_url);
+  if (noImage.length > 0) {
+    const found = await mapLimit(noImage, 5, (r) => fetchOgImage(r.source_url));
+    noImage.forEach((r, i) => (r.image_url = found[i]));
+    console.log(`  og:image fallback: ${found.filter(Boolean).length}/${noImage.length} filled`);
+  }
   return rows;
 }
 
@@ -663,7 +728,39 @@ async function upsert(rows) {
   return inserted.length;
 }
 
+// Backfill image_url on existing rows that have none.
+async function fillImages() {
+  const res = await sb("articles?select=id,source_url&image_url=is.null&limit=2000");
+  if (!res.ok) throw new Error(`select failed ${res.status}: ${await res.text()}`);
+  const missing = await res.json();
+  console.log(`Rows without image: ${missing.length}`);
+  const found = await mapLimit(missing, 5, (r) => fetchOgImage(r.source_url));
+  let updated = 0;
+  for (let i = 0; i < missing.length; i++) {
+    if (!found[i] || DRY) continue;
+    const up = await sb(`articles?id=eq.${missing[i].id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ image_url: found[i] }),
+    });
+    if (up.ok) updated++;
+    else console.log(`  ✗ ${missing[i].id}: ${up.status}`);
+  }
+  console.log(
+    `og:image found ${found.filter(Boolean).length}/${missing.length}` +
+      (DRY ? " (--dry: no DB write)" : `, updated ${updated}`),
+  );
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
+if (process.argv.includes("--fill-images")) {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    console.error("--fill-images needs SUPABASE_URL + a service-role/secret key");
+    process.exit(1);
+  }
+  await fillImages();
+  process.exit(process.exitCode ?? 0);
+}
+
 console.log(
   BACKFILL
     ? `Backfilling paginated feeds since ${SINCE_ARG}…`
