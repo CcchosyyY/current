@@ -8,6 +8,9 @@
 //   node scripts/crawl-articles.mjs          # crawl + upsert into Supabase
 //   node scripts/crawl-articles.mjs --dry    # crawl + write JSON only (no DB write)
 //   node scripts/crawl-articles.mjs --no-llm # skip the LLM second pass (keyword only)
+//   node scripts/crawl-articles.mjs --backfill --since=2026-08-08
+//       # page back through paginated (WordPress) feeds to recover articles
+//       # published since the given date (e.g. after the cron was down)
 //
 // Auth: uses SUPABASE_SERVICE_ROLE_KEY if present (recommended for production /
 // cron), otherwise falls back to the public anon key from .env.local. The anon
@@ -71,16 +74,27 @@ const ALLOW_ANON = process.argv.includes("--allow-anon-insert");
 const ANTHROPIC_KEY =
   process.env.ANTHROPIC_API_KEY || fileEnv.ANTHROPIC_API_KEY || "";
 const NO_LLM = process.argv.includes("--no-llm");
+
+// Backfill: walk `?paged=N` on feeds that support it until we pass --since.
+const BACKFILL = process.argv.includes("--backfill");
+const SINCE_ARG = process.argv.find((a) => a.startsWith("--since="))?.slice(8);
+const SINCE = SINCE_ARG ? new Date(SINCE_ARG) : null;
+if (BACKFILL && (!SINCE || Number.isNaN(SINCE.getTime()))) {
+  console.error("--backfill requires --since=YYYY-MM-DD");
+  process.exit(1);
+}
+const MAX_PAGES = 60; // safety cap per feed
+const LLM_BATCH = 40; // ambiguous items per Haiku call (keeps output under max_tokens)
 const LLM_ENABLED = !NO_LLM && !!ANTHROPIC_KEY;
 
 // ── Feeds ──────────────────────────────────────────────────────────────────
 const FEEDS = [
-  { url: "https://techcrunch.com/category/artificial-intelligence/feed/", source: "TechCrunch" },
+  { url: "https://techcrunch.com/category/artificial-intelligence/feed/", source: "TechCrunch", paged: true },
   { url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", source: "The Verge" },
   { url: "https://www.wired.com/feed/tag/ai/latest/rss", source: "Wired" },
-  { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica" },
-  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat" },
-  { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Technology Review" },
+  { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", paged: true },
+  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", paged: true },
+  { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Technology Review", paged: true },
 ];
 
 const PER_FEED = 12; // cap items per feed
@@ -416,6 +430,28 @@ async function llmClassifyBatch(items) {
   return map;
 }
 
+// RSS item lists for a feed: just the first page normally; in backfill mode,
+// successive `?paged=N` pages until the oldest item predates SINCE.
+async function fetchFeedItems(feed) {
+  if (!BACKFILL) return (await parser.parseURL(feed.url)).items || [];
+  if (!feed.paged) return [];
+  const items = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url = page === 1 ? feed.url : `${feed.url}?paged=${page}`;
+    let pageItems;
+    try {
+      pageItems = (await parser.parseURL(url)).items || [];
+    } catch {
+      break; // past the last page (404) or transient failure
+    }
+    if (pageItems.length === 0) break;
+    items.push(...pageItems);
+    const oldest = Math.min(...pageItems.map((it) => new Date(it.isoDate || it.pubDate || 0).getTime()));
+    if (oldest < SINCE.getTime()) break;
+  }
+  return items.filter((it) => new Date(it.isoDate || it.pubDate || 0) >= SINCE);
+}
+
 // ── Crawl ──────────────────────────────────────────────────────────────────
 const parser = new Parser({
   timeout: 20000,
@@ -445,10 +481,14 @@ async function crawl() {
   // ── Pass 1: fetch + keyword-classify every item, flag the ambiguous ones ──
   for (const feed of FEEDS) {
     try {
-      const parsed = await parser.parseURL(feed.url);
+      const items = await fetchFeedItems(feed);
+      if (BACKFILL && !feed.paged) {
+        console.log(`  – ${feed.source}: no pagination, skipped`);
+        continue;
+      }
       let n = 0;
-      for (const item of parsed.items || []) {
-        if (n >= PER_FEED || candidates.length >= TOTAL_CAP) break;
+      for (const item of items) {
+        if (!BACKFILL && (n >= PER_FEED || candidates.length >= TOTAL_CAP)) break;
         const link = (item.link || "").trim();
         const title = (item.title || "").trim();
         if (!link || !title || seen.has(link)) continue;
@@ -501,11 +541,14 @@ async function crawl() {
   let verdicts = new Map();
   if (LLM_ENABLED && ambiguous.length > 0) {
     console.log(`  LLM pass: ${ambiguous.length}/${candidates.length} ambiguous → Haiku…`);
-    try {
-      verdicts = await llmClassifyBatch(ambiguous);
-    } catch (e) {
-      console.log(`  ⚠ LLM pass failed (${e.message}) — falling back to keyword results`);
-      verdicts = new Map();
+    // Chunk so each response fits max_tokens; re-key chunk-local indices.
+    for (let start = 0; start < ambiguous.length; start += LLM_BATCH) {
+      try {
+        const chunk = await llmClassifyBatch(ambiguous.slice(start, start + LLM_BATCH));
+        for (const [i, v] of chunk) verdicts.set(start + i, v);
+      } catch (e) {
+        console.log(`  ⚠ LLM pass failed (${e.message}) — falling back to keyword results`);
+      }
     }
   } else if (ambiguous.length > 0) {
     console.log(`  (LLM off — ${ambiguous.length} ambiguous items kept by keyword rules)`);
@@ -621,7 +664,11 @@ async function upsert(rows) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
-console.log(`Crawling ${FEEDS.length} feeds…`);
+console.log(
+  BACKFILL
+    ? `Backfilling paginated feeds since ${SINCE_ARG}…`
+    : `Crawling ${FEEDS.length} feeds…`,
+);
 const rows = await crawl();
 
 // Sort newest-first, then assign synthetic engagement metrics so the Trending
@@ -640,10 +687,10 @@ rows.forEach((r, i) => {
   const noise = (hash(r.source_url) % 1000) / 1000;
   r.view_count = Math.round(800 + recency * 18000 + noise * 9000);
 });
-// Mark the ~12 highest-viewed as trending.
+// Mark the ~12 highest-viewed as trending (not for backfilled back-catalogue).
 [...rows]
   .sort((a, b) => b.view_count - a.view_count)
-  .slice(0, 12)
+  .slice(0, BACKFILL ? 0 : 12)
   .forEach((r) => {
     r.is_trending = true;
   });
