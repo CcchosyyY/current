@@ -31,6 +31,8 @@ export const imageRemotePatterns: ImageHostPattern[] = [
   { protocol: "https", hostname: "the-decoder.de" },
   { protocol: "https", hostname: "**.the-decoder.de" },
   { protocol: "https", hostname: "**.technologyreview.com" },
+  { protocol: "https", hostname: "**.theverge.com" },
+  { protocol: "https", hostname: "**.wired.com" },
   { protocol: "https", hostname: "techcrunch.com" },
   { protocol: "https", hostname: "**.techcrunch.com" },
   { protocol: "https", hostname: "**.wp.com" },
