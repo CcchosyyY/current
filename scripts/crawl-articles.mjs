@@ -97,8 +97,8 @@ const FEEDS = [
   { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Technology Review", paged: true },
 ];
 
-const PER_FEED = 12; // cap items per feed
-const TOTAL_CAP = 70; // overall cap
+const PER_FEED = 20; // cap items per feed
+const TOTAL_CAP = 120; // overall cap (6 feeds × 20)
 
 // ── Classification keyword maps ────────────────────────────────────────────
 // AI model slug ← keyword(s). Order matters: first match wins.
