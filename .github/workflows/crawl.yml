@@ -7,7 +7,7 @@ name: Crawl articles
 
 on:
   schedule:
-    - cron: "0 */6 * * *" # every 6 hours (UTC) → KST 03:00 / 09:00 / 15:00 / 21:00
+    - cron: "0 */12 * * *" # every 12 hours (UTC) → KST 09:00 / 21:00
   workflow_dispatch: {} # manual "Run workflow" button in the Actions tab
 
 # Never let two crawls overlap (a slow run + the next tick).

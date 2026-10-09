@@ -117,7 +117,7 @@ AI 기술의 발전 속도가 너무 빠르다. Claude, ChatGPT, Gemini 등 주�
 ### 백엔드 (Next.js 내부)
 - **Next.js Route Handler** (app/api/) — RESTful API 설계
 - **Node 크롤러** (`scripts/crawl-articles.mjs`) — rss-parser 기반 수집·분류
-- Cron Job: GitHub Actions(6시간 주기) — 추후 Vercel Cron 검토
+- Cron Job: GitHub Actions(12시간 주기) — 추후 Vercel Cron 검토
 
 ### 데이터베이스 / 인증
 - **Supabase** — PostgreSQL, Auth + Google OAuth, RLS, (필요 시) Realtime
