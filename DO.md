@@ -6,12 +6,13 @@
 
 ---
 
-## 📍 현황 (2026-10-09)
+## 📍 현황 (2026-10-10)
 
 - **B1 AI 모델 뉴스 대시보드: ~완성** — 메인/Trending/Models(37개)/Newsletter/Saved, Google 로그인+북마크, 크롤러(키워드+Haiku 하이브리드 분류)
 - **B2 주가 연동 · B3 ESP32 하드웨어 · Vercel 배포: 미착수**
-- 6/9 이후 4개월 휴면 → 10/9 복구 완료: Supabase 재개 + 키 교체(`.env.local`, GitHub Secrets), 크롤러 재가동(DB 390건, 10/9 수집 확인)
-- 크롤러 공백: 8/8 ~ 10/9 (GitHub 60일 비활성 → schedule 자동 비활성화). RSS에 남은 범위만 채워짐
+- 6/9 이후 4개월 휴면 → 10/9~10 복구 완료: Supabase 재개, 크롤러 재가동, 공백(8/8~10/9) 백필
+- DB 기사 568건(14MB / 무료 500MB), 566건 이미지 정상
+- 크롤러: 12시간 주기(KST 09/21시), 피드 6곳 = TechCrunch·Verge·Wired·Ars·SiliconANGLE·MIT TR, 피드당 20건
 
 ---
 
@@ -24,15 +25,16 @@
 
 - [ ] **B2 시작**: AI 모델 → 상장사 매핑(ChatGPT→MSFT, Gemini→GOOGL 등) + 주가 위젯
 - [ ] 분류 정확도 점검 — Haiku 2차 분류 코드는 있음, 비즈니스 기사 누출 여부 확인
-- [ ] 기존 DB 기사 백필 (옛 분류·옛 소스 재분류)
+- [ ] 기존 DB 기사 재분류 (옛 키워드 분류·옛 소스 기사를 현재 규칙+Haiku로)
 - [ ] 기사 로고 fallback(모델→회사→사이트)을 Trending·Saved·상세에도 적용
-- [ ] 검색 Supabase 전문 검색 연동 (현재 title/summary ilike)
 - [ ] 모델 상세 모달 Figma 다듬기 → 코드 반영
 
 ## 🧹 정리 — 잡일
 
 - [ ] `middleware` → `proxy` 파일 컨벤션 마이그레이션 (Next.js 16 deprecation 경고)
-- [ ] `package-lock.json` 미커밋 변경(13줄 삭제) 확인 후 커밋/폐기
+- [ ] `package-lock.json` 미커밋 변경(13줄 삭제) 확인 후 커밋/폐기 — `"peer": true` 플래그만 빠진 npm 버전 차이
+- [ ] NEW 신선도 점 기준(6시간) — 크롤 12시간 주기라 대부분 안 붙음. 12시간으로 늘릴지 결정
+- [ ] Verge 본문 일부 이모지 깨짐(`ð¤` — 원본 피드의 mojibake)
 - [ ] GitHub Actions `checkout@v4`·`setup-node@v4` 버전 점검 (Node 20 제거 9/16 이후에도 10/9 실행 정상)
 
 ## 💡 Someday — 백로그
