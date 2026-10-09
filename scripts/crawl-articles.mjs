@@ -229,13 +229,22 @@ function hasIndustrySignal(full) {
 }
 
 // ── Text helpers ───────────────────────────────────────────────────────────
+const NAMED_ENTITIES = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  lsquo: "\u2018", rsquo: "\u2019", ldquo: "\u201C", rdquo: "\u201D",
+  hellip: "…", mdash: "—", ndash: "–",
+  aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú",
+  agrave: "à", egrave: "è", ntilde: "ñ", ccedil: "ç", auml: "ä", ouml: "ö", uuml: "ü",
+};
+// Single pass, so "&amp;#8217;" decodes once (to "&#8217;"), not twice.
 function decodeEntities(s) {
-  return s
-    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, " ").replace(/&#8217;/g, "'").replace(/&#8216;/g, "'")
-    .replace(/&#8220;/g, '"').replace(/&#8221;/g, '"').replace(/&#8230;/g, "…")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
+  return String(s || "").replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => {
+    if (e[0] === "#") {
+      const cp = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : +e.slice(1);
+      return cp > 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
+    }
+    return NAMED_ENTITIES[e.toLowerCase()] ?? m;
+  });
 }
 function stripHtml(html) {
   return decodeEntities(
@@ -547,7 +556,7 @@ async function crawl() {
       for (const item of items) {
         if (!BACKFILL && (n >= PER_FEED || candidates.length >= TOTAL_CAP)) break;
         const link = (item.link || "").trim();
-        const title = (item.title || "").trim();
+        const title = decodeEntities(item.title || "").trim();
         if (!link || !title || seen.has(link)) continue;
         seen.add(link);
 

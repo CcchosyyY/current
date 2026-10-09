@@ -147,6 +147,32 @@ export async function GET(request: NextRequest) {
 
     const { data, error, count } = await query;
 
+    // Page past the end: PostgREST answers 416 (PGRST103) instead of an empty
+    // list. Treat it as an empty page, with the real total from a head count.
+    if (error?.code === "PGRST103") {
+      let countQuery = supabase
+        .from("articles")
+        .select("id", { count: "exact", head: true });
+      if (categoryId) countQuery = countQuery.eq("category_id", categoryId);
+      if (aiModelId) countQuery = countQuery.eq("ai_model_id", aiModelId);
+      if (search) {
+        countQuery = countQuery.textSearch("search_vector", search.trim(), {
+          type: "websearch",
+          config: "english",
+        });
+      }
+      const { count: total } = await countQuery;
+      return NextResponse.json({
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: total ?? 0,
+          totalPages: Math.ceil((total ?? 0) / limit),
+        },
+      });
+    }
+
     if (error) {
       console.error("Articles query error:", error);
       return NextResponse.json(
