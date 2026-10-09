@@ -80,7 +80,7 @@ Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수�
 | **백엔드** | Next.js Route Handlers (REST API), Node 크롤러 (rss-parser) |
 | **DB / 인증** | Supabase (PostgreSQL, Auth + Google OAuth, RLS), 전문검색(tsvector + GIN) |
 | **AI** | Claude API (Anthropic) — 기사 분류·요약 |
-| **인프라** | Vercel (배포), GitHub Actions (크롤러 cron, 6시간 주기) |
+| **인프라** | Vercel (배포), GitHub Actions (크롤러 cron, 12시간 주기) |
 | **하드웨어 (예정)** | ESP32, 4인치 TFT(ILI9341), Fusion 360 3D 케이스 |
 
 ---
