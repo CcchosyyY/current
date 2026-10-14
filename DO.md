@@ -1,33 +1,43 @@
-# TODO — Current by Jyos
+# TODO — Current
 
-> AI 뉴스 큐레이션 (Next.js 16 + Supabase)
-> "한 일" → `git log --oneline` · 깊은 맥락(왜/어떻게) → `docs/worklog/`
+> AI 뉴스 수집 + **작업에 맞는 AI 모델 찾기**(OpenRouter 비교) 서비스 (Next.js 16 + Supabase)
+> "한 일" → `git log --oneline` · 설계/맥락 → `docs/`
 > 완료한 항목은 이 파일에서 **삭제**합니다 (git이 기록함)
 
 ---
 
-## 📍 현황 (2026-10-10)
+## 📍 현황 (2026-10-15)
 
-- **B1 AI 모델 뉴스 대시보드: ~완성** — 메인/Trending/Models(37개)/Newsletter/Saved, Google 로그인+북마크, 크롤러(키워드+Haiku 하이브리드 분류)
-- **B2 주가 연동 · B3 ESP32 하드웨어 · Vercel 배포: 미착수**
-- 6/9 이후 4개월 휴면 → 10/9~10 복구 완료: Supabase 재개, 크롤러 재가동, 공백(8/8~10/9) 백필
-- DB 기사 568건(14MB / 무료 500MB), 566건 이미지 정상
-- 크롤러: 12시간 주기(KST 09/21시), 피드 6곳 = TechCrunch·Verge·Wired·Ars·SiliconANGLE·MIT TR, 피드당 20건
+- **방향 전환**: 뉴스 대시보드 → 뉴스 파이프라인 위에 **모델 비교·평가 서비스**를 붙인다
+  - 제거: B2 주가 연동·호재/악재, B3 ESP32 하드웨어, 요약·감성 판단(핵심 기능에서 제외)
+  - 유지: 기사 수집 → 새 모델 출시 감지의 입력으로 사용
+- **뉴스 대시보드: ~완성** — 메인/Trending/Models(37개)/Newsletter/Saved, Google 로그인+북마크, 크롤러(키워드+Haiku 분류)
+- **Hot: 구현·커밋 완료** (`feat/hot-news`, 미머지) — 새 모델 출시·긴급 뉴스를 사건 단위로 홈 상단에 표시
+- DB 기사 568건+, 크롤러 12시간 주기(KST 09/21시), 피드 6곳
+
+## ✅ 결정된 것
+
+- 프로젝트 이름: **Current**
+- OpenRouter 키: **서버 키로 저가 모델 3개(GPT·Gemini·Claude, 운영자 부담, 하루 5회)**, 그 밖의 모델은 **사용자 각자 결제한 키**로
+- 설계 문서: `docs/domain-stories.md`, `docs/architecture.md`, `docs/architecture.puml`(+ `docs/uml/*.png`)
+- 비교 서비스는 **로그인 필요** (사용자별 선호 순위·실행 기록)
+- 크롤러 keepalive는 **하지 않음** — 60일 커밋 없으면 GitHub이 크롤러를 끄도록 둔다
+- `docs/openrouter-integration.md`(10/13, `feat/openrouter-playground`)는 "사용자 키만·로그인 없음" 전제라 위 결정과 다름 → 아키텍처 확정 후 다시 씀
 
 ---
 
 ## 🔥 Now — 지금 (1~3개만)
 
-- [ ] (사용자) 로그인 → 북마크 → `/saved` end-to-end 1회 확인
-- [ ] 크롤러 자동 비활성화 방지 — 60일 커밋 없으면 GitHub이 schedule 끔 (keepalive 단계 추가)
+- [ ] **0-4 비교 1단계 화면·API 세부 계획** (도메인 스토리·아키텍처 v1 작성 완료, Q-1~Q-5 결정)
 
 ## ⏭️ Next — 다음
 
-- [ ] **B2 시작**: AI 모델 → 상장사 매핑(ChatGPT→MSFT, Gemini→GOOGL 등) + 주가 위젯
-- [ ] 분류 정확도 점검 — Haiku 2차 분류 코드는 있음, 비즈니스 기사 누출 여부 확인
-- [ ] 기존 DB 기사 재분류 (옛 키워드 분류·옛 소스 기사를 현재 규칙+Haiku로)
+- [ ] 저장소 구조 정리 → 재사용/제거/신규 구분 → **실행 기록 테이블 설계** → 비교 1단계 구현 계획
+- [ ] 비교 1단계: 여러 모델 결과 나란히 + 비용·속도, 이름 가리기, 순서 섞기, 선택 저장
+- [ ] 비교 2단계 순위 → 3단계 일관성·비용 시뮬레이터 → 4단계 Hot(model_release) 연결 자동 재평가 → 5단계 라우팅(보류)
+- [ ] 한국어 모델 비교 서비스가 이미 있는지 조사 (차별점 확인)
+- [ ] 분류 정확도 점검 / 기존 DB 기사 재분류
 - [ ] 기사 로고 fallback(모델→회사→사이트)을 Trending·Saved·상세에도 적용
-- [ ] 모델 상세 모달 Figma 다듬기 → 코드 반영
 
 ## 🧹 정리 — 잡일
 
@@ -39,9 +49,8 @@
 
 ## 💡 Someday — 백로그
 
-**하드웨어 / 확장 (기본 목표 최종 산출물)**
-- [ ] B3: ESP32 + 4인치 TFT 디스플레이 — Wi-Fi로 뉴스·주가 수신
-- [ ] Vercel 배포
+**배포**
+- [ ] Vercel 배포 (Auth·OpenRouter 콜백 URL도 배포 도메인으로 추가)
 
 **모델 / 회사**
 - [ ] `PAGE_FIRST_SLUGS` 전체 모델로 확장 (현재 chatgpt만 파일럿)

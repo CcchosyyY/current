@@ -1,0 +1,554 @@
+' ============================================================================
+' Current — 아키텍처 UML (PlantUML)
+' 문서: docs/architecture.md (본문의 [UML-n]이 아래 다이어그램 번호)
+'       docs/domain-stories.md (용어·규칙 R-n)
+'
+' 보는 법
+'   - VS Code: "PlantUML" 확장(jebbs.plantuml) 설치 → 이 파일 열고 Alt+D (Java 필요)
+'   - 또는 https://www.plantuml.com/plantuml 에 블록 하나씩 붙여넣기
+'   - 한 파일에 @startuml 블록이 7개 있다. 커서가 있는 블록이 미리보기에 나온다.
+' ============================================================================
+
+
+' ----------------------------------------------------------------------------
+' [UML-1] 시스템 컨텍스트 — Current와 바깥 세계
+' ----------------------------------------------------------------------------
+@startuml UML-1_system-context
+title [UML-1] 시스템 컨텍스트
+left to right direction
+skinparam shadowing false
+skinparam rectangle {
+  RoundCorner 12
+}
+
+actor "방문자\n(비로그인)" as Visitor
+actor "사용자\n(Google 로그인)" as User
+
+rectangle "Current\n(Next.js 16 앱)" as Current #E8F0FE
+
+rectangle "크롤러\n(GitHub Actions, 12시간마다)" as Crawler #F3F4F6
+cloud "언론사 RSS 6곳\nTechCrunch, Verge, Wired,\nArs, SiliconANGLE, MIT TR" as RSS
+database "Supabase\nPostgres + Auth" as Supabase
+cloud "OpenRouter\n(실험 대상 모델들)" as OpenRouter #FFF4E5
+cloud "Anthropic\n(판정 AI: Haiku)" as Anthropic #F5F3FF
+
+Visitor --> Current : 뉴스·Hot 보기
+User --> Current : 작업 입력·비교·선택·순위
+
+Current --> Supabase : 읽기/쓰기\n(사용자 세션 + RLS)
+Current --> OpenRouter : 모델 실행·모델 목록\n(서버 키: 허용 목록 저가 모델 / 개인 키)
+Current --> Anthropic : 작업 유형 묶기
+
+Crawler --> RSS : 기사 수집
+Crawler --> Anthropic : 기사 분류·Hot 판정
+Crawler --> Supabase : 기사 저장\n(service role)
+
+note bottom of OpenRouter
+  실험 대상. 호출은 전부 실행 기록(runs)에 남는다.
+end note
+note bottom of Anthropic
+  시스템 도구. 실행 기록에 남기지 않는다 (R-24).
+end note
+@enduml
+
+
+' ----------------------------------------------------------------------------
+' [UML-2] 모듈(경계)과 의존 방향
+' ----------------------------------------------------------------------------
+@startuml UML-2_modules
+title [UML-2] 모듈과 의존 방향 (화살표 = "부른다/읽는다")
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+package "화면 (브라우저)" as UI #FAFAFA {
+  [홈 / Hot 섹션] as HomeUI
+  [/compare 비교 화면] as CompareUI
+  [/rankings (2단계)] as RankUI
+  [/my-tasks (4단계)] as MyTaskUI
+}
+
+package "API 라우트 (얇게: zod 검증 + 인증)" as API #FAFAFA {
+  [/api/hot] as HotAPI
+  [/api/catalog/*] as CatalogAPI
+  [/api/task-types/*\n/api/tasks/*] as TaskAPI
+  [/api/comparisons/*] as CompareAPI
+  [/api/rankings] as RankAPI
+  [/api/suggestions] as SuggestAPI
+}
+
+package "뉴스 영역 (기존)" as NewsArea #F3F4F6 {
+  [뉴스 수집\nnews] as News
+  [Hot\nhot] as Hot
+}
+
+package "비교 영역 (신규, src/modules)" as CompareArea #E8F0FE {
+  [계정\naccount] as Account
+  [모델 카탈로그\ncatalog] as Catalog
+  [작업\ntask] as Task
+  [비교\ncomparison] as Comparison
+  [모델 실행\nexecution] as Execution
+  [평가\nevaluation] as Evaluation
+  [새 모델 추천\nsuggestion (4단계)] as Suggestion
+}
+
+package "어댑터 (src/lib)" as Adapters #FFF7ED {
+  [OpenRouter 어댑터\nopenrouter.ts] as ORA
+  [판정 AI 어댑터\njudge-llm.ts] as JudgeA
+}
+
+database "Supabase" as DB
+cloud "OpenRouter" as OR
+cloud "Anthropic" as AN
+
+HomeUI --> HotAPI
+CompareUI --> CatalogAPI
+CompareUI --> TaskAPI
+CompareUI --> CompareAPI
+RankUI --> RankAPI
+MyTaskUI --> SuggestAPI
+
+HotAPI --> Hot
+CatalogAPI --> Catalog
+TaskAPI --> Task
+CompareAPI --> Comparison
+RankAPI --> Evaluation
+SuggestAPI --> Suggestion
+
+News --> Hot : 기사 넘김 (크롤러 안에서)
+
+Comparison --> Account : 로그인·한도·키
+Comparison --> Task : 샘플 저장
+Comparison --> Execution : 실행 요청
+Comparison --> Evaluation : 추천 모델 3개
+Execution --> Catalog : 가격·허용 목록
+Execution --> Account : 어느 키로?
+Task --> JudgeA : 유형 묶기
+Catalog --> ORA : 모델 목록
+Execution --> ORA : 모델 호출
+Suggestion --> Hot : 새 모델 사건 (읽기)
+Suggestion --> Catalog : 새 모델
+Suggestion --> Task : 내 작업
+Suggestion --> Comparison : 미리 채운 비교
+
+Evaluation ..> DB : runs·choices 읽기만\n(DB 함수)
+ORA --> OR
+JudgeA --> AN
+
+note right of Execution
+  OpenRouter를 부르는 유일한 모듈
+  (카탈로그 동기화의 목록 조회 제외).
+  블라인드·선택·순위를 모른다.
+end note
+
+note right of Evaluation
+  소유 데이터 없음.
+  원본(runs, choices)을 읽어 계산만.
+end note
+
+note bottom of NewsArea
+  비교 영역을 전혀 모른다.
+  새 모델 추천이 Hot을 "읽기만" 한다.
+end note
+@enduml
+
+
+' ----------------------------------------------------------------------------
+' [UML-3] 데이터 모델 (ER)
+' ----------------------------------------------------------------------------
+@startuml UML-3_data-model
+title [UML-3] 데이터 모델 — 기존(회색) + 신규(파랑)
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+hide methods
+
+' ---------- 기존 ----------
+entity "auth.users" as users #F3F4F6 {
+  * id : uuid <<PK>>
+  --
+  email : text
+}
+
+entity "ai_models (37개 브랜드)" as ai_models #F3F4F6 {
+  * id : uuid <<PK>>
+  --
+  * slug : text <<unique>>
+  name : text
+  company : text
+  brand_color : text
+}
+
+entity "articles" as articles #F3F4F6 {
+  * id : uuid <<PK>>
+  --
+  title : text
+  source_url : text <<unique>>
+  ai_model_id : uuid <<FK>>
+  published_at : timestamptz
+  hot_type : text  (model_release | breaking)
+  hot_reason : text
+  hot_event : text  (사건 키)
+}
+
+' ---------- 신규: 카탈로그 ----------
+entity "catalog_models" as catalog #E8F0FE {
+  * id : text <<PK>>  (OpenRouter 모델 ID)
+  --
+  canonical_slug : text
+  name : text
+  provider : text
+  ai_model_slug : text <<FK>> (브랜드, null 가능)
+  prompt_price : numeric
+  completion_price : numeric
+  is_free : bool
+  server_allowed : bool  (서버 키 허용 목록)
+  default_rank : smallint
+  context_length : int
+  modality : text
+  first_seen_at : timestamptz  (새 모델 감지)
+  last_seen_at : timestamptz
+  is_active : bool
+}
+
+' ---------- 신규: 작업 ----------
+entity "task_types" as task_types #E8F0FE {
+  * id : uuid <<PK>>
+  --
+  * key : text <<unique>>
+  name : text  ("문장 교정")
+  description : text
+  is_unclassified : bool
+  merged_into : uuid <<FK>> (자기 참조, null)
+  created_by : text  (judge | admin)
+  created_at : timestamptz
+}
+
+entity "tasks" as tasks #E8F0FE {
+  * id : uuid <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  name : text  ("자소서 다듬기")
+  name_normalized : text
+  * task_type_id : uuid <<FK>>
+  classified_by : text  (judge | user_pick | fallback)
+  is_saved : bool  (4단계)
+  current_model_id : text <<FK>> (4단계)
+  created_at : timestamptz
+  ..
+  unique(user_id, name_normalized)
+}
+
+entity "samples" as samples #E8F0FE {
+  * id : uuid <<PK>>
+  --
+  * task_id : uuid <<FK>>
+  * user_id : uuid <<FK>>
+  content : text  (≤ 8,000자)
+  content_hash : text
+  is_saved : bool  (4단계)
+  created_at : timestamptz
+}
+
+' ---------- 신규: 비교 ----------
+entity "comparisons" as comparisons #E8F0FE {
+  * id : uuid <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * task_id : uuid <<FK>>
+  * task_type_id : uuid <<FK>>  (생성 시점 스냅샷)
+  * sample_id : uuid <<FK>>
+  is_blind : bool
+  status : text  (running | awaiting_choice | chosen | failed | abandoned)
+  model_count : int
+  source : text  (manual | new_model | rerun)
+  source_event : text  (사건 키, null)
+  created_at : timestamptz
+  completed_at : timestamptz
+}
+
+entity "runs  ★ 모든 분석의 원천 (추가만)" as runs #DBEAFE {
+  * id : uuid <<PK>>
+  --
+  comparison_id : uuid <<FK>>
+  repeat_group_id : uuid  (3단계)
+  * user_id : uuid <<FK>>
+  * task_type_id : uuid <<FK>>
+  * sample_id : uuid <<FK>>
+  * requested_model_id : text <<FK>>
+  response_model : text  (실제 응답 버전)
+  provider_name : text
+  display_position : smallint  (0=A 1=B 2=C)
+  key_kind : text  (server | user)
+  params : jsonb
+  status : text  (success | error | timeout)
+  output_text : text
+  error_code : text
+  input_tokens : int
+  output_tokens : int
+  cost_usd : numeric
+  cost_source : text  (openrouter | estimated)
+  latency_ms : int
+  ttft_ms : int
+  openrouter_generation_id : text
+  started_at : timestamptz
+  finished_at : timestamptz
+}
+
+entity "choices" as choices #E8F0FE {
+  * id : uuid <<PK>>
+  --
+  * comparison_id : uuid <<FK>> <<unique>>
+  * user_id : uuid <<FK>>
+  kind : text  (pick | tie=무승부 | all_bad=순위 제외)
+  chosen_run_id : uuid <<FK>> (pick일 때)
+  was_blind : bool
+  decision_ms : int
+  created_at : timestamptz
+}
+
+' ---------- 신규: 4단계 ----------
+entity "event_model_links (4단계)" as links #EDE9FE {
+  * hot_event : text <<PK>>
+  * catalog_model_id : text <<PK, FK>>
+  --
+  match_reason : text
+  confidence : real
+  created_at : timestamptz
+}
+
+' ---------- 관계 ----------
+ai_models ||--o{ articles : ai_model_id
+ai_models |o--o{ catalog : ai_model_slug
+
+task_types |o--o{ task_types : merged_into
+task_types ||--o{ tasks
+users ||--o{ tasks
+tasks ||--o{ samples
+catalog |o--o{ tasks : current_model_id
+
+users ||--o{ comparisons
+tasks ||--o{ comparisons
+samples ||--o{ comparisons
+task_types ||--o{ comparisons
+
+comparisons ||--o{ runs
+catalog ||--o{ runs : requested_model_id
+samples ||--o{ runs
+
+comparisons ||--o| choices
+runs |o--o| choices : chosen_run_id
+
+articles }o..o{ links : hot_event
+catalog ||--o{ links
+
+note right of runs
+  R-11 사용자에겐 SELECT만, 쓰기는 서버만.
+  UPDATE는 "진행 중 → 완료" 1회.
+  R-12 requested_model_id + response_model 둘 다.
+end note
+
+note bottom of choices
+  순위는 저장하지 않는다 (R-15).
+  ranking_global / ranking_mine DB 함수가
+  choices + runs를 읽어 계산 (2단계).
+end note
+@enduml
+
+
+' ----------------------------------------------------------------------------
+' [UML-4] 블라인드 비교 흐름 (1단계)
+' ----------------------------------------------------------------------------
+@startuml UML-4_blind-comparison
+title [UML-4] 블라인드 비교 (이야기 3)
+skinparam shadowing false
+autonumber
+
+actor "사용자\n(지우)" as U
+participant "비교 화면\n/compare" as UI
+participant "API 라우트" as API
+participant "작업\ntask" as Task
+participant "평가\nevaluation" as Eval
+participant "비교\ncomparison" as Cmp
+participant "모델 실행\nexecution" as Exe
+participant "계정\naccount" as Acc
+database "Supabase" as DB
+participant "OpenRouter" as OR
+participant "판정 AI\n(Haiku)" as Judge
+
+U -> UI : 작업 이름 "자소서 다듬기"
+UI -> API : POST /api/tasks/resolve
+API -> Task : resolveTask(user, name)
+Task -> Judge : (처음 쓰는 이름일 때만) 유형 묶기
+Judge --> Task : reuse "문장 교정"
+Task -> DB : tasks insert
+Task --> UI : task + taskType
+
+UI -> API : GET /api/comparisons/suggest
+API -> Eval : suggestModels(taskType)
+Eval --> UI : 추천 모델 3개
+
+U -> UI : 샘플 입력, 모델 확인, 블라인드 ON, [비교 실행]
+UI -> API : POST /api/comparisons
+API -> Cmp : createComparison
+Cmp -> Acc : 로그인·오늘 한도 확인
+Cmp -> Task : saveSample
+Cmp -> Cmp : 순서 섞기 (위치 0,1,2)
+Cmp -> DB : comparisons (running)
+Cmp --> UI : comparisonId + 슬롯\n<color:red>블라인드: 모델 ID 없음</color>
+
+UI -> API : POST /api/comparisons/{id}/run
+API -> Cmp : run
+par 모델 3개 병렬
+  Cmp -> Exe : execute(모델 A, 위치 0)
+  Exe -> Acc : 어느 키? → server
+  Exe -> OR : chat/completions
+  OR --> Exe : 결과 + usage + 실제 model
+  Exe -> DB : runs insert
+else
+  Cmp -> Exe : execute(모델 B, 위치 1)
+  Exe -> OR : chat/completions
+  OR --> Exe : 결과
+  Exe -> DB : runs insert
+else
+  Cmp -> Exe : execute(모델 C, 위치 2)
+  Exe -> OR : chat/completions
+  OR --> Exe : <color:red>시간 초과</color>
+  Exe -> DB : runs insert (status=timeout)
+end
+Cmp -> DB : status = awaiting_choice (성공 2개 이상)
+Cmp --> UI : A·B·C 결과 + 응답 속도\n<color:red>블라인드: 이름·로고·비용 없음 (R-8)</color>
+
+U -> UI : B 선택
+UI -> API : POST /api/comparisons/{id}/choice
+API -> Cmp : choose(kind=pick, runId=B)
+Cmp -> DB : choices insert (comparison_id unique, R-10)
+Cmp -> DB : status = chosen
+Cmp --> UI : 공개: 각 위치의 모델·비용
+UI --> U : "B = Llama 3.3 이었어요"
+@enduml
+
+
+' ----------------------------------------------------------------------------
+' [UML-5] 작업 유형 묶기 — 의미 묶기 패턴 (1단계)
+' ----------------------------------------------------------------------------
+@startuml UML-5_task-type-grouping
+title [UML-5] 작업 이름 → 작업 유형 묶기 (이야기 2)
+skinparam shadowing false
+
+start
+:resolveTask(user, "자소서 다듬기");
+:name_normalized 만들기;
+
+if (내 작업 중 같은 이름이 있나?) then (있음)
+  :기존 작업·유형 재사용 (R-6);
+  stop
+else (없음)
+endif
+
+:후보 추리기 (DB, 무료)
+pg_trgm 유사도로 task_types + 별칭 상위 20개;
+
+:판정 AI 호출 (Haiku, temperature 0, JSON 스키마)
+입력: 작업 이름, 샘플 앞부분(선택), 후보 20개
+지시: 같은 목적이면 재사용 우선 (R-7);
+
+if (판정 AI 성공?) then (예)
+  if (decision = reuse 이고 key가 후보에 있나?) then (예)
+    :기존 유형 사용;
+  else (아니오 / new)
+    :key 형식 정리 (소문자-케밥);
+    if (같은 key가 이미 있나?) then (예)
+      :그 유형 재사용;
+    else (아니오)
+      :task_types insert
+      (name, description, created_by=judge)
+      → 다음 사람 자동완성에 나타남 (R-5);
+    endif
+  endif
+  :tasks insert (classified_by=judge);
+else (실패 / 시간 초과)
+  :"미분류" 유형으로 저장
+  (classified_by=fallback);
+  note right
+    비교는 막지 않는다.
+    나중에 배치/관리자가 다시 묶는다.
+  end note
+endif
+
+:작업 + 유형 반환;
+stop
+@enduml
+
+
+' ----------------------------------------------------------------------------
+' [UML-6] 새 모델 추천 → 사용자가 직접 비교 (4단계)
+' ----------------------------------------------------------------------------
+@startuml UML-6_new-model-suggestion
+title [UML-6] 새 모델 추천 (이야기 7) — 자동 실행·알림 없음
+skinparam shadowing false
+autonumber
+
+participant "크롤러" as Crawler
+participant "카탈로그 동기화\n(매일)" as Sync
+participant "OpenRouter" as OR
+database "Supabase" as DB
+participant "새 모델 추천\nsuggestion" as Sug
+actor "사용자" as U
+participant "비교 화면" as UI
+
+== 신호 1: 뉴스 ==
+Crawler -> DB : 사건 생성\nhot_type=model_release\nhot_event=google-gemini-4-argon-release
+
+== 신호 2: 카탈로그 ==
+Sync -> OR : GET /api/v1/models
+OR --> Sync : 모델 목록
+Sync -> DB : catalog_models upsert\n(새 모델은 first_seen_at = 지금)
+
+== 연결 (배치) ==
+Sug -> DB : 최근 새 모델 사건 × 최근 새 카탈로그 모델
+Sug -> Sug : 같은 브랜드 + first_seen_at이 사건 ±7일\n+ 이름 토큰 일치
+alt 연결됨
+  Sug -> DB : event_model_links insert
+else 연결 못 함
+  Sug -> Sug : 추천 안 함\n(틀린 추천보다 없는 게 낫다)
+end
+
+== 사용자가 들어왔을 때 ==
+U -> UI : /my-tasks 열기
+UI -> Sug : suggestionsFor(user)
+Sug -> DB : 내 작업 × 연결된 새 모델
+Sug --> UI : "새 모델 Gemini 4 Argon — 지금 쓰는 Claude와 비교해 보기"
+U -> UI : 버튼 클릭
+UI -> Sug : prefillComparison
+Sug --> UI : 저장 샘플 + {새 모델, 지금 쓰는 모델, 순위 1위}\n블라인드 ON
+U -> UI : <b>[비교 실행]</b> 직접 클릭 (R-21)
+UI -> UI : UML-4의 "POST /api/comparisons"부터 동일\nsource=new_model, source_event=사건 키
+@enduml
+
+
+' ----------------------------------------------------------------------------
+' [UML-7] 비교(comparison)의 상태
+' ----------------------------------------------------------------------------
+@startuml UML-7_comparison-states
+title [UML-7] 비교의 상태 전이
+skinparam shadowing false
+
+[*] --> running : 비교 만들기\n(샘플 저장, 순서 섞기)
+
+running --> awaiting_choice : 실행 끝\n성공 2개 이상
+running --> failed : 실행 끝\n성공 1개 이하
+
+awaiting_choice --> chosen : 선택 (pick / tie / all_bad)\n→ 모델 이름 공개
+awaiting_choice --> abandoned : 24시간 동안 선택 없음
+
+chosen --> [*]
+failed --> [*]
+abandoned --> [*]
+
+state running : 모델 N개 병렬 실행\n각 실행 → runs 기록
+state awaiting_choice : 블라인드면 이름·로고·비용 숨김 (R-8)\n응답 속도는 보임
+state chosen : 선택 1번, 변경 불가 (R-10)\n순위 계산에 포함
+state failed : 선택 받지 않음\n실패 실행도 runs에 남음
+state abandoned : runs는 남지만\n순위에는 안 쓰임
+@enduml
