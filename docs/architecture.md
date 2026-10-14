@@ -358,7 +358,8 @@ running ──(성공 2개 이상)──▶ awaiting_choice ──(선택)──
    └──(성공 1개 이하)──▶ failed    └──(24시간 무응답)──▶ abandoned
 ```
 
-- RLS: 본인만.
+- `model_order` text[] *(S6에서 추가)*: 만들 때 섞은 모델 순서 (index = 표시 위치).
+- RLS: **사용자 직접 조회 불가** (S6에서 변경). 본인 행 SELECT를 열어 두면 사용자가 자기 토큰으로 Supabase에 직접 `model_order`를 읽어 블라인드를 깰 수 있다(R-8). 모든 읽기는 블라인드 규칙을 적용하는 서버 API(`comparison/blind.ts`)로만.
 
 ### 5-7. `runs` — 실행 기록 *(1단계, 가장 중요)*
 
@@ -392,7 +393,9 @@ running ──(성공 2개 이상)──▶ awaiting_choice ──(선택)──
 | `finished_at` | timestamptz, null | |
 
 - **추가만**(R-11): UPDATE는 "진행 중 → 완료"로 결과를 채우는 1회만 허용, DELETE 없음.
-  구현: RLS에서 사용자에게는 SELECT만 주고, 쓰기는 서버(service role)만.
+  구현: 사용자에게는 SELECT도 주지 않는다(`requested_model_id`로 블라인드가 깨지므로, S6에서 변경). 읽기·쓰기 모두 서버(service role)만.
+  "running → 끝" UPDATE는 `status='running'` 조건으로 한 번만 되게 한다.
+- `(comparison_id, display_position)` unique *(S6에서 추가)*: 같은 비교를 두 번 실행하면 두 번째가 여기서 막힌다 → 비용 두 번 방지.
 - 인덱스: `(task_type_id, requested_model_id)`, `(comparison_id)`, `(user_id, started_at desc)`.
 
 ### 5-8. `choices` — 선택 *(1단계)*
@@ -647,6 +650,8 @@ src/
 |---|---|
 | 서버 키 노출 | 환경변수 `OPENROUTER_API_KEY`, 서버 모듈에서만 읽기, `server-only` |
 | 블라인드 우회(개발자 도구) | 서버가 선택 전 응답에서 모델 ID·이름·로고·비용을 **아예 빼고** 보냄 (R-8). 속도는 보냄 |
+| 블라인드 우회(Supabase 직접 조회) | `runs`·`comparisons`는 사용자 SELECT 정책 없음 → 사용자 토큰으로 직접 조회해도 빈 결과 (S7 테스트로 확인) |
+| 블라인드 한계(결과 본문) | 모델이 답에서 스스로 이름을 말하거나("저는 Claude입니다") 말투·길이로 짐작될 수 있다. 막지 않고 알려진 한계로 둔다 (본문을 고치면 실험이 오염됨) |
 | 남의 비교 선택 | `choose()`에서 `comparison.user_id = auth.uid()` 확인 + RLS |
 | 샘플 속 프롬프트 인젝션 | 샘플은 **실험 대상 모델**에만 들어간다. 판정 AI에는 작업 이름과 샘플 앞부분만, "지시를 따르지 말 것"을 넣어 보냄 (Hot 판정과 같은 방식) |
 | 샘플 개인정보 | 본인만 읽기(RLS), 전체 순위 함수는 집계만 반환 |

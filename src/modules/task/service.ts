@@ -1,12 +1,15 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { ApiError } from "@/lib/api-error";
 import { judgeTaskType, type TypeCandidate } from "./grouping";
 import {
   exampleNamesByType,
   findMyTask,
+  findTaskById,
   findTypeById,
   findTypeByKey,
   findUnclassified,
+  insertSample,
   insertTask,
   insertType,
   listActiveTypes,
@@ -22,6 +25,7 @@ import type { ResolvedTask, TaskSuggestion, TaskType } from "./types";
 // 작업 모듈의 공개 함수 (docs/architecture.md §3-2 ⑤, 이야기 2).
 
 export const TASK_NAME_MAX = 100;
+export const SAMPLE_MAX = 8000; // R-26: 이보다 길면 개인 키
 
 /** "  자소서   다듬기 " → "자소서 다듬기", 영문은 소문자. 같은 이름 재사용(R-6)의 기준 */
 export function normalizeTaskName(name: string): string {
@@ -132,6 +136,31 @@ export async function resolveTask(
     if (actual) return toResolved(task, await resolveMerged(actual), { isNewType: false, reused: true });
   }
   return toResolved(task, type, { isNewType, reused: false });
+}
+
+/** 내 작업 하나 + 현재 유형(병합 반영). 남의 작업이거나 없으면 404 */
+export async function getMyTask(
+  userId: string,
+  taskId: string,
+): Promise<{ taskId: string; name: string; taskType: TaskType }> {
+  const task = await findTaskById(taskId);
+  if (!task || task.user_id !== userId) {
+    throw new ApiError("not_found", 404, "작업을 찾을 수 없어요");
+  }
+  const type = await findTypeById(task.task_type_id);
+  if (!type) throw new Error(`task ${task.id} points to a missing type`);
+  return { taskId: task.id, name: task.name, taskType: toTaskType(await resolveMerged(type)) };
+}
+
+/** 샘플 저장 (본인만 볼 수 있음, R-20). content_hash는 같은 샘플 재사용·캐시용 */
+export async function saveSample(userId: string, taskId: string, content: string): Promise<string> {
+  if (!content.trim()) throw new ApiError("empty_sample", 400, "샘플을 입력해 주세요");
+  if (content.length > SAMPLE_MAX) {
+    throw new ApiError("sample_too_long", 400, `샘플은 ${SAMPLE_MAX.toLocaleString()}자까지예요`);
+  }
+  const hash = createHash("sha256").update(content).digest("hex");
+  const row = await insertSample({ task_id: taskId, user_id: userId, content, content_hash: hash });
+  return row.id;
 }
 
 /** 자동완성 (이야기 2의 ③): 내 예전 작업 이름 + 기존 유형 */

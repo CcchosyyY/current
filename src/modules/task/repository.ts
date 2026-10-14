@@ -125,6 +125,23 @@ export async function insertTask(t: Omit<TaskRow, "id">): Promise<TaskRow> {
   return data as TaskRow;
 }
 
+export async function findTaskById(id: string): Promise<TaskRow | null> {
+  const { data, error } = await db().from("tasks").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(`tasks select failed: ${error.message}`);
+  return data as TaskRow | null;
+}
+
+export async function insertSample(s: {
+  task_id: string;
+  user_id: string;
+  content: string;
+  content_hash: string;
+}): Promise<{ id: string }> {
+  const { data, error } = await db().from("samples").insert(s).select("id").single();
+  if (error) throw new Error(`samples insert failed: ${error.message}`);
+  return data as { id: string };
+}
+
 export async function suggestTypes(
   q: string,
   limit: number,
