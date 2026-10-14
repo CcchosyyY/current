@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeft,
   ChevronDown,
   EyeOff,
+  Pencil,
   Eye,
   LogIn,
   Loader2,
   Plus,
   RotateCcw,
   Sparkles,
+  Tag,
   X,
 } from "lucide-react";
 import { AI_MODELS } from "@/lib/constants";
@@ -23,7 +24,6 @@ import { DEFAULT_SETTINGS, type ModelSettings } from "@/modules/execution/types"
 import type { ResolvedTask } from "@/modules/task/types";
 import { ApiCallError, compareApi } from "./api";
 import ResultSlots from "./ResultSlots";
-import TaskNameInput from "./TaskNameInput";
 
 // 비교 화면 (이야기 2·3, plan-stage1 S9). 홈의 가로 슬라이드 오른쪽 패널.
 // UI는 1차 — 흐름이 동작하는 것이 목적. 다듬기는 다음 단계.
@@ -32,30 +32,28 @@ const SAMPLE_MAX = 8000;
 const MIN_MODELS = 2;
 const MAX_MODELS = 3;
 
-export default function ComparePanel({ onBack }: { onBack: () => void }) {
+export default function ComparePanel() {
   const { user, isLoading } = useAuth();
 
   return (
-    <section className="relative h-full w-1/2 overflow-y-auto bg-[#07070C]">
+    // 양옆 여백: 화면 가장자리의 전환 버튼(SlideTab)과 겹치지 않게
+    <section className="relative h-full w-1/2 overflow-y-auto bg-[#07070C] lg:px-[140px]">
       <Backdrop />
-      <button
-        onClick={onBack}
-        className="absolute left-6 top-6 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-text-secondary hover:border-white/25 hover:text-text-primary transition-colors cursor-pointer"
-      >
-        <ArrowLeft size={14} /> 뉴스로
-      </button>
 
-      <div className="relative mx-auto max-w-5xl px-6 pt-20 pb-16">
-        <p className="mb-3 font-mono text-[11px] tracking-[0.3em] text-primary-light">MODEL LAB</p>
-        <h1 className="font-heading text-3xl md:text-4xl font-bold leading-tight text-white">
-          내 작업에 맞는 모델,{" "}
-          <span className="bg-gradient-to-r from-primary-light to-violet-400 bg-clip-text text-transparent">
-            직접 비교해서 찾기
-          </span>
-        </h1>
-        <p className="mt-3 text-sm text-text-secondary">
-          같은 일을 여러 모델에 시키고, 이름을 가린 채 가장 나은 답을 고르세요.
-        </p>
+      {/* 제목·입력은 읽기 좋은 폭(max-w-5xl), 결과는 더 넓게(1600px) — CompareFlow가 나눠 쓴다 */}
+      <div className="relative mx-auto max-w-[1600px] px-6 pt-10 pb-6">
+        <div className="mx-auto max-w-5xl">
+          <p className="mb-3 font-mono text-[11px] tracking-[0.3em] text-primary-light">MODEL LAB</p>
+          <h1 className="font-heading text-3xl md:text-4xl font-bold leading-tight text-white">
+            내 작업에 맞는 모델,{" "}
+            <span className="bg-gradient-to-r from-primary-light to-violet-400 bg-clip-text text-transparent">
+              직접 비교해서 찾기
+            </span>
+          </h1>
+          <p className="mt-3 text-sm text-text-secondary">
+            같은 일을 여러 모델에 시키고, 이름을 가린 채 가장 나은 답을 고르세요.
+          </p>
+        </div>
 
         <div className="mt-8">
           {isLoading ? (
@@ -119,7 +117,10 @@ function LoginGate() {
 
 function CompareFlow() {
   const { showToast } = useToast();
+  // 작업(이름·유형)은 사용자가 쓰지 않는다 — 실행할 때 샘플을 보고 AI가 정한다.
+  // 같은 샘플로 다시 돌리면 다시 묻지 않는다.
   const [task, setTask] = useState<ResolvedTask | null>(null);
+  const [taskSample, setTaskSample] = useState<string | null>(null);
   const [sample, setSample] = useState("");
   const [allowed, setAllowed] = useState<CatalogModel[]>([]);
   const [selected, setSelected] = useState<CatalogModel[]>([]);
@@ -130,25 +131,27 @@ function CompareFlow() {
 
   const [view, setView] = useState<ComparisonView | null>(null);
   const [runningSince, setRunningSince] = useState<number | null>(null);
+  const [classifying, setClassifying] = useState(false);
   const [choosing, setChoosing] = useState(false);
   const shownAt = useRef<number>(0);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // 기본 모델 3개 + 오늘 남은 횟수 (작업 유형이 정해지면 다시 — 2단계에선 유형별 추천)
+  // 기본 모델 3개 + 오늘 남은 횟수. 처음 한 번만 — 1단계 추천은 작업 유형과 무관하다.
+  // (유형이 바뀔 때마다 다시 부르면 늦게 온 응답이 방금 줄어든 남은 횟수를 덮어쓸 수 있다.
+  //  2단계에서 유형별 추천을 붙일 때는 모델 목록만 따로 다시 부른다.)
   useEffect(() => {
     compareApi
-      .suggestModels(task?.taskType.id)
+      .suggestModels()
       .then((d) => {
         setAllowed(d.models);
         setSelected((prev) => (prev.length > 0 ? prev : d.models));
         setRemaining(d.remainingToday);
       })
       .catch(() => showToast("모델 목록을 불러오지 못했어요", "error"));
-  }, [task?.taskType.id, showToast]);
+  }, [showToast]);
 
   const busy = runningSince !== null || choosing;
   const canRun =
-    !!task &&
     sample.trim().length > 0 &&
     sample.length <= SAMPLE_MAX &&
     selected.length >= MIN_MODELS &&
@@ -162,10 +165,22 @@ function CompareFlow() {
   }
 
   async function run() {
-    if (!task || !canRun) return;
+    if (!canRun) return;
     try {
+      setRunningSince(Date.now());
+      let current = task;
+      if (!current || taskSample !== sample) {
+        setClassifying(true);
+        try {
+          current = await compareApi.resolveFromSample(sample);
+        } finally {
+          setClassifying(false);
+        }
+        setTask(current);
+        setTaskSample(sample);
+      }
       const created = await compareApi.create({
-        taskId: task.taskId,
+        taskId: current.taskId,
         sample,
         modelIds: selected.map((m) => m.id),
         blind,
@@ -173,15 +188,31 @@ function CompareFlow() {
       });
       setView(created.data);
       setRemaining(created.remainingToday);
-      setRunningSince(Date.now());
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 
-      const done = await compareApi.run(created.data.id);
+      // /run은 모든 모델이 끝나야 응답한다. 그동안 1초마다 비교를 조회해서
+      // 이미 끝난 모델의 결과부터 보여준다 (실행 기록은 모델마다 끝나는 즉시 저장된다).
+      let finished = false;
+      const poll = setInterval(() => {
+        compareApi
+          .get(created.data.id)
+          .then((v) => {
+            if (!finished) setView(v);
+          })
+          .catch(() => {});
+      }, 1000);
+      let done: ComparisonView;
+      try {
+        done = await compareApi.run(created.data.id);
+      } finally {
+        finished = true;
+        clearInterval(poll);
+      }
       setView(done);
       shownAt.current = Date.now();
       if (done.status === "failed") {
         // 전부 실패한 비교는 횟수에 안 센다 → 서버 값으로 다시
-        compareApi.suggestModels(task.taskType.id).then((d) => setRemaining(d.remainingToday)).catch(() => {});
+        compareApi.suggestModels(current.taskType.id).then((d) => setRemaining(d.remainingToday)).catch(() => {});
       }
     } catch (e) {
       fail(e);
@@ -204,33 +235,37 @@ function CompareFlow() {
 
   function reset(keepInputs: boolean) {
     setView(null);
+    setEditing(false);
     if (!keepInputs) {
       setSample("");
     }
   }
 
+  // 결과가 있으면 입력을 한 줄 요약으로 접어 결과에 자리를 준다 ("수정"으로 다시 펼침)
+  const [editing, setEditing] = useState(false);
+  const formCollapsed = view !== null && !editing;
+
   return (
-    <div className="space-y-6">
-      {/* ── 입력 ── */}
-      <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl space-y-6">
-        <Field step="01" label="무엇을 하나요?">
-          <TaskNameInput resolved={task} onResolved={setTask} onError={(m) => showToast(m, "error")} />
-        </Field>
-
-        <Field step="02" label="샘플">
-          <textarea
-            value={sample}
-            onChange={(e) => setSample(e.target.value)}
-            rows={6}
-            placeholder={"모델에게 보낼 내용을 지시까지 함께 써 주세요.\n예: 다음 자기소개서 문단을 자연스럽게 고쳐줘: 저는 열정 있는 사람 입니다…"}
-            className="w-full resize-y rounded-xl border border-white/10 bg-black/30 p-4 font-mono text-[13px] leading-relaxed text-text-primary placeholder:text-text-tertiary outline-none focus:border-primary/60"
-          />
-          <p className={`mt-1 text-right text-[11px] ${sample.length > SAMPLE_MAX ? "text-red-400" : "text-text-tertiary"}`}>
-            {sample.length.toLocaleString()} / {SAMPLE_MAX.toLocaleString()}
-          </p>
-        </Field>
-
-        <Field step="03" label="모델">
+    <div className="space-y-5">
+      {/* ── 입력 (결과가 있으면 한 줄 요약) ── */}
+      {formCollapsed ? (
+        <div className="mx-auto flex max-w-5xl items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
+          <span className="shrink-0 font-mono text-[11px] text-text-tertiary">
+            {selected.length}개 모델 · {blind ? "이름 가림" : "이름 보임"}
+          </span>
+          <span className="min-w-0 flex-1 truncate font-mono text-xs text-text-secondary">{sample}</span>
+          <span className="shrink-0 font-mono text-[11px] text-text-tertiary">남은 비교 {remaining ?? "-"}/5</span>
+          <button
+            onClick={() => setEditing(true)}
+            disabled={busy}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-[11px] text-text-secondary hover:border-white/25 hover:text-text-primary disabled:opacity-40 cursor-pointer"
+          >
+            <Pencil size={11} /> 수정
+          </button>
+        </div>
+      ) : (
+      <div className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl space-y-6">
+        <Field step="01" label="모델">
           <ModelChips
             allowed={allowed}
             selected={selected}
@@ -246,6 +281,20 @@ function CompareFlow() {
           {showSettings && <SettingsPanel value={settings} onChange={setSettings} />}
         </Field>
 
+        <Field step="02" label="모델들에게 보낼 내용">
+          <textarea
+            value={sample}
+            onChange={(e) => setSample(e.target.value)}
+            rows={8}
+            autoFocus
+            placeholder={"평소 AI에게 말하듯 지시까지 함께 써 주세요.\n예: 다음 자기소개서 문단을 자연스럽게 고쳐줘: 저는 열정 있는 사람 입니다…"}
+            className="w-full resize-y rounded-xl border border-white/10 bg-black/30 p-4 font-mono text-[13px] leading-relaxed text-text-primary placeholder:text-text-tertiary outline-none focus:border-primary/60"
+          />
+          <p className={`mt-1 text-right text-[11px] ${sample.length > SAMPLE_MAX ? "text-red-400" : "text-text-tertiary"}`}>
+            {sample.length.toLocaleString()} / {SAMPLE_MAX.toLocaleString()}
+          </p>
+        </Field>
+
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
           <button
             onClick={() => setBlind((b) => !b)}
@@ -256,13 +305,17 @@ function CompareFlow() {
             모델 이름 가리기 {blind ? "ON" : "OFF"}
           </button>
           <div className="flex items-center gap-4">
+            {classifying && (
+              <span className="flex items-center gap-1.5 text-[11px] text-text-secondary">
+                <Loader2 size={12} className="animate-spin" /> 어떤 작업인지 파악하는 중…
+              </span>
+            )}
             <span className="font-mono text-[11px] text-text-tertiary">
               오늘 남은 비교 {remaining ?? "-"}/5
             </span>
             <button
               onClick={run}
               disabled={!canRun}
-              title={!task ? "작업 이름을 먼저 입력해 주세요" : undefined}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-violet-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_30px_-5px] shadow-primary/60 disabled:opacity-40 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed"
             >
               {runningSince !== null ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
@@ -274,13 +327,24 @@ function CompareFlow() {
           <p className="text-right text-xs text-amber-400">오늘 무료 비교 5회를 다 썼어요. 내일 다시 할 수 있어요.</p>
         )}
       </div>
+      )}
 
       {/* ── 결과 ── */}
       {view && (
         <div ref={resultsRef} className="scroll-mt-6 space-y-4">
+          {task && (
+            <p className="flex items-center gap-1.5 text-xs text-text-secondary">
+              <Tag size={12} className="text-primary-light" />
+              <span className="text-text-tertiary">AI가 파악한 작업</span>
+              <span className="text-text-primary">{task.name}</span>
+              <span className="text-text-tertiary">·</span>
+              <span className="text-primary-light">{task.taskType.name}</span>
+              {task.isNewType && <span className="text-text-tertiary">(새 유형)</span>}
+            </p>
+          )}
           <ResultSlots view={view} runningSince={runningSince} choosing={choosing} onChoose={choose} />
           {(view.status === "chosen" || view.status === "failed") && (
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-2 pb-4">
               <button
                 onClick={() => reset(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-text-secondary hover:border-white/25 hover:text-text-primary cursor-pointer"

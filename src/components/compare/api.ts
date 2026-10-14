@@ -44,6 +44,11 @@ export const compareApi = {
       json: { name, pickedTypeId },
     }).then((r) => r.data),
 
+  resolveFromSample: (sample: string) =>
+    call<{ data: ResolvedTask }>("/api/tasks/from-sample", { method: "POST", json: { sample } }).then(
+      (r) => r.data,
+    ),
+
   suggestModels: (taskTypeId?: string) =>
     call<{ data: { models: CatalogModel[]; remainingToday: number } }>(
       `/api/comparisons/suggest${taskTypeId ? `?taskTypeId=${taskTypeId}` : ""}`,
@@ -60,6 +65,9 @@ export const compareApi = {
       method: "POST",
       json: input,
     }),
+
+  get: (id: string, signal?: AbortSignal) =>
+    call<{ data: ComparisonView }>(`/api/comparisons/${id}`, { signal }).then((r) => r.data),
 
   run: (id: string) =>
     call<{ data: ComparisonView }>(`/api/comparisons/${id}/run`, { method: "POST" }).then((r) => r.data),

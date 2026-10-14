@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { ApiError } from "@/lib/api-error";
-import { judgeTaskType, type TypeCandidate } from "./grouping";
+import { judgeTaskFromSample, judgeTaskType, type GroupingVerdict, type TypeCandidate } from "./grouping";
 import {
   exampleNamesByType,
   findMyTask,
@@ -88,24 +88,68 @@ export async function resolveTask(
   }
 
   // 3. 판정 AI로 묶기. 실패하면 "미분류" — 비교는 막지 않는다.
+  let verdict: GroupingVerdict | null = null;
+  try {
+    verdict = await judgeTaskType(name, await loadCandidates(), opts.samplePreview);
+  } catch (err) {
+    console.error("[task] grouping failed, using unclassified:", err);
+  }
+  return saveWithVerdict(userId, name, normalized, verdict);
+}
+
+/**
+ * 샘플만 보고 작업 이름 + 유형을 정한다 (비교 화면 기본 경로 — 작업 이름 칸 없음).
+ * 판정 AI 한 번에 이름과 유형을 같이 받는다. 같은 이름이 나오면 예전 작업을 재사용(R-6).
+ */
+export async function resolveTaskFromSample(userId: string, sample: string): Promise<ResolvedTask> {
+  if (!sample.trim()) throw new ApiError("empty_sample", 400, "샘플을 입력해 주세요");
+
+  let taskName: string | null = null;
+  let verdict: GroupingVerdict | null = null;
+  try {
+    ({ taskName, verdict } = await judgeTaskFromSample(sample, await loadCandidates()));
+  } catch (err) {
+    console.error("[task] sample grouping failed, using unclassified:", err);
+  }
+  // 이름을 못 받았으면 샘플 앞부분으로 (미분류와 함께)
+  const name = (taskName ?? sample.trim().replace(/\s+/g, " ").slice(0, 30)).slice(0, TASK_NAME_MAX);
+  const normalized = normalizeTaskName(name);
+
+  const existing = await findMyTask(userId, normalized);
+  if (existing) {
+    const type = await findTypeById(existing.task_type_id);
+    if (!type) throw new Error(`task ${existing.id} points to a missing type`);
+    return toResolved(existing, await resolveMerged(type), { isNewType: false, reused: true });
+  }
+  return saveWithVerdict(userId, name, normalized, verdict);
+}
+
+async function loadCandidates(): Promise<TypeCandidate[]> {
+  const [types, examples] = await Promise.all([listActiveTypes(), exampleNamesByType()]);
+  return types.map((t) => ({
+    key: t.key,
+    name: t.name,
+    description: t.description,
+    examples: examples.get(t.id) ?? [],
+  }));
+}
+
+/** 판정 결과(없으면 미분류)대로 유형을 정하고 작업을 저장한다 */
+async function saveWithVerdict(
+  userId: string,
+  name: string,
+  normalized: string,
+  verdict: GroupingVerdict | null,
+): Promise<ResolvedTask> {
   let type: TaskTypeRow;
   let classifiedBy: TaskRow["classified_by"] = "judge";
   let isNewType = false;
   try {
-    const [types, examples] = await Promise.all([listActiveTypes(), exampleNamesByType()]);
-    const candidates: TypeCandidate[] = types.map((t) => ({
-      key: t.key,
-      name: t.name,
-      description: t.description,
-      examples: examples.get(t.id) ?? [],
-    }));
-    const verdict = await judgeTaskType(name, candidates, opts.samplePreview);
-
-    if (verdict.decision === "reuse") {
+    if (verdict?.decision === "reuse") {
       const found = await findTypeByKey(verdict.key);
       if (!found) throw new Error(`judge reused unknown key ${verdict.key}`);
       type = await resolveMerged(found);
-    } else if (verdict.decision === "new") {
+    } else if (verdict?.decision === "new") {
       const inserted = await insertType({
         key: verdict.key,
         name: verdict.name,
@@ -118,7 +162,7 @@ export async function resolveTask(
       classifiedBy = "fallback";
     }
   } catch (err) {
-    console.error("[task] grouping failed, using unclassified:", err);
+    console.error("[task] applying verdict failed, using unclassified:", err);
     type = await findUnclassified();
     classifiedBy = "fallback";
   }

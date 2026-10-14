@@ -525,6 +525,7 @@ resolveTask(user, name)
 | GET | `/api/catalog/models?free=true` | 비교에 쓸 수 있는 모델 목록 | 카탈로그 |
 | GET | `/api/task-types/suggest?q=` | 자동완성: 유형 + 내 예전 작업 이름 | 작업 |
 | POST | `/api/tasks/resolve` | 작업 이름 → 작업+유형 | 작업 |
+| POST | `/api/tasks/from-sample` | **샘플 → 작업 이름+유형** (비교 화면 기본 경로, 판정 1회) | 작업 |
 | GET | `/api/comparisons/suggest?taskTypeId=` | 기본 모델 3개 | 평가 |
 | POST | `/api/comparisons` | 비교 만들기 (샘플 저장, 순서 섞기) | 비교 |
 | POST | `/api/comparisons/{id}/run` | 실행 (병렬, 결과 반환) | 비교 → 실행 |

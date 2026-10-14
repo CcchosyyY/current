@@ -3,9 +3,10 @@
 import { useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, FlaskConical } from "lucide-react";
+import { FlaskConical, Newspaper } from "lucide-react";
 import ComparePanel from "@/components/compare/ComparePanel";
 import NewsHome from "./NewsHome";
+import SlideTab from "./SlideTab";
 
 // 홈 = 뉴스(왼쪽) ↔ 모델 비교(오른쪽) 가로 슬라이드.
 // 어느 쪽인지는 주소의 ?view=compare로 둔다 → 뒤로가기·새로고침·로그인 후 복귀가 그대로 동작.
@@ -57,34 +58,34 @@ export default function HomeSlider() {
           <NewsHome />
         </section>
         <div className="contents" aria-hidden={view !== "compare"} inert={view !== "compare"}>
-          <ComparePanel onBack={() => go("news")} />
+          <ComparePanel />
         </div>
       </motion.div>
 
-      {/* 비교 입구 — 슬라이드 바깥에 둔다 (움직이는 부모 안에선 위치가 같이 밀린다) */}
-      <AnimatePresence>
-        {view === "news" && (
+      {/* 전환 버튼 — 슬라이드 바깥에 둔다 (움직이는 부모 안에선 위치가 같이 밀린다).
+          뉴스에선 오른쪽 가장자리 "비교 →", 비교에선 왼쪽 가장자리 "← 뉴스" (같은 모양, 좌우 반전) */}
+      <AnimatePresence mode="wait">
+        {view === "news" ? (
           <motion.div
+            key="to-compare"
             className="absolute right-4 top-1/2 z-10 -translate-y-1/2"
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.25 }}
           >
-            <button
-              onClick={() => go("compare")}
-              className="group flex flex-col items-center gap-3 rounded-2xl border border-primary/40 bg-gradient-to-b from-primary/15 to-violet-500/10 px-4 py-6 backdrop-blur hover:border-primary hover:from-primary/25 transition-colors cursor-pointer"
-            >
-              <FlaskConical size={22} className="text-primary-light" />
-              <span className="text-center text-xs font-semibold leading-snug text-text-primary">
-                여러 모델
-                <br />
-                비교해보기
-              </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white transition-transform group-hover:translate-x-1">
-                <ArrowRight size={16} />
-              </span>
-            </button>
+            <SlideTab direction="right" icon={FlaskConical} label={["여러 모델", "비교해보기"]} onClick={() => go("compare")} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="to-news"
+            className="absolute left-4 top-1/2 z-10 -translate-y-1/2"
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ duration: 0.25, delay: 0.15 }}
+          >
+            <SlideTab direction="left" icon={Newspaper} label={["AI 뉴스", "보러가기"]} onClick={() => go("news")} />
           </motion.div>
         )}
       </AnimatePresence>
