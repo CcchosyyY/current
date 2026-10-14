@@ -1,4 +1,4 @@
-import type { Article, CategorySlug, AIModelSlug } from "./types";
+import type { Article, CategorySlug, AIModelSlug, HotType } from "./types";
 import { isRenderableImageUrl } from "./image-config";
 
 // Shape returned by Supabase articles query with joined relations
@@ -16,6 +16,9 @@ export interface DBArticleRow {
   view_count: number | null;
   is_trending: boolean | null;
   tags: string[] | null;
+  hot_type: HotType | null;
+  hot_reason: string | null;
+  hot_event: string | null;
   categories: { name: string; slug: string; color: string } | null;
   ai_models: { name: string; slug: string; company: string; brand_color: string } | null;
 }
@@ -40,5 +43,7 @@ export function dbArticleToArticle(row: DBArticleRow): Article {
     viewCount: row.view_count ?? 0,
     isTrending: row.is_trending ?? false,
     tags: row.tags ?? [],
+    hotType: row.hot_type ?? null,
+    hotReason: row.hot_reason ?? null,
   };
 }

@@ -1,4 +1,18 @@
-import type { AIModel, Category, NewsletterIssue } from "./types";
+import type { AIModel, Category, HotType, NewsletterIssue } from "./types";
+
+// Hot 노출 기간 — 사건의 첫 기사 시각부터. 크롤 주기가 12h라 최소 몇 번의 크롤에 걸쳐 보이게 잡는다.
+//   새 모델: 출시 후 써보기·비교 수요가 며칠 가므로 3일
+//   긴급: 사용자가 바로 알아야 하지만 금방 낡으므로 2일
+export const HOT_WINDOW_HOURS: Record<HotType, number> = {
+  model_release: 72,
+  breaking: 48,
+};
+
+// 배지는 채우지 않은 테두리 박스 + 같은 색 글자. 새 모델은 Hot 섹션 불꽃 아이콘(orange-500)과 같은 색.
+export const HOT_LABELS: Record<HotType, { label: string; color: string }> = {
+  model_release: { label: "새 모델", color: "#F97316" }, // orange-500
+  breaking: { label: "긴급", color: "#F43F5E" }, // rose-500
+};
 
 // Sidebar navigation categories (matches the Pencil design)
 export const CATEGORIES: Category[] = [

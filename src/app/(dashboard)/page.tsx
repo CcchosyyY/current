@@ -9,6 +9,7 @@ import { AI_MODELS } from "@/lib/constants";
 import ModelCard from "@/components/ModelCard";
 import { useArticles } from "@/lib/hooks/useArticles";
 import ArticleLogo from "@/components/ArticleLogo";
+import HotSection, { HotBadge } from "@/components/HotSection";
 import { getRelativeTimeShort, formatDate } from "@/lib/utils";
 import type { AIModelFilter } from "@/lib/types";
 
@@ -77,6 +78,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Hot ── */}
+      <HotSection />
+
       {/* ── Today's AI News ── */}
       <section>
         <div className="flex items-center justify-between mb-0">
@@ -144,6 +148,7 @@ export default function DashboardPage() {
                         }`}
                       >
                         <ArticleLogo article={article} size={18} />
+                        {article.hotType && <HotBadge type={article.hotType} />}
 
                         <span className="flex-1 min-w-0 text-[11px] font-medium truncate group-hover:text-primary transition-colors">
                           {article.aiModel && (
