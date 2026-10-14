@@ -11,41 +11,53 @@
 - **방향 전환**: 뉴스 대시보드 → 뉴스 파이프라인 위에 **모델 비교·평가 서비스**를 붙인다
   - 제거: B2 주가 연동·호재/악재, B3 ESP32 하드웨어, 요약·감성 판단(핵심 기능에서 제외)
   - 유지: 기사 수집 → 새 모델 출시 감지의 입력으로 사용
-- **뉴스 대시보드: ~완성** — 메인/Trending/Models(37개)/Newsletter/Saved, Google 로그인+북마크, 크롤러(키워드+Haiku 분류)
-- **Hot: 구현·커밋 완료** (`feat/hot-news`, 미머지) — 새 모델 출시·긴급 뉴스를 사건 단위로 홈 상단에 표시
-- DB 기사 568건+, 크롤러 12시간 주기(KST 09/21시), 피드 6곳
+- **설계 완료**: `docs/domain-stories.md`(이야기 7·규칙 R-1~R-28) · `docs/architecture.md`(모듈 9·테이블) · `docs/architecture.puml`+`docs/uml/` · `docs/plan-stage1.md`(S1~S11)
+- **비교 1단계: S1~S9 완료** (`feat/compare`, 미머지)
+  - 백엔드: DB 7테이블+RLS, OpenRouter 어댑터, 카탈로그 344개, 작업 유형 묶기(판정 AI), 실행·비교·블라인드·한도 API — 실제 HTTP 26항목 검증
+  - 화면: 홈 = 뉴스 ↔ 비교 **가로 슬라이드**. 비교는 모델 → 보낼 내용 → 실행, 끝난 모델부터 표시, 블라인드 선택 후 공개 (1·2차 UI)
+- **Hot: 구현·커밋 완료** (`feat/hot-news`, 미머지) — 새 모델·긴급 뉴스를 사건 단위로 홈 상단에
+- 뉴스: 메인/Trending/Models/Newsletter/Saved, 크롤러 12시간 주기(KST 09/21시), 피드 6곳, 기사 568건+
 
 ## ✅ 결정된 것
 
-- 프로젝트 이름: **Current**
-- OpenRouter 키: **서버 키로 저가 모델 3개(GPT·Gemini·Claude, 운영자 부담, 하루 5회)**, 그 밖의 모델은 **사용자 각자 결제한 키**로
-- 설계 문서: `docs/domain-stories.md`, `docs/architecture.md`, `docs/architecture.puml`(+ `docs/uml/*.png`)
-- 비교 서비스는 **로그인 필요** (사용자별 선호 순위·실행 기록)
-- 크롤러 keepalive는 **하지 않음** — 60일 커밋 없으면 GitHub이 크롤러를 끄도록 둔다
-- `docs/openrouter-integration.md`(10/13, `feat/openrouter-playground`)는 "사용자 키만·로그인 없음" 전제라 위 결정과 다름 → 아키텍처 확정 후 다시 씀
+- 프로젝트 이름 **Current** · 비교는 **로그인 필수** · 크롤러 keepalive **안 함**(60일 커밋 없으면 꺼지게 둠)
+- OpenRouter: **서버 키**로 허용 목록 저가 모델 3개(`gpt-5-nano`·`gemini-2.5-flash-lite`·`claude-haiku-5.5`, 운영자 부담), 그 밖은 **개인 키**
+- 서버 키 한도: 사용자 **하루 5회** + 서비스 하루 $1 + OpenRouter 키 $5. 반복 측정 하루 1회·샘플 2개까지 (R-26)
+- 블라인드: 선택 전 이름·로고·비용 숨김(서버가 안 보냄), **속도는 보임**. 선택지 이게 낫다 / 셋 다 비슷함 / 전부 별로
+- 모델 설정: **기본값**(아무것도 안 보냄) + 추론 강도·답변 길이 선택. 한 비교 안은 같은 설정 (R-27)
+- 샘플을 그대로 전송(숨은 시스템 프롬프트 없음, R-28) · **작업 이름 칸 없음** → 판정 AI가 샘플로 작업·유형 결정
+- 작업 유형: 씨앗 6개 출발점, AI가 묶고 새 유형은 넓은 범주로 늘림 · 순위는 전체+내 순위, 유형별
+- 새 모델: 추천만, 실행은 사용자가 직접 · 알림 없음
+- 보류: 개인 키 보관 방식 (3단계 전)
 
 ---
 
 ## 🔥 Now — 지금 (1~3개만)
 
-- [ ] **0-4 비교 1단계 화면·API 세부 계획** (도메인 스토리·아키텍처 v1 작성 완료, Q-1~Q-5 결정)
+- [ ] **비교 화면 UI 다듬기** — 2차까지 반영(작업 칸 제거·끝난 모델부터·넓은 칸·크게 보기). 다음 피드백 대기
+- [ ] **S10 기록 화면** — 내 비교 목록 / 비교 다시 보기 (`GET /api/comparisons?mine=1`)
+- [ ] **S11 검증** — 브라우저 E2E (Playwright Chromium 다운로드가 멈춰 있음 → 다시 시도), 비용 대조, RLS
 
 ## ⏭️ Next — 다음
 
-- [ ] 저장소 구조 정리 → 재사용/제거/신규 구분 → **실행 기록 테이블 설계** → 비교 1단계 구현 계획
-- [ ] 비교 1단계: 여러 모델 결과 나란히 + 비용·속도, 이름 가리기, 순서 섞기, 선택 저장
-- [ ] 비교 2단계 순위 → 3단계 일관성·비용 시뮬레이터 → 4단계 Hot(model_release) 연결 자동 재평가 → 5단계 라우팅(보류)
+- [ ] **브랜치 합치기**: `feat/hot-news`와 `feat/compare` 둘 다 main 미머지. 홈이 `page.tsx` → `components/home/NewsHome.tsx`로 옮겨져서 Hot 머지 시 `HotSection`을 `NewsHome`에 다시 넣어야 함
+- [ ] 결과 본문 마크다운 렌더링 (지금은 줄바꿈만 — `**굵게**`·목록이 그대로 보임)
+- [ ] 결과 글자 단위 스트리밍 (지금은 모델별로 끝나면 표시)
+- [ ] 비교 2단계: 유형별 전체/내 순위 (`ranking_*` DB 함수, Bradley-Terry 검토) → 추천 모델을 순위 기반으로
+- [ ] 비교 3단계: 일관성 측정(반복 하루 1회) + 비용 시뮬레이터 + 개인 키
+- [ ] 비교 4단계: Hot `model_release` 사건 ↔ 카탈로그 연결 → "내 작업으로 비교해 보기" (예: `google/gemini-4-argon`)
+- [ ] 카탈로그 동기화 하루 1회 자동 (지금 수동: `POST /api/admin/catalog/sync`)
 - [ ] 한국어 모델 비교 서비스가 이미 있는지 조사 (차별점 확인)
 - [ ] 분류 정확도 점검 / 기존 DB 기사 재분류
-- [ ] 기사 로고 fallback(모델→회사→사이트)을 Trending·Saved·상세에도 적용
 
 ## 🧹 정리 — 잡일
 
 - [ ] `middleware` → `proxy` 파일 컨벤션 마이그레이션 (Next.js 16 deprecation 경고)
-- [ ] `package-lock.json` 미커밋 변경(13줄 삭제) 확인 후 커밋/폐기 — `"peer": true` 플래그만 빠진 npm 버전 차이
+- [ ] `docs/openrouter-integration.md`(10/13, `feat/openrouter-playground`) 정리 — 새 설계로 대체됨
+- [ ] 쓰지 않는 API 정리 여부: `/api/tasks/resolve`, `/api/task-types/suggest` (작업 이름 칸 제거 후 화면에서 안 씀, 내 작업 저장에서 재사용 가능)
 - [ ] NEW 신선도 점 기준(6시간) — 크롤 12시간 주기라 대부분 안 붙음. 12시간으로 늘릴지 결정
 - [ ] Verge 본문 일부 이모지 깨짐(`ð¤` — 원본 피드의 mojibake)
-- [ ] GitHub Actions `checkout@v4`·`setup-node@v4` 버전 점검 (Node 20 제거 9/16 이후에도 10/9 실행 정상)
+- [ ] 기사 로고 fallback(모델→회사→사이트)을 Trending·Saved·상세에도 적용
 
 ## 💡 Someday — 백로그
 
