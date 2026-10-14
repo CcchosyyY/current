@@ -6,6 +6,9 @@
 --   - ai_models   ↔ AI_MODELS     in src/lib/constants.ts (37 rows)
 --   - articles    ↔ DBArticleRow  in src/lib/transforms.ts
 -- Articles are populated by the RSS crawler: `node scripts/crawl-articles.mjs`.
+--
+-- 비교 영역 테이블(catalog_models, task_types, tasks, samples, comparisons, runs, choices)은
+-- supabase/migrations/ 의 마이그레이션 파일을 순서대로 실행한다 (docs/architecture.md §5).
 
 -- ============================================================
 -- 1. CATEGORIES  (14 — matches CATEGORIES in constants.ts)

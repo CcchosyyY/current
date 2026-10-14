@@ -92,6 +92,8 @@ export default function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
+  // 홈의 비교 화면(?view=compare)에서는 뉴스 카테고리가 쓸모없으니 사이드바를 접어 없앤다
+  const hiddenForCompare = pathname === "/" && searchParams.get("view") === "compare";
 
   const { counts: categoryCounts, total, fresh: freshCounts, freshTotal } =
     useCategoryCounts();
@@ -255,8 +257,14 @@ export default function Sidebar({
     <>
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col h-full bg-bg-sidebar border-r border-border-subtle py-4 shrink-0 transition-[width] duration-200 overflow-y-auto overflow-x-hidden ${
-          collapsed ? "w-[50px] px-1.5" : "w-[220px] px-3"
+        aria-hidden={hiddenForCompare}
+        inert={hiddenForCompare}
+        className={`hidden lg:flex flex-col h-full bg-bg-sidebar border-border-subtle py-4 shrink-0 transition-[width,padding] duration-300 overflow-y-auto overflow-x-hidden ${
+          hiddenForCompare
+            ? "w-0 px-0 border-r-0"
+            : collapsed
+              ? "w-[50px] px-1.5 border-r"
+              : "w-[220px] px-3 border-r"
         }`}
       >
         {sidebarContent}
