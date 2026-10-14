@@ -171,7 +171,24 @@ S6 모델 실행 ─▶ S7 비교 ─▶ S8 평가(임시 추천) ─▶ S9 화�
 | 관리 API | `POST /api/admin/catalog/sync` — 헤더 `x-admin-secret` = 환경변수 `ADMIN_SECRET`일 때만 |
 | 조회 API | `GET /api/catalog/models?allowed=1` |
 
-**확인:** 동기화 실행 → 약 400여 개 저장, 3개가 허용 목록. 두 번째 동기화에서 `first_seen_at`이 바뀌지 않음.
+**확인:** ✅ (2026-10-15)
+
+| 케이스 | 결과 |
+|---|---|
+| 비밀값 없음 / 틀림 | 403 `forbidden` |
+| 1회차 동기화 | OpenRouter 462개 중 **344개** 저장 (별칭 `~`, `:batch`, `openrouter/*`, 음수 가격 제외) |
+| 2회차 동기화 | 새 모델 0개, 허용 목록 3개·기본 순서 유지 |
+| 지운 모델 다시 동기화 (새 모델 경로) | `added: 1`, 처음 본 시각 = 마지막 본 시각 |
+| 목록에 없는 가짜 모델 | `deactivated: 1` → `is_active=false` |
+| `GET /api/catalog/models?allowed=1` | GPT-5 Nano · Gemini 2.5 Flash Lite · Claude Haiku 5.5 순서, 브랜드 연결됨 |
+| 버전 식별자 | `openai/gpt-5-nano-2025-08-07`, `anthropic/claude-haiku-5.5-20261007` |
+
+발견·수정:
+- 처음엔 새 모델의 `first_seen_at`(DB가 저장 순간에 찍음)이 `last_seen_at`(행 준비 때 찍음)보다 1~2초 늦었다 → 동기화마다 **시각 하나**를 정해 두 값에 같이 쓰도록 수정, 기존 341행 보정.
+- `google/gemini-4-argon`이 이미 카탈로그에 있다 → 4단계(새 모델 추천)의 실제 사례.
+- 브랜드 연결 없는 모델 135개(z-ai, nvidia, cohere 등) → 화면에서는 공급사 이름으로 표시.
+
+**동기화 주기:** 지금은 수동(`curl -X POST -H "x-admin-secret: …" localhost:3003/api/admin/catalog/sync`). 배포할 때 하루 1회 스케줄을 붙인다 (4단계 새 모델 감지 전까지는 수동으로 충분).
 
 ### S5. 판정 AI 어댑터 + 작업 모듈
 
