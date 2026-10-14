@@ -6,14 +6,6 @@
  * (e.g. during `next build` in CI).
  */
 
-function required(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
-}
-
 /**
  * Public environment variables (safe to expose to browser).
  * Each property is a lazy getter — the value is resolved on first access,
@@ -36,17 +28,5 @@ export const env = {
   },
 } as const;
 
-/**
- * Server-only environment variables.
- * Access via serverEnv() — a function call prevents accidental
- * inclusion in client bundles (tree-shaking won't inline it).
- *
- * Security: SUPABASE_SERVICE_ROLE_KEY bypasses RLS and must NEVER
- * be exposed to the browser. Lazy-loading it in a function ensures
- * it's only resolved at runtime on the server.
- */
-export function serverEnv() {
-  return {
-    SUPABASE_SERVICE_ROLE_KEY: required("SUPABASE_SERVICE_ROLE_KEY"),
-  } as const;
-}
+// Server-only secrets live in ./env.server.ts (guarded by `server-only`),
+// because this file is also imported by browser code (supabase/client.ts).

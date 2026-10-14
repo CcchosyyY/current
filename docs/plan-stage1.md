@@ -123,13 +123,13 @@ S6 모델 실행 ─▶ S7 비교 ─▶ S8 평가(임시 추천) ─▶ S9 화�
 | 할 일 | 파일 |
 |---|---|
 | `server-only` 패키지 설치 | `package.json` |
-| 서버 전용 환경변수: `OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | `src/lib/env.server.ts` (신규, `server-only`) |
+| 서버 전용 환경변수: `OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_SECRET` (기존 `env.ts`의 미사용 `serverEnv()`를 옮김. `env.ts`는 브라우저도 가져가므로) | `src/lib/env.server.ts` (신규, `server-only`) |
 | 서버용 관리자 Supabase 클라이언트 (service role, RLS 우회 — 쓰기 전용) | `src/lib/supabase/admin.ts` (신규) |
 | `requireUser()`: 세션 확인, 없으면 401 | `src/modules/account/service.ts` |
-| `/compare` 보호 경로 | `src/middleware.ts` `PROTECTED_ROUTES`에 추가 |
+| ~~`/compare` 보호 경로~~ → **화면이 직접 로그인 안내** (시나리오 1: 무엇을 하는 곳인지 보여주고 로그인 유도. 리다이렉트하면 홈으로 튕겨 의도를 잃음). 데이터 보호는 API의 `requireUser()`가 맡는다 | — |
 | 공통 에러 형식 `{ error: { code, message } }` | `src/lib/api-error.ts` |
 
-**확인:** 로그아웃 상태로 `/compare` → 홈으로 리다이렉트. `tsc` 통과.
+**확인:** ✅ `tsc`·`eslint` 통과, 관리자 클라이언트로 `task_types` 7행 조회 (S3 확인 스크립트에서 함께).
 
 ### S3. OpenRouter 어댑터
 
@@ -144,7 +144,20 @@ S6 모델 실행 ─▶ S7 비교 ─▶ S8 평가(임시 추천) ─▶ S9 화�
 - `finish_reason: "length"`인데 본문이 비었으면 `empty_output`으로 본다 (GPT-5 nano 사례).
 - 키는 이 파일 안에서만 읽는다.
 
-**확인:** 작은 스크립트로 3개 모델 호출 → 결과 형식이 맞는지. 잘못된 모델 ID → `provider_error`.
+**확인:** ✅ (2026-10-15)
+
+| 케이스 | 결과 |
+|---|---|
+| 기본값 + 안전 상한 4096, 3개 병렬 | 3개 모두 성공. GPT-5 nano 11.7초(생각 768토큰), Gemini 1.9초, Claude 2.4초 |
+| 추론 low (GPT-5 nano) | 2.1초 |
+| 짧게(64) | `empty_output` — **실패여도 비용은 청구됨** → `runs.cost_usd`에 기록해야 함 |
+| 없는 모델 | `provider_error` |
+| 타임아웃 0.5초 | `timeout` |
+| `listModels()` | 462개, `canonical_slug`에 날짜 버전 포함 (`openai/gpt-5-nano-2025-08-07`) → R-12에 충분 |
+
+발견:
+- Claude Haiku 5.5의 공급사가 호출마다 다름 (Azure / Claude Platform on AWS) → `provider_name` 기록이 의미 있음
+- **GPT-5 nano의 modality는 `text+image+file->text`** → S4에서 "텍스트 모델" 필터를 `text->text`로 하면 기본 모델이 빠진다. **출력이 text이고 입력에 text가 있는 모델**(`modality`가 `->text`로 끝남)로 거른다.
 
 ### S4. 모델 카탈로그
 
