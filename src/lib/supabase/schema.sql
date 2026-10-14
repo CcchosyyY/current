@@ -77,7 +77,17 @@ ALTER TABLE articles ADD COLUMN IF NOT EXISTS search_vector tsvector
     setweight(to_tsvector('english', coalesce(content, '')), 'C')
   ) STORED;
 
+-- Hot: 크롤러의 Hot 판정 단계(Haiku)가 채운다. NULL = Hot 아님.
+--   model_release = 새 모델/메이저 버전 출시, breaking = AI 사용자에게 바로 영향 있는 긴급 뉴스
+-- 노출 기간(HOT_WINDOW_HOURS)은 앱에서 published_at으로 자른다.
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS hot_type TEXT
+  CHECK (hot_type IN ('model_release','breaking'));
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS hot_reason TEXT;      -- 한 줄 이유(한국어)
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS hot_event TEXT;       -- 사건 키: 같은 사건 기사끼리 같은 값 → Hot 카드 하나로 묶임
+
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_articles_hot ON articles(published_at DESC) WHERE hot_type IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_hot_event ON articles(hot_event) WHERE hot_event IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category_id);
 CREATE INDEX IF NOT EXISTS idx_articles_ai_model ON articles(ai_model_id);
 CREATE INDEX IF NOT EXISTS idx_articles_search ON articles USING GIN (search_vector);

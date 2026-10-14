@@ -16,6 +16,21 @@ export interface Article {
   viewCount: number;
   isTrending: boolean;
   tags: string[];
+  hotType: HotType | null;
+  hotReason: string | null;
+}
+
+// Hot = 지금 주목해야 하는 기사 (크롤러 Hot 판정 단계가 채움)
+export type HotType = "model_release" | "breaking";
+
+// 같은 사건을 다룬 Hot 기사 묶음 (articles.hot_event 기준). 카드 하나 = 사건 하나.
+export interface HotEvent {
+  key: string;
+  type: HotType;
+  reason: string;
+  firstAt: string; // 사건의 첫 기사 시각 — 노출 기간은 여기서부터 잰다
+  lead: Article; // 대표 기사 = 가장 먼저 나온 기사
+  articles: Pick<Article, "id" | "title" | "source" | "publishedAt">[]; // 대표 포함, 오래된 순
 }
 
 export interface AIModel {
