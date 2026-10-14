@@ -220,7 +220,7 @@ entity "task_types" as task_types #E8F0FE {
   description : text
   is_unclassified : bool
   merged_into : uuid <<FK>> (자기 참조, null)
-  created_by : text  (judge | admin)
+  created_by : text  (seed | judge | admin)
   created_at : timestamptz
 }
 
@@ -263,6 +263,7 @@ entity "comparisons" as comparisons #E8F0FE {
   model_count : int
   source : text  (manual | new_model | rerun)
   source_event : text  (사건 키, null)
+  settings : jsonb  (추론 강도·답변 길이, R-27)
   created_at : timestamptz
   completed_at : timestamptz
 }
@@ -276,8 +277,10 @@ entity "runs  ★ 모든 분석의 원천 (추가만)" as runs #DBEAFE {
   * task_type_id : uuid <<FK>>
   * sample_id : uuid <<FK>>
   * requested_model_id : text <<FK>>
-  response_model : text  (실제 응답 버전)
-  provider_name : text
+  response_model : text  (응답 model)
+  model_canonical_slug : text  (실행 시점 버전)
+  provider_name : text  (실제 공급사)
+  system_fingerprint : text
   display_position : smallint  (0=A 1=B 2=C)
   key_kind : text  (server | user)
   params : jsonb

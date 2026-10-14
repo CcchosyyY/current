@@ -6,6 +6,7 @@
 > 렌더링된 이미지: [`docs/uml/`](./uml/) — `UML-1_system-context.png` ~ `UML-7_comparison-states.png`
 > 다시 그리기(.puml 수정 후): `docker run --rm -v "$PWD/docs:/data" -v /mnt/c/Windows/Fonts:/usr/share/fonts/win plantuml/plantuml:1.2024.7 -tpng -SdefaultFontName="Malgun Gothic" -o uml /data/architecture.puml`
 > 용어는 도메인 스토리 §9 용어집을 그대로 쓴다.
+> 1단계 구현 순서·API 계약·검증은 [`plan-stage1.md`](./plan-stage1.md).
 
 ---
 
@@ -294,7 +295,7 @@ app/api 라우트 ──▶ 모듈 서비스 ──▶ 모듈 저장소(reposito
 | `description` | text | 판정 AI가 묶을 때 참고하는 설명. 예: "글의 맞춤법·문법·표현을 다듬는 작업" |
 | `is_unclassified` | bool | "미분류" 유형 하나만 true |
 | `merged_into` | uuid FK → `task_types.id`, null | 병합되면 살아남는 유형을 가리킨다 |
-| `created_by` | text | `judge`(판정 AI가 만듦) / `admin` |
+| `created_by` | text | `seed`(출발점 6개) / `judge`(판정 AI가 만듦) / `admin` |
 | `created_at` | timestamptz | |
 
 - 유형별 "비교 횟수"(자동완성 표시용)는 저장하지 않고 `comparisons`에서 센다(R-15와 같은 원칙).
@@ -345,6 +346,7 @@ app/api 라우트 ──▶ 모듈 서비스 ──▶ 모듈 저장소(reposito
 | `model_count` | int | 기본 3 |
 | `source` | text | `manual` / `new_model`(4단계) / `rerun`(같은 샘플 다시) |
 | `source_event` | text, null | 새 모델 추천이면 사건 키 (`hot_event`) |
+| `settings` | jsonb | 사용자가 고른 설정 `{reasoning: default\|low\|high, maxLength: default\|short}` — 비교 안의 모든 실행에 같게 적용 (R-27) |
 | `created_at` | timestamptz | |
 | `completed_at` | timestamptz, null | 실행이 다 끝난 시각 |
 
@@ -370,10 +372,12 @@ running ──(성공 2개 이상)──▶ awaiting_choice ──(선택)──
 | `sample_id` | uuid FK | |
 | `requested_model_id` | text FK → `catalog_models` | 요청한 모델 |
 | `response_model` | text | **OpenRouter가 실제로 응답한 모델** (R-12) |
-| `provider_name` | text, null | OpenRouter가 실제로 연결한 공급사 (같은 모델도 공급사마다 다를 수 있음) |
+| `model_canonical_slug` | text, null | 실행 시점 `catalog_models.canonical_slug` — 응답 `model`엔 버전이 안 붙어서 이걸로 버전 추적 (2026-10-15 실측) |
+| `provider_name` | text, null | OpenRouter가 실제로 연결한 공급사 (같은 모델도 공급사마다 다를 수 있음. 예: Claude Haiku 5.5 → Azure) |
+| `system_fingerprint` | text, null | 공급사 쪽 빌드 식별자 (있을 때만) |
 | `display_position` | smallint | 0=A, 1=B, 2=C (R-9) |
 | `key_kind` | text | `server` / `user` |
-| `params` | jsonb | temperature, max_tokens 등 실제 보낸 설정 |
+| `params` | jsonb | OpenRouter에 실제로 보낸 파라미터 (reasoning, max_tokens 등. 기본값이면 안전 상한만) |
 | `status` | text | `success` / `error` / `timeout` |
 | `output_text` | text, null | 결과 |
 | `error_code` | text, null | |
@@ -629,7 +633,9 @@ src/
 ### 10-2. 한도 (서버 키 보호)
 
 - 사용자당 하루 무료 비교 **5회**. 계산: 오늘 `comparisons` 수 (KST 자정 기준).
-- 비교당 모델 최대 **3개**(1단계), 샘플 최대 **8,000자**, 출력 `max_tokens` **1,024**.
+- 비교당 모델 최대 **3개**, 샘플 최대 **8,000자**, 추론 "높음" 불가 — 이를 넘으면 개인 키 (R-26).
+- 서버 키 실행에는 안전 상한 `max_tokens: 4096`을 항상 붙인다 (사용자 설정이 기본값이어도).
+- 반복 측정(3단계)은 서버 키로 **사용자당 하루 1회**, 여러 샘플 재평가(4단계)는 **샘플 2개까지**.
 - 서버 키는 **허용 목록 모델만** 실행한다(R-25). 실행 모듈이 매 실행 전에 확인한다.
 - 서비스 전체 하루 비용 상한(초안 $1)을 넘으면 그날은 서버 키 실행을 멈추고 "오늘 무료 비교가 끝났어요".
 - OpenRouter 키 자체에도 사용 한도(credit limit)를 걸어 이중으로 막는다.
@@ -688,6 +694,6 @@ src/
 | ~~Q-5~~ | 사용자당 하루 무료 비교 수 | ✅ **5회** | 결정 |
 | Q-6 | 순위 점수 방식·블라인드 가중치 | Bradley-Terry, 블라인드만 집계로 시작 | 2단계 |
 | Q-7 | 내 순위 표시 기준 수 | 10번 | 2단계 |
-| Q-8 | "복잡한 작업" 경계 | ⏸️ 보류 | 3단계 전 |
+| ~~Q-8~~ | "복잡한 작업" 경계 | ✅ **R-26** (서버 키 = 기본 비교 하루 5회 + 반복 측정 하루 1회 + 샘플 2개까지) | 결정 |
 | Q-9 | 개인 키 보관 (쿠키 vs DB 암호화) | ⏸️ 보류 | 3단계 전 |
 | Q-10 | 유형 병합은 누가 | 관리자 수동 (SQL/간단한 관리 API) | 필요할 때 |
