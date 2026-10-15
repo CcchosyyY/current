@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye } from "lucide-react";
 import type { AIModel } from "@/lib/types";
 import ModelDetailModal from "./ModelDetailModal";
 
@@ -11,15 +10,9 @@ interface ModelCardProps {
   model: AIModel;
 }
 
-// Pilot: these models open their full page (/models/[slug]) on click, with a
-// "간략히 보기" (quick view) button that opens the modal instead. All other
-// models still open the modal directly. Add more slugs (or drop the gate) once
-// the UX is confirmed.
-const PAGE_FIRST_SLUGS = new Set(["chatgpt"]);
-
 /**
- * AI model tile. Page-first models navigate to the model page and offer a quick
- * "간략히 보기" modal; other models open the detail modal on click.
+ * AI model tile. Clicking the tile opens the model page (/models/[slug]); the
+ * "Quick view" button opens the detail modal instead.
  */
 function ModelCardInner({ model }: ModelCardProps) {
   const [open, setOpen] = useState(false);
@@ -28,7 +21,7 @@ function ModelCardInner({ model }: ModelCardProps) {
     model.colorSecondary || model.color
   } 12%, #08080E))`;
 
-  // Decorative tile content (background glow, logo, name) — shared by both modes.
+  // Decorative tile content (background glow, logo, name).
   const visual = (
     <>
       <div className="absolute inset-0 transition-all duration-300 group-hover:brightness-125" />
@@ -50,52 +43,35 @@ function ModelCardInner({ model }: ModelCardProps) {
     </>
   );
 
-  const pageFirst = PAGE_FIRST_SLUGS.has(model.slug);
-
   return (
     <>
-      {pageFirst ? (
-        <div
-          className="group relative block w-full overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:scale-[1.03]"
-          style={{ background: gradient }}
-        >
-          {/* The whole tile navigates to the model page. */}
-          <Link
-            href={`/models/${model.slug}`}
-            aria-label={`${model.name} 페이지 보기`}
-            className="absolute inset-0 z-0"
-          />
-          {/* Decorative content is click-through so the link underneath fires. */}
-          <div className="pointer-events-none">{visual}</div>
-          {/* Quick view → opens the modal instead of navigating. Icon-only;
-              the label shows as a tooltip on hover. */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setOpen(true);
-            }}
-            aria-label="Quick view"
-            className="group/qv absolute top-2 right-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer"
-          >
-            <Eye size={13} aria-hidden="true" />
-            <span className="pointer-events-none absolute top-full right-0 mt-1 whitespace-nowrap rounded-md bg-black/85 px-2 py-1 text-[10px] font-medium text-white opacity-0 transition-opacity duration-150 group-hover/qv:opacity-100">
-              Quick view
-            </span>
-          </button>
-        </div>
-      ) : (
+      <div
+        className="group relative block w-full overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:scale-[1.03]"
+        style={{ background: gradient }}
+      >
+        {/* The whole tile navigates to the model page. */}
+        <Link
+          href={`/models/${model.slug}`}
+          aria-label={`${model.name} 페이지 보기`}
+          className="absolute inset-0 z-0"
+        />
+        {/* Decorative content is click-through so the link underneath fires. */}
+        <div className="pointer-events-none">{visual}</div>
+        {/* Quick view → opens the modal instead of navigating. A labeled pill (an
+            icon alone wasn't clear). Shown on card hover or keyboard focus; always
+            visible on touch screens, which have no hover. */}
         <button
           type="button"
-          onClick={() => setOpen(true)}
-          aria-label={`${model.name} by ${model.company} — view details`}
-          className="group relative block w-full overflow-hidden rounded-xl aspect-[4/3] cursor-pointer text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:scale-[1.03]"
-          style={{ background: gradient }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          className="absolute top-2 right-2 z-10 rounded-full border border-white/25 bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-black/80 opacity-0 transition-[opacity,background-color] duration-150 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 cursor-pointer"
         >
-          {visual}
+          Quick view
         </button>
-      )}
+      </div>
 
       <ModelDetailModal model={open ? model : null} onClose={() => setOpen(false)} />
     </>
