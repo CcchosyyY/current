@@ -63,6 +63,10 @@ const nextConfig: NextConfig = {
     // the SSRF rationale and the "**." apex-host caveat.
     remotePatterns: imageRemotePatterns,
   },
+  // Trending 페이지는 News(전체 기사)로 바뀜 — 예전 링크·북마크를 살린다
+  async redirects() {
+    return [{ source: "/trending", destination: "/news", permanent: true }];
+  },
   async headers() {
     return [
       {

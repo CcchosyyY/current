@@ -10,8 +10,10 @@ const ArticlesQuerySchema = z.object({
   search: z.string().max(200).optional(),
   sort: z.enum(["latest", "oldest"]).default("latest"),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(200).default(20),
   ai_model: z.string().optional(),
+  // 최근 N시간 안에 발행된 기사만 (홈 "Today's AI News"는 24)
+  hours: z.coerce.number().int().min(1).max(24 * 90).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -33,6 +35,7 @@ export async function GET(request: NextRequest) {
       page: searchParams.get("page") ?? undefined,
       limit: searchParams.get("limit") ?? undefined,
       ai_model: searchParams.get("ai_model") ?? undefined,
+      hours: searchParams.get("hours") ?? undefined,
     });
 
     if (!parsed.success) {
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { category, search, sort, page, limit, ai_model } = parsed.data;
+    const { category, search, sort, page, limit, ai_model, hours } = parsed.data;
     const offset = (page - 1) * limit;
 
     const supabase = await createClient();
@@ -140,6 +143,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Sort order
+    if (hours) {
+      query = query.gte("published_at", new Date(Date.now() - hours * 60 * 60 * 1000).toISOString());
+    }
+
     query = query.order("published_at", {
       ascending: sort === "oldest",
       nullsFirst: false,

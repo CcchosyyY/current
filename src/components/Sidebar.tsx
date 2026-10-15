@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import { useCategoryCounts } from "@/lib/hooks/useCategoryCounts";
+import { useSeenCategories } from "@/lib/hooks/useSeenCategories";
+import { modelCountsByCategory } from "@/lib/model-sections";
 import SidebarToggle from "./SidebarToggle";
 
 const STORAGE_KEY = "sidebar-collapsed";
@@ -95,8 +97,18 @@ export default function Sidebar({
   // 홈의 비교 화면(?view=compare)에서는 뉴스 카테고리가 쓸모없으니 사이드바를 접어 없앤다
   const hiddenForCompare = pathname === "/" && searchParams.get("view") === "compare";
 
-  const { counts: categoryCounts, total, fresh: freshCounts, freshTotal } =
-    useCategoryCounts();
+  const articleCounts = useCategoryCounts(`${pathname}|${activeCategory}`);
+  const { latest } = articleCounts;
+  // Models 화면에서는 카테고리 옆 숫자가 기사 수가 아니라 그 묶음의 모델 수
+  const onModelsPage = pathname === "/models";
+  const { counts: categoryCounts, total } = onModelsPage ? modelCountsByCategory() : articleCounts;
+  const { hasNew, markSeen } = useSeenCategories(latest);
+
+  // 홈에서 카테고리를 열면(클릭·주소 이동 모두) 그 카테고리의 "새 글" 점을 지운다
+  const homeCategory = pathname === "/" ? activeCategory : null;
+  useEffect(() => {
+    if (homeCategory) markSeen(homeCategory);
+  }, [homeCategory, markSeen]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -124,8 +136,8 @@ export default function Sidebar({
   function renderCategoryItem(cat: (typeof CATEGORIES)[number], isActive: boolean) {
     const Icon = ICON_MAP[cat.icon] || Brain;
     const count = cat.slug === "all" ? total : categoryCounts[cat.slug] ?? 0;
-    const hasFresh =
-      (cat.slug === "all" ? freshTotal : freshCounts[cat.slug] ?? 0) > 0;
+    // 새 글 점은 기사 이야기라 Models 화면에선 숨긴다
+    const showNew = !onModelsPage && hasNew(cat.slug) && !(isActive && pathname === "/");
 
     return (
       <Link
@@ -164,8 +176,8 @@ export default function Sidebar({
                 : "text-text-secondary group-hover:[color:var(--cat-color)]"
             }`}
           />
-          {/* NEW indicator (collapsed view) */}
-          {hasFresh && collapsed && (
+          {/* 새 글 점 (접힌 사이드바) */}
+          {showNew && collapsed && (
             <span
               className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-bg-sidebar animate-pulse"
               style={{ backgroundColor: cat.color }}
@@ -185,12 +197,12 @@ export default function Sidebar({
             >
               {cat.name}
             </span>
-            {/* NEW indicator (expanded view) */}
-            {hasFresh && (
+            {/* 새 글 점 — 마지막으로 연 뒤 새 기사가 들어왔을 때. 카테고리를 열면 사라진다 */}
+            {showNew && (
               <span
                 className="h-1.5 w-1.5 rounded-full animate-pulse"
                 style={{ backgroundColor: cat.color }}
-                title="최근 6시간 내 새 글"
+                title="새 글이 있어요"
                 aria-label="새 글 있음"
               />
             )}
