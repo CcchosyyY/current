@@ -16,11 +16,9 @@ const BY_USERS: Record<string, string[]> = {
   "ai-search": ["chatgpt", "gemini", "perplexity", "copilot", "grok", "genspark", "claude", "glean"],
   "subtitle-translation": ["deepl", "chatgpt", "gemini", "copilot", "claude", "elevenlabs", "deepseek", "qwen"],
   "design-ui": ["figma", "adobe-firefly", "midjourney", "lovable", "v0", "recraft", "lovart", "ideogram"],
-  writing: ["chatgpt", "gemini", "copilot", "claude", "notion", "deepl", "meta-ai", "deepseek"],
   productivity: ["copilot", "chatgpt", "notion", "gemini", "notebooklm", "zapier", "n8n", "glean"],
   "ai-agent": ["chatgpt", "gemini", "claude", "copilot", "manus", "genspark", "coze", "n8n"],
   "3d-spatial": ["meshy", "tripo", "hunyuan", "gemini", "chatgpt", "stable-diffusion", "luma", "runway"],
-  education: ["chatgpt", "gemini", "notebooklm", "copilot", "claude", "perplexity", "deepseek", "meta-ai"],
 };
 
 /** 카테고리의 사용자 많은 순 모델. 표에 없는 카테고리면 null (→ 홈 기본 8개) */

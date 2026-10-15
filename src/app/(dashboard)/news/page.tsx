@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Newspaper, Search, X } from "lucide-react";
 import NewsCard from "@/components/NewsCard";
@@ -20,6 +20,48 @@ const PERIODS = [
   { value: "30d", label: "30일", hours: 24 * 30 },
 ] as const;
 type Period = (typeof PERIODS)[number]["value"];
+
+// ── 날짜별 묶음 (한국 시간 기준) ──────────────────────────────────────────────
+const kstDay = (iso: string | null | undefined) => {
+  const t = Date.parse(iso ?? "");
+  return new Date((Number.isNaN(t) ? Date.now() : t) + 9 * 3600_000).toISOString().slice(0, 10);
+};
+const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+
+function dayLabels(key: string) {
+  const today = kstDay(new Date().toISOString());
+  const yesterday = kstDay(new Date(Date.now() - 24 * 3600_000).toISOString());
+  const [, m, d] = key.split("-").map(Number);
+  const wd = WEEKDAY[new Date(`${key}T00:00:00Z`).getUTCDay()];
+  const date = `${m}월 ${d}일 (${wd})`;
+  if (key === today) return { label: "오늘", date };
+  if (key === yesterday) return { label: "어제", date };
+  return { label: date, date: "" };
+}
+
+// 그날의 대표 기사: Hot(이미지 있음) → Hot → 모델 기사(이미지 있음) → 이미지 있는 기사 → 가장 최근
+function pickFeature(items: Article[]): Article {
+  return (
+    items.find((a) => a.hotType && a.imageUrl) ??
+    items.find((a) => a.hotType) ??
+    items.find((a) => a.aiModel && a.imageUrl) ??
+    items.find((a) => a.imageUrl) ??
+    items[0]
+  );
+}
+
+function groupByDay(articles: Article[]) {
+  const map = new Map<string, Article[]>();
+  for (const a of articles) {
+    const key = kstDay(a.publishedAt || a.createdAt);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(a);
+  }
+  return [...map.entries()].map(([key, items]) => {
+    const feature = pickFeature(items);
+    return { key, ...dayLabels(key), items, feature, rest: items.filter((a) => a !== feature) };
+  });
+}
 
 function NewsContent() {
   const router = useRouter();
@@ -94,11 +136,12 @@ function NewsContent() {
   }
 
   const categoryName = category === "all" ? null : CATEGORIES.find((c) => c.slug === category)?.name;
+  const days = useMemo(() => groupByDay(articles), [articles]);
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="flex items-center gap-2 font-heading text-2xl font-bold text-text-primary">
+        <h1 className="flex items-center gap-2 font-heading text-[24px] font-bold text-text-primary">
           <Newspaper size={24} className="text-primary" />
           News
           {categoryName && <span className="text-lg font-semibold text-text-secondary">· {categoryName}</span>}
@@ -112,31 +155,31 @@ function NewsContent() {
               e.preventDefault();
               setParam("q", draft.trim() || null);
             }}
-            className="flex items-center gap-2 rounded-lg border border-border-subtle bg-bg-surface/40 px-3 py-1.5 focus-within:border-primary/60"
+            className="flex h-[26px] items-center gap-2 rounded-lg border border-border-subtle bg-bg-surface/40 px-3 focus-within:border-primary/60"
           >
-            <Search size={14} className="text-text-tertiary" />
+            <Search size={13} className="text-text-tertiary" />
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="기사 검색 (영문)"
+              placeholder="Search"
               maxLength={200}
-              className="w-44 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-tertiary"
+              className="w-52 bg-transparent text-[12px] text-text-primary outline-none placeholder:text-text-tertiary"
             />
             {q && (
               <button type="button" onClick={() => setParam("q", null)} aria-label="검색 지우기" className="text-text-tertiary hover:text-text-primary cursor-pointer">
-                <X size={14} />
+                <X size={12} />
               </button>
             )}
           </form>
 
           {/* 기간 */}
-          <div className="flex rounded-lg border border-border-subtle p-0.5" role="group" aria-label="기간">
+          <div className="flex h-[26px] items-center rounded-lg border border-border-subtle p-0.5" role="group" aria-label="기간">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setParam("period", p.value === "all" ? null : p.value)}
                 aria-pressed={period === p.value}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                className={`flex h-full items-center rounded-md px-3 text-[12px] font-medium transition-colors cursor-pointer ${
                   period === p.value ? "bg-primary text-white" : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -147,35 +190,54 @@ function NewsContent() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border-subtle bg-bg-card px-3 py-2">
-        {loading && page === 1 ? (
-          <div className="space-y-2 py-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-12 animate-pulse rounded-lg bg-bg-surface" />
-            ))}
-          </div>
-        ) : articles.length === 0 ? (
-          <p className="py-16 text-center text-sm text-text-secondary">
-            {q ? `"${q}"에 맞는 기사가 없어요` : "조건에 맞는 기사가 없어요"}
-          </p>
-        ) : (
-          <div className="divide-y divide-border-subtle">
-            {articles.map((a) => (
-              <NewsCard key={a.id} article={a} variant="list" />
-            ))}
-          </div>
-        )}
+      {loading && page === 1 ? (
+        <div className="space-y-3">
+          <div className="h-56 animate-pulse rounded-2xl bg-bg-surface" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl bg-bg-surface" />
+          ))}
+        </div>
+      ) : articles.length === 0 ? (
+        <p className="rounded-2xl border border-border-subtle bg-bg-card py-16 text-center text-sm text-text-secondary">
+          {q ? `"${q}"에 맞는 기사가 없어요` : "조건에 맞는 기사가 없어요"}
+        </p>
+      ) : (
+        <div className="space-y-12">
+          {days.map((day, i) => {
+            // 마지막 날은 아직 다 안 불러왔을 수 있어 개수를 숨긴다
+            const complete = i < days.length - 1 || !hasMore;
+            return (
+              <section key={day.key}>
+                {/* 날짜 제목 — 스크롤하는 동안 위에 붙어 있다. <main>의 위쪽 여백(py-4/6/8)만큼 끌어올려
+                    맨 위 틈으로 기사가 비치지 않게 */}
+                <h2 className="sticky -top-4 z-10 -mx-2 mb-4 flex items-baseline gap-3 bg-bg-page/95 px-2 pb-3 pt-7 backdrop-blur md:-top-6 md:pt-9 lg:-top-8 lg:pt-11">
+                  <span className="font-heading text-xl font-bold text-text-primary">{day.label}</span>
+                  <span className="text-sm text-text-tertiary">{day.date}</span>
+                  {complete && <span className="ml-auto text-sm tabular-nums text-text-tertiary">{day.items.length}건</span>}
+                </h2>
+                <NewsCard article={day.feature} variant="feature" />
+                {day.rest.length > 0 && (
+                  <div className="mt-3 divide-y divide-border-subtle">
+                    {day.rest.map((a) => (
+                      <NewsCard key={a.id} article={a} variant="list" />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
 
-        <div ref={sentinel} />
-        {loading && page > 1 && (
-          <div className="flex justify-center py-4 text-text-tertiary">
-            <Loader2 size={18} className="animate-spin" />
-          </div>
-        )}
-        {!loading && articles.length > 0 && !hasMore && (
-          <p className="py-4 text-center text-xs text-text-tertiary">모든 기사를 다 봤어요 · {total}건</p>
-        )}
-      </div>
+      <div ref={sentinel} />
+      {loading && page > 1 && (
+        <div className="flex justify-center py-4 text-text-tertiary">
+          <Loader2 size={18} className="animate-spin" />
+        </div>
+      )}
+      {!loading && articles.length > 0 && !hasMore && (
+        <p className="py-4 text-center text-xs text-text-tertiary">모든 기사를 다 봤어요 · {total}건</p>
+      )}
     </div>
   );
 }
