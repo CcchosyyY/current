@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession } from "@/lib/supabase/proxy";
 
 // Routes that require authentication — unauthenticated users
 // are redirected to the home page.
 const PROTECTED_ROUTES = ["/saved"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request);
 
   // Redirect unauthenticated users away from protected pages
