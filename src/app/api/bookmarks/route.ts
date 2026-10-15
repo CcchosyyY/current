@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         created_at,
         articles(
           id, title, summary, source_url, source_name, image_url, published_at,
+          title_ko, summary_ko,
           categories(name, slug, color),
           ai_models(name, slug, company, brand_color)
         )
