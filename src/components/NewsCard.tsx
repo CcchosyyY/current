@@ -11,10 +11,12 @@ import { getRelativeTime } from "@/lib/utils";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
 import { useShare } from "@/lib/hooks/useShare";
 import { useToast } from "@/lib/hooks/useToast";
+import { HotBadge } from "@/components/HotSection";
 
 interface NewsCardProps {
   article: Article;
-  variant?: "list" | "card";
+  /** card: 그리드 카드 · list: 썸네일+요약 한 줄 (News) · feature: 날짜별 대표 기사 큰 카드 (News) */
+  variant?: "list" | "card" | "feature";
 }
 
 // Branded fallback shown when a card article has no thumbnail. Fills the same
@@ -78,9 +80,6 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
   const bookmarkClassName = bookmarked
     ? "p-1 text-primary transition-colors"
     : "p-1 hover:text-primary transition-colors text-text-tertiary";
-  const bookmarkClassNameList = bookmarked
-    ? "p-1.5 text-primary transition-colors"
-    : "p-1.5 hover:text-primary transition-colors text-text-tertiary";
 
   if (variant === "card") {
     return (
@@ -153,47 +152,113 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
     );
   }
 
-  // List variant (default) — compact row. Used by the News page (title 16px, meta 14px).
+  const actions = (size: number, pad: string) => (
+    <div className="flex items-center gap-1 shrink-0">
+      <button
+        aria-label={`Bookmark "${article.title}"`}
+        className={`${pad} transition-colors ${bookmarked ? "text-primary" : "text-text-tertiary hover:text-primary"}`}
+        onClick={handleBookmark}
+      >
+        <BookmarkIcon size={size} />
+      </button>
+      <button
+        aria-label={`Share "${article.title}"`}
+        className={`${pad} text-text-tertiary hover:text-primary transition-colors`}
+        onClick={handleShare}
+      >
+        <Share2 size={size} />
+      </button>
+    </div>
+  );
+
+  // Feature — 날짜별 대표 기사: 왼쪽 큰 이미지, 오른쪽 제목·요약 (좁은 화면에선 위아래)
+  if (variant === "feature") {
+    return (
+      <Link
+        href={`/article/${article.id}`}
+        className="group grid overflow-hidden rounded-2xl border border-border-subtle bg-bg-card transition-colors hover:border-border-strong md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]"
+      >
+        <div className="relative aspect-[16/9] w-full overflow-hidden md:aspect-auto md:min-h-[220px]">
+          {article.imageUrl ? (
+            <Image
+              src={article.imageUrl}
+              alt={article.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 45vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <ArticlePlaceholder article={article} />
+          )}
+        </div>
+        <div className="flex min-w-0 flex-col gap-3 p-5 md:p-6">
+          <div className="flex items-center gap-2">
+            {article.hotType && <HotBadge type={article.hotType} />}
+            {article.aiModel && (
+              <span className="text-xs font-medium text-text-secondary">
+                {AI_MODELS.find((m) => m.slug === article.aiModel)?.name}
+              </span>
+            )}
+          </div>
+          <h3 className="font-heading text-xl font-bold leading-snug text-text-primary line-clamp-3 transition-colors group-hover:text-primary">
+            {article.title}
+          </h3>
+          {article.summary && (
+            <p className="text-sm leading-relaxed text-text-secondary line-clamp-3">{article.summary}</p>
+          )}
+          <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+            <span className="flex min-w-0 items-center gap-2 text-sm text-text-tertiary">
+              <ArticleLogo article={article} size={16} />
+              <span className="truncate">{article.source}</span>
+              <span>·</span>
+              <span className="shrink-0">{getRelativeTime(article.publishedAt)}</span>
+            </span>
+            {actions(16, "p-1.5")}
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  // List variant (default) — News 목록 한 줄: 썸네일 + 제목 + 요약 한 줄 + 출처·시간
   return (
     <Link
       href={`/article/${article.id}`}
-      className="group flex items-center gap-4 py-3 px-2 rounded-lg hover:bg-bg-surface/50 transition-colors"
+      className="group flex items-center gap-4 rounded-xl px-2 py-3 transition-colors hover:bg-bg-surface/50"
     >
-      {/* Source logo (model → company → site fallback) */}
-      <div className="w-9 h-9 rounded-full bg-bg-surface border border-border-subtle flex items-center justify-center shrink-0">
-        <ArticleLogo article={article} size={20} />
+      <div className="relative hidden h-[68px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-bg-surface sm:block">
+        {article.imageUrl ? (
+          <Image src={article.imageUrl} alt="" fill sizes="104px" className="object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ArticleLogo article={article} size={24} />
+          </div>
+        )}
       </div>
 
-      {/* Title + source */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-base font-medium text-text-primary line-clamp-2 md:truncate group-hover:text-primary transition-colors">
+      <div className="min-w-0 flex-1">
+        <h3 className="text-base font-medium text-text-primary line-clamp-2 md:line-clamp-1 transition-colors group-hover:text-primary">
+          {article.hotType && (
+            <span className="mr-2 inline-block align-middle">
+              <HotBadge type={article.hotType} />
+            </span>
+          )}
           {article.title}
         </h3>
-        <span className="text-sm text-text-tertiary">{article.source}</span>
+        {article.summary && (
+          <p className="mt-0.5 hidden text-sm text-text-secondary md:line-clamp-1">{article.summary}</p>
+        )}
+        <span className="mt-1 flex items-center gap-1.5 text-sm text-text-tertiary">
+          <span className="sm:hidden">
+            <ArticleLogo article={article} size={14} />
+          </span>
+          {article.source}
+          <span>·</span>
+          {getRelativeTime(article.publishedAt)}
+        </span>
       </div>
 
-      {/* Time */}
-      <span className="text-sm text-text-tertiary shrink-0 hidden sm:block">
-        {getRelativeTime(article.publishedAt)}
-      </span>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0 hidden sm:flex">
-        <button
-          aria-label={`Bookmark "${article.title}"`}
-          className={bookmarkClassNameList}
-          onClick={handleBookmark}
-        >
-          <BookmarkIcon size={14} />
-        </button>
-        <button
-          aria-label={`Share "${article.title}"`}
-          className="p-1.5 hover:text-primary transition-colors text-text-tertiary"
-          onClick={handleShare}
-        >
-          <Share2 size={14} />
-        </button>
-      </div>
+      <div className="hidden sm:block">{actions(15, "p-1.5")}</div>
     </Link>
   );
 }

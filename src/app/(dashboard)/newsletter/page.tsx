@@ -105,8 +105,8 @@ function NewsletterContent() {
       {/* 제목 + 구독 버튼 */}
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="flex items-center gap-3 font-heading text-3xl font-bold text-text-primary">
-            <Mail size={30} className="text-primary" />
+          <h1 className="flex items-center gap-2 font-heading text-[24px] font-bold text-text-primary">
+            <Mail size={24} className="text-primary" />
             Newsletter
           </h1>
 

@@ -53,7 +53,7 @@ export default function SavedPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold font-heading text-text-primary flex items-center gap-2">
+        <h1 className="text-[24px] font-bold font-heading text-text-primary flex items-center gap-2">
           <Bookmark size={24} className="text-primary" />
           Saved Articles
         </h1>
