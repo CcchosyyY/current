@@ -3,6 +3,9 @@
 
 import type { ModelSettings } from "@/modules/execution/types";
 
+/** 서버 키로 하는 비교의 사용자 하루 한도 (R-26). 화면에서도 쓰므로 server-only가 아닌 여기에 둔다. */
+export const DAILY_COMPARISONS = 5;
+
 export type ComparisonStatus = "running" | "awaiting_choice" | "chosen" | "failed" | "abandoned";
 export type ChoiceKind = "pick" | "tie" | "all_bad";
 
