@@ -28,11 +28,9 @@ export const CATEGORIES: Category[] = [
   // Extended
   { slug: "subtitle-translation", name: "자막 / 번역", icon: "languages", color: "#F59E0B", group: "extended" },
   { slug: "design-ui", name: "디자인 / UI", icon: "palette", color: "#F472B6", group: "extended" },
-  { slug: "writing", name: "글쓰기 / 콘텐츠", icon: "pen-tool", color: "#FB923C", group: "extended" },
   { slug: "productivity", name: "생산성 / 자동화", icon: "zap", color: "#FACC15", group: "extended" },
   { slug: "ai-agent", name: "AI 에이전트", icon: "bot", color: "#22D3EE", group: "extended" },
   { slug: "3d-spatial", name: "3D / 공간", icon: "box", color: "#818CF8", group: "extended" },
-  { slug: "education", name: "교육 / 연구", icon: "graduation-cap", color: "#34D399", group: "extended" },
 ];
 
 // Top-level navigation links (Header)

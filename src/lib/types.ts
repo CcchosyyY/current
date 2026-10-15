@@ -153,11 +153,9 @@ export type CategorySlug =
   | "ai-search"
   | "subtitle-translation"
   | "design-ui"
-  | "writing"
   | "productivity"
   | "ai-agent"
-  | "3d-spatial"
-  | "education";
+  | "3d-spatial";
 
 export interface User {
   id: string;

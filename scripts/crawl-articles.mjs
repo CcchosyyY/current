@@ -109,12 +109,10 @@ const FEEDS = [
   { url: "https://www.marktechpost.com/feed/", source: "MarkTechPost", aiOnly: true },
   { url: "https://blog.google/technology/ai/rss/", source: "Google AI" },
   { url: "https://openai.com/news/rss.xml", source: "OpenAI" },
-  // 분야별 — 작은 카테고리(번역·음악·글쓰기·교육·디자인)를 채우기 위한 피드.
+  // 분야별 — 작은 카테고리(번역·음악·디자인)를 채우기 위한 피드.
   // aiOnly: AI 글이 아닌 것도 섞여 나오는 피드라 제목·요약에 AI 신호가 있을 때만 받는다.
   { url: "https://slator.com/feed/", source: "Slator", aiOnly: true },
   { url: "https://www.musicbusinessworldwide.com/tag/artificial-intelligence/feed/", source: "Music Business Worldwide" },
-  { url: "https://www.niemanlab.org/tag/artificial-intelligence/feed/", source: "Nieman Lab" },
-  { url: "https://www.edsurge.com/articles_rss", source: "EdSurge", aiOnly: true },
   { url: "https://www.figma.com/blog/feed/atom.xml", source: "Figma", aiOnly: true },
 ];
 // aiOnly 피드에서 "AI 이야기"로 볼 신호 (제목 + 요약 앞부분)
@@ -223,16 +221,14 @@ const MODEL_RULES = [
 // Keywords are matched against " " + text + " ", so prefer multi-word phrases
 // and explicit-space tokens to avoid substring false positives ("ide " in
 // "guide"/"inside", bare "code"/"voice"/"music").
-// Use-case categories that mainstream AI feeds rarely name outright. They are
+// Use-case categories that mainstream AI feeds rarely name outright (translation, design). They are
 // checked FIRST (see classify) so e.g. a live-translation story isn't swallowed
 // by ai-search just because it also says "search" — but only on a strong signal
 // (keyword in the title, or ≥ 3 body hits) so a passing "translate" stays put.
 const TRANSLATION_KWS = ["subtitle", "subtitles", "closed caption", "captions", "translation", "translations", "translator", " translate ", "translates", "translating", "live translate", "real-time translation", "machine translation", "dubbing", " dubbed", "localization", "localisation", "multilingual", "speech-to-speech", "voice translation", "interpreter mode"];
-const WRITING_KWS = ["writing assistant", "writing tool", "ai writing", "copywriting", "content generation", "drafting documents", "author's style", "authors", "novelist", "ghostwrit", "grammarly", "palmyra", "journalism", "newsroom", "ai-written", "ai-generated text", "fiction"];
 const DESIGN_KWS = ["design tool", "ui design", "ux design", "figma", " canva ", "canva's", "canva ai", "prototyping tool", "design system", "graphic design", "web design", "photoshop", "framer", "app design", "designers"];
 const FOCUSED_CATEGORY_RULES = [
   ["subtitle-translation", TRANSLATION_KWS],
-  ["writing", WRITING_KWS],
   ["design-ui", DESIGN_KWS],
 ];
 const FOCUSED_BODY_HITS = 3;
@@ -251,9 +247,7 @@ const CATEGORY_RULES = [
   ["subtitle-translation", TRANSLATION_KWS],
   ["design-ui", DESIGN_KWS],
   ["3d-spatial", ["robotics startup", "humanoid", " robot ", " robots ", "spatial comput", "3d model", "world model", "self-driving", "autonomous vehicle"]],
-  ["writing", WRITING_KWS],
   ["coding", ["ai coding", "coding model", "coding assistant", "coding tool", "code generation", "code completion", "ai pair programmer", "vibe code", "vibe-coded", "github copilot", "claude code", "software developer", "writing code", "developer tool", "competitive programming", "code editor"]],
-  ["education", ["research paper", "study finds", "working paper", "university", "scientists", "mathematicians", "education", "tutor", "ai for science"]],
   ["productivity", ["productivity", "workflow automation", "enterprise ai", "back-office", "automate complex", "workplace ai", "operating model", "expense report", "spreadsheet", "note-taking", "meeting notes", "email assistant", "google workspace", "microsoft 365", "notebooklm"]],
   // Industry / business topics — placed before the generic `llm` bucket so AI
   // industry news (funding, data centers, regulation) is captured. Ordered
@@ -302,8 +296,8 @@ const MODEL_CATEGORY = {
 // dropped at crawl time unless the article is tagged with a specific model.
 const TECH_CATEGORIES = new Set([
   "llm", "image-gen", "video-gen", "music-audio", "coding", "ai-search",
-  "ai-agent", "subtitle-translation", "design-ui", "writing", "productivity",
-  "3d-spatial", "education",
+  "ai-agent", "subtitle-translation", "design-ui", "productivity",
+  "3d-spatial",
 ]);
 // Industry / peripheral topics (funding, data centers, regulation, chips,
 // security). Classified ONLY so the scope filter can exclude them — they have no
@@ -567,12 +561,10 @@ function llmPrompt(items) {
     '     breach, data leak or vulnerability in it; it malfunctioning or causing real',
     '     harm (false reports, dangerous output, a rollback); or a change to its',
     '     privacy, data-use or terms policy.',
-    '  4. How AI is concretely being USED in writing, journalism/newsrooms, publishing,',
-    '     translation/localization, education/classrooms, music, or design — a specific',
-    '     adoption, tool, workflow, policy for AI use, or measured result (e.g. a newsroom',
-    '     launching an AI briefing, a school district adopting an AI tutor, authors and',
-    '     AI-written books, a translation company switching to AI). Pick the matching',
-    '     category: writing, subtitle-translation, education, music-audio, design-ui.',
+    '  4. How AI is concretely being USED in translation/localization, music, or design —',
+    '     a specific adoption, tool, workflow, or measured result (e.g. a translation company',
+    '     switching to AI, a label licensing an AI music model). Pick the matching category:',
+    '     subtitle-translation, music-audio, design-ui.',
     '',
     'OUT OF SCOPE (keep: false):',
     '  - Generic AI opinion, think-pieces, analysis, or "AI in general" commentary',
