@@ -39,6 +39,13 @@ export const imageRemotePatterns: ImageHostPattern[] = [
   { protocol: "https", hostname: "venturebeat.com" },
   { protocol: "https", hostname: "**.venturebeat.com" },
   { protocol: "https", hostname: "images.siliconangle.com" },
+  { protocol: "https", hostname: "cdn.sanity.io" }, // Figma blog
+  { protocol: "https", hostname: "www.niemanlab.org" },
+  { protocol: "https", hostname: "lnnhub.s3.amazonaws.com" }, // Nieman Lab (exact bucket only — never **.amazonaws.com)
+  { protocol: "https", hostname: "www.marktechpost.com" },
+  { protocol: "https", hostname: "www.musicbusinessworldwide.com" },
+  { protocol: "https", hostname: "images.openai.com" },
+  { protocol: "https", hostname: "slator.com" },
   { protocol: "https", hostname: "placehold.co" },
 ];
 

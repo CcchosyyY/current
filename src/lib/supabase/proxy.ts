@@ -3,11 +3,11 @@ import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/env";
 
 /**
- * Supabase auth middleware — refreshes the session on every request
+ * Supabase auth proxy — refreshes the session on every request
  * so Server Components always get a fresh user object.
  *
  * Returns both the response and the authenticated user (if any),
- * so the root middleware can make routing decisions.
+ * so the root proxy (src/proxy.ts) can make routing decisions.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

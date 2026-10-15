@@ -64,7 +64,8 @@ export default function Header() {
             const isActive =
               link.href === "/"
                 ? pathname === "/"
-                : pathname.startsWith(link.href);
+                : // 경로 단위로 비교 — "/newsletter"가 "/news"로 잡히지 않게
+                  pathname === link.href || pathname.startsWith(link.href + "/");
 
             return (
               <Link

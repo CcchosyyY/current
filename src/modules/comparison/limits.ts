@@ -2,6 +2,7 @@ import "server-only";
 import { ApiError } from "@/lib/api-error";
 import { serverCostSince } from "@/modules/execution/service";
 import { countCountedSince } from "./repository";
+import { DAILY_COMPARISONS } from "./types";
 
 /**
  * 서버 키 한도 (R-26, docs/architecture.md §10-2).
@@ -9,7 +10,7 @@ import { countCountedSince } from "./repository";
  * 하루의 기준은 한국 시간 자정.
  */
 
-export const DAILY_COMPARISONS = 5;
+export { DAILY_COMPARISONS };
 export const SERVICE_DAILY_BUDGET_USD = 1;
 export const MAX_MODELS = 3;
 export const MIN_MODELS = 2;

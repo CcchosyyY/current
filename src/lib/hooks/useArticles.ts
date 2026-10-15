@@ -11,6 +11,8 @@ interface UseArticlesParams {
   sort?: "latest" | "oldest";
   page?: number;
   limit?: number;
+  /** 최근 N시간 안에 발행된 기사만 */
+  hours?: number;
 }
 
 interface UseArticlesReturn {
@@ -26,7 +28,7 @@ interface UseArticlesReturn {
 }
 
 export function useArticles(params: UseArticlesParams = {}): UseArticlesReturn {
-  const { category, search, sort = "latest", page = 1, limit = 30 } = params;
+  const { category, search, sort = "latest", page = 1, limit = 30, hours } = params;
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +52,7 @@ export function useArticles(params: UseArticlesParams = {}): UseArticlesReturn {
       searchParams.set("sort", sort);
       searchParams.set("page", String(page));
       searchParams.set("limit", String(limit));
+      if (hours) searchParams.set("hours", String(hours));
 
       try {
         const res = await fetch(`/api/articles?${searchParams}`, {
@@ -73,7 +76,7 @@ export function useArticles(params: UseArticlesParams = {}): UseArticlesReturn {
 
     fetchArticles();
     return () => controller.abort();
-  }, [category, search, sort, page, limit]);
+  }, [category, search, sort, page, limit, hours]);
 
   return { articles, isLoading, error, pagination };
 }

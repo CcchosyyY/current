@@ -91,7 +91,49 @@ export type AIModelSlug =
   | "recraft"
   | "glean"
   | "cline"
-  | "higgsfield";
+  | "higgsfield"
+  | "poe"
+  | "pi"
+  | "cohere"
+  | "doubao"
+  | "ernie"
+  | "hunyuan"
+  | "glm"
+  | "minimax"
+  | "solar"
+  | "exaone"
+  | "gemma"
+  | "nemotron"
+  | "huggingchat"
+  | "olmo"
+  | "adobe-firefly"
+  | "krea"
+  | "nano-banana"
+  | "reve"
+  | "luma"
+  | "hailuo"
+  | "vidu"
+  | "pixverse"
+  | "hedra"
+  | "udio"
+  | "fish-audio"
+  | "claude-code"
+  | "codex"
+  | "github-copilot"
+  | "trae"
+  | "kiro"
+  | "gemini-cli"
+  | "phind"
+  | "kagi"
+  | "coze"
+  | "notion"
+  | "zapier"
+  | "n8n"
+  | "figma"
+  | "lovart"
+  | "deepl"
+  | "meshy"
+  | "tripo";
 
 export interface Category {
   slug: CategorySlug | "all";
@@ -137,6 +179,5 @@ export interface NewsletterIssue {
 }
 
 // Filter / UI state types
-export type TrendingPeriod = "today" | "this-week" | "this-month";
 
 export type AIModelFilter = "all" | AIModelCategory;

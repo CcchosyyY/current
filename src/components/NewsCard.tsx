@@ -54,7 +54,13 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
   function handleBookmark(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    toggleBookmark(article.id);
+    const ok = toggleBookmark(article.id, {
+      onError: () => showToast("저장하지 못했어요. 잠시 후 다시 시도해 주세요", "error"),
+    });
+    if (!ok) {
+      showToast("Sign in to save articles", "info");
+      return;
+    }
     showToast(
       bookmarked ? "Removed from bookmarks" : "Saved to bookmarks",
       "success"
@@ -147,7 +153,7 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
     );
   }
 
-  // List variant (default) — compact row
+  // List variant (default) — compact row. Used by the News page (title 16px, meta 14px).
   return (
     <Link
       href={`/article/${article.id}`}
@@ -160,14 +166,14 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
 
       {/* Title + source */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-medium text-text-primary line-clamp-2 md:truncate group-hover:text-primary transition-colors">
+        <h3 className="text-base font-medium text-text-primary line-clamp-2 md:truncate group-hover:text-primary transition-colors">
           {article.title}
         </h3>
-        <span className="text-xs text-text-tertiary">{article.source}</span>
+        <span className="text-sm text-text-tertiary">{article.source}</span>
       </div>
 
       {/* Time */}
-      <span className="text-xs text-text-tertiary shrink-0 hidden sm:block">
+      <span className="text-sm text-text-tertiary shrink-0 hidden sm:block">
         {getRelativeTime(article.publishedAt)}
       </span>
 

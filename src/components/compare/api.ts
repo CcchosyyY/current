@@ -3,7 +3,7 @@
 import type { CatalogModel } from "@/modules/catalog/types";
 import type { ChoiceKind, ComparisonView } from "@/modules/comparison/types";
 import type { ModelSettings } from "@/modules/execution/types";
-import type { ResolvedTask, TaskSuggestion } from "@/modules/task/types";
+import type { ResolvedTask } from "@/modules/task/types";
 
 export class ApiCallError extends Error {
   constructor(
@@ -33,17 +33,6 @@ async function call<T>(path: string, init?: RequestInit & { json?: unknown }): P
 }
 
 export const compareApi = {
-  suggestTasks: (q: string, signal?: AbortSignal) =>
-    call<{ data: TaskSuggestion[] }>(`/api/task-types/suggest?q=${encodeURIComponent(q)}`, { signal }).then(
-      (r) => r.data,
-    ),
-
-  resolveTask: (name: string, pickedTypeId?: string) =>
-    call<{ data: ResolvedTask }>("/api/tasks/resolve", {
-      method: "POST",
-      json: { name, pickedTypeId },
-    }).then((r) => r.data),
-
   resolveFromSample: (sample: string) =>
     call<{ data: ResolvedTask }>("/api/tasks/from-sample", { method: "POST", json: { sample } }).then(
       (r) => r.data,

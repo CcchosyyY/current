@@ -4,15 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyOrigin, createRateLimiter, safeParseBody } from "@/lib/security";
 
-// Rate limit: 30 bookmark mutations per minute per IP
-const bookmarkLimiter = createRateLimiter({ windowMs: 60_000, max: 30 });
+// Rate limits per IP — reads and writes are counted separately so loading the
+// list can never use up the budget for saving (which made saves fail with 429).
+const bookmarkReadLimiter = createRateLimiter({ windowMs: 60_000, max: 120 });
+const bookmarkLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
 
 // ---- GET: list the current user's bookmarks ----
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    if (!bookmarkLimiter.check(ip)) {
+    if (!bookmarkReadLimiter.check(ip)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 },
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = request.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 20)));
+    const limit = Math.min(200, Math.max(1, Number(searchParams.get("limit") ?? 20)));
     const offset = (page - 1) * limit;
 
     const supabase = await createClient();

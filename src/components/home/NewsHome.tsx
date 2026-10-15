@@ -6,22 +6,21 @@ import Link from "next/link";
 import { Minus, ChevronUp, LayoutGrid, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AI_MODELS } from "@/lib/constants";
+import { modelsByUsers } from "@/lib/popular-models";
 import ModelCard from "@/components/ModelCard";
 import { useArticles } from "@/lib/hooks/useArticles";
 import ArticleLogo from "@/components/ArticleLogo";
 import HotSection, { HotBadge } from "@/components/HotSection";
 import { getRelativeTimeShort, formatDate } from "@/lib/utils";
-import type { AIModelFilter } from "@/lib/types";
-
-const MODEL_TABS: { value: AIModelFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "llm", label: "LLM" },
-  { value: "image", label: "Image" },
-];
 
 // 처음 열었을 때 보여줄 기사 수 — 나머지는 컨테이너 내부 스크롤로 노출
 const VISIBLE_NEWS_COUNT = 5;
+// 한 번에 불러오는 기사 수 — 더 있으면 목록 아래 "더 보기"로 이만큼씩 늘린다
+const NEWS_PAGE = 30;
+// "Today's AI News"는 최근 24시간 안에 발행된 기사만
+const TODAY_HOURS = 24;
 
+// "전체"일 때 보여줄 유명한 모델 8개. 카테고리를 고르면 그 분야 사용자 많은 순(popular-models.ts).
 const FEATURED_SLUGS = [
   "chatgpt",
   "claude",
@@ -38,35 +37,61 @@ export default function NewsHome() {
   const category = searchParams.get("category");
 
   const [newsOpen, setNewsOpen] = useState(true);
-  const [modelFilter, setModelFilter] = useState<AIModelFilter>("all");
 
   const newsListRef = useRef<HTMLDivElement>(null);
   const [newsMaxHeight, setNewsMaxHeight] = useState<number | null>(null);
 
-  const { articles, isLoading } = useArticles({ category });
+  // 카테고리가 바뀌면 다시 처음 상태(NEWS_PAGE건, 5줄 높이)부터.
+  // "더 보기"를 누르면 박스를 두 배(10줄)로 키우고, 새로 불러온 첫 기사로 스크롤한다.
+  const [shown, setShown] = useState({ category, limit: NEWS_PAGE, expanded: false, from: 0 });
+  const current = shown.category === category ? shown : { category, limit: NEWS_PAGE, expanded: false, from: 0 };
+  const { articles, isLoading, pagination } = useArticles({ category, limit: current.limit, hours: TODAY_HOURS });
+  const totalNews = pagination.total;
+  // 보고 있던 카테고리 그대로 전체 기사(News)로
+  const newsHref = category && category !== "all" ? `/news?category=${encodeURIComponent(category)}` : "/news";
+  const visibleRows = current.expanded ? VISIBLE_NEWS_COUNT * 2 : VISIBLE_NEWS_COUNT;
 
-  // 5번째 기사까지의 실제 높이를 측정해 스크롤 영역 높이로 고정
+  function showMore() {
+    setShown({ category, limit: current.limit + NEWS_PAGE, expanded: true, from: articles.length });
+  }
+
+  // visibleRows번째 기사까지의 실제 높이를 측정해 스크롤 영역 높이로 고정
   useEffect(() => {
     const el = newsListRef.current;
     if (!el) return;
     const items = el.children;
-    if (items.length > VISIBLE_NEWS_COUNT) {
+    if (items.length > visibleRows) {
       const first = items[0] as HTMLElement;
-      const last = items[VISIBLE_NEWS_COUNT - 1] as HTMLElement;
+      const last = items[visibleRows - 1] as HTMLElement;
       setNewsMaxHeight(last.offsetTop + last.offsetHeight - first.offsetTop);
     } else {
       setNewsMaxHeight(null);
     }
-  }, [articles, isLoading, newsOpen]);
+  }, [articles, isLoading, newsOpen, visibleRows]);
+
+  // 더 불러온 뒤: 새로 들어온 첫 기사가 박스 맨 위에 오도록
+  const scrolledFor = useRef(0);
+  useEffect(() => {
+    const el = newsListRef.current;
+    const from = current.from;
+    if (!el || from === 0 || scrolledFor.current === from || articles.length <= from) return;
+    const target = el.children[from] as HTMLElement | undefined;
+    if (!target) return;
+    scrolledFor.current = from;
+    el.scrollTo({ top: target.offsetTop - (el.children[0] as HTMLElement).offsetTop, behavior: "smooth" });
+  }, [articles, current.from]);
+
+  const categoryModels = useMemo(
+    () => (category && category !== "all" ? modelsByUsers(category) : null),
+    [category],
+  );
 
   const featuredModels = useMemo(() => {
-    const featured = FEATURED_SLUGS.map((slug) =>
+    if (categoryModels) return categoryModels;
+    return FEATURED_SLUGS.map((slug) =>
       AI_MODELS.find((m) => m.slug === slug)
     ).filter(Boolean) as (typeof AI_MODELS)[number][];
-
-    if (modelFilter === "all") return featured;
-    return featured.filter((m) => m.category === modelFilter);
-  }, [modelFilter]);
+  }, [categoryModels]);
 
   const modelRows = useMemo(() => {
     const rows: (typeof featuredModels)[] = [];
@@ -101,9 +126,18 @@ export default function NewsHome() {
               )}
             </button>
           </div>
-          <span className="text-sm text-text-tertiary">
-            {formatDate(new Date())}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-text-tertiary">
+              {formatDate(new Date())}
+            </span>
+            <Link
+              href={newsHref}
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-light transition-colors"
+            >
+              전체 기사
+              <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
 
         <AnimatePresence initial={false}>
@@ -117,7 +151,7 @@ export default function NewsHome() {
               style={{ overflow: "hidden" }}
             >
               <div className="mt-2">
-                {isLoading ? (
+                {isLoading && articles.length === 0 ? (
                   <div className="space-y-2">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="h-8 bg-bg-surface rounded animate-pulse" />
@@ -126,7 +160,7 @@ export default function NewsHome() {
                 ) : articles.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-text-secondary text-sm">
-                      No articles found in this category
+                      최근 24시간 동안 올라온 기사가 없어요
                     </p>
                   </div>
                 ) : (
@@ -169,6 +203,30 @@ export default function NewsHome() {
                     ))}
                   </div>
                 )}
+                {/* 아래: 24시간 안에 더 있으면 "더 보기", 그리고 항상 전체 기사(News)로 가는 길 */}
+                {!(isLoading && articles.length === 0) && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    {articles.length > 0 && totalNews > articles.length && (
+                    <button
+                      onClick={showMore}
+                      disabled={isLoading}
+                      className="flex items-center gap-2 rounded-full border border-border-subtle bg-bg-surface/40 px-4 py-1.5 text-xs text-text-secondary hover:border-border-strong hover:text-text-primary disabled:opacity-50 cursor-pointer transition-colors"
+                    >
+                      {isLoading ? "불러오는 중…" : "더 보기"}
+                      <span className="tabular-nums text-text-tertiary">
+                        {articles.length} / {totalNews}
+                      </span>
+                    </button>
+                    )}
+                    <Link
+                      href={newsHref}
+                      className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-bg-surface/40 px-4 py-1.5 text-xs text-text-secondary hover:border-border-strong hover:text-text-primary transition-colors"
+                    >
+                      지난 기사 전체 보기
+                      <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -183,22 +241,6 @@ export default function NewsHome() {
             <h2 className="text-lg font-bold text-text-primary font-heading">
               AI Models
             </h2>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {MODEL_TABS.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setModelFilter(tab.value)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  modelFilter === tab.value
-                    ? "bg-primary text-white"
-                    : "border border-border-strong text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
           </div>
         </div>
 

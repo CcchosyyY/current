@@ -104,10 +104,24 @@ const FEEDS = [
   { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", paged: true },
   { url: "https://siliconangle.com/category/ai/feed/", source: "SiliconANGLE", paged: true },
   { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Technology Review", paged: true },
+  // AI 전문 매체 · 공식 블로그 — 일반 매체가 덜 다루는 도구·기능 소식
+  { url: "https://the-decoder.com/feed/", source: "The Decoder" },
+  { url: "https://www.marktechpost.com/feed/", source: "MarkTechPost", aiOnly: true },
+  { url: "https://blog.google/technology/ai/rss/", source: "Google AI" },
+  { url: "https://openai.com/news/rss.xml", source: "OpenAI" },
+  // 분야별 — 작은 카테고리(번역·음악·글쓰기·교육·디자인)를 채우기 위한 피드.
+  // aiOnly: AI 글이 아닌 것도 섞여 나오는 피드라 제목·요약에 AI 신호가 있을 때만 받는다.
+  { url: "https://slator.com/feed/", source: "Slator", aiOnly: true },
+  { url: "https://www.musicbusinessworldwide.com/tag/artificial-intelligence/feed/", source: "Music Business Worldwide" },
+  { url: "https://www.niemanlab.org/tag/artificial-intelligence/feed/", source: "Nieman Lab" },
+  { url: "https://www.edsurge.com/articles_rss", source: "EdSurge", aiOnly: true },
+  { url: "https://www.figma.com/blog/feed/atom.xml", source: "Figma", aiOnly: true },
 ];
+// aiOnly 피드에서 "AI 이야기"로 볼 신호 (제목 + 요약 앞부분)
+const AI_SIGNAL = /\b(ai|a\.i\.|artificial intelligence|machine learning|llms?|gpt[-\w.]*|chatgpt|gemini|claude|copilot|generative|genai|machine translation|neural|language models?|agents?|agentic)\b/i;
 
 const PER_FEED = 20; // cap items per feed
-const TOTAL_CAP = 120; // overall cap (6 feeds × 20)
+const TOTAL_CAP = 300; // overall cap (15 feeds × 20)
 
 // ── Classification keyword maps ────────────────────────────────────────────
 // AI model slug ← keyword(s). Order matters: first match wins.
@@ -115,6 +129,15 @@ const TOTAL_CAP = 120; // overall cap (6 feeds × 20)
 // Avoid bare substrings ("openai"/"anthropic" as a backend, "cline" inside
 // "decline") — prefer possessive/subject forms and multi-word product phrases.
 const MODEL_RULES = [
+  // Sub-products / tools of a bigger family — BEFORE the family rule, or "OpenAI's Codex"
+  // would hit chatgpt ("openai's") and "Claude Code" would hit claude.
+  ["claude-code", ["claude code"]],
+  ["codex", ["openai codex", "codex cli", "codex app", " codex ", "codex's"]],
+  ["github-copilot", ["github copilot", "copilot coding agent", "copilot workspace"]],
+  ["gemini-cli", ["gemini cli"]],
+  ["nano-banana", ["nano banana", "nano-banana"]],
+  ["gemma", ["gemma"]],
+  ["hailuo", ["hailuo"]],
   // App / agent builders first — often the subject even when a foundation model is the backend
   ["lovable", ["lovable"]],
   ["devin", ["devin", "cognition labs"]],
@@ -139,12 +162,49 @@ const MODEL_RULES = [
   ["sora", ["sora 2", "openai sora", "sora video", "sora app"]],
   ["veo", ["veo 3", "veo 2", "google veo", "veo model"]],
   ["qwen", ["qwen"]],
+  // 2026-10 추가 — 짧은 이름은 다른 단어 속에 숨어 있으므로(udio⊂audio, reve⊂revenue,
+  // solar=태양광, pi, poe) 앞뒤 공백·소유격·회사명으로만 잡는다.
+  ["trae", [" trae ", "trae ai", "trae ide"]],
+  ["kiro", [" kiro ", "kiro ide", "kiro's"]],
+  ["udio", [" udio ", "udio's", "udio ai"]],
+  ["fish-audio", ["fish audio"]],
+  ["luma", ["luma ai", "luma labs", "dream machine", "luma's"]],
+  ["vidu", [" vidu ", "shengshu"]],
+  ["pixverse", ["pixverse"]],
+  ["hedra", [" hedra ", "hedra's", "hedra ai"]],
+  ["krea", ["krea ai", " krea ", "krea's"]],
+  ["reve", ["reve image", "reve ai", "reve's", " reve "]],
+  ["adobe-firefly", ["adobe firefly", "firefly image", "firefly video", "firefly model"]],
+  ["lovart", ["lovart"]],
+  ["meshy", ["meshy"]],
+  ["tripo", ["tripo3d", "tripo ai", " tripo "]],
+  ["deepl", ["deepl"]],
+  ["figma", ["figma"]],
+  ["notion", ["notion ai", "notion's", "notion agent", " notion "]],
+  ["zapier", ["zapier"]],
+  ["n8n", ["n8n"]],
+  ["coze", [" coze ", "coze's"]],
+  ["phind", ["phind"]],
+  ["kagi", [" kagi ", "kagi's"]],
+  ["doubao", ["doubao"]],
+  ["ernie", ["ernie bot", "ernie 4", "ernie 5", "ernie x", "baidu's ernie", "baidu ernie"]],
+  ["hunyuan", ["hunyuan"]],
+  ["glm", ["zhipu", " glm-", " glm ", "chatglm", "z.ai"]],
+  ["minimax", ["minimax"]],
+  ["solar", ["upstage", "solar pro", "solar llm", "solar open"]],
+  ["exaone", ["exaone", "lg ai research"]],
+  ["nemotron", ["nemotron"]],
+  ["olmo", [" olmo", "allen institute for ai", "ai2's"]],
+  ["huggingchat", ["huggingchat", "hugging face"]],
+  ["cohere", ["cohere"]],
+  ["poe", [" poe ", "poe's", "quora's poe", "poe app"]],
+  ["pi", ["inflection ai", "pi.ai", "inflection's pi", "pi assistant"]],
   ["kimi-k2", ["kimi k2", "kimi-k2", "moonshot ai", "kimi k"]],
   // First-party foundation model families
   ["claude", ["claude", "anthropic's", "by anthropic", "anthropic released", "anthropic launches", "anthropic report"]],
   ["dall-e", ["dall-e", "dall·e", "dalle"]],
   ["chatgpt", ["chatgpt", "gpt-5", "gpt-4", "gpt-4o", "openai's", "by openai", "openai released", "openai launches", "sam altman"]],
-  ["gemini", ["gemini", "google deepmind", "deepmind", "gemma", "bard", "google ai studio"]],
+  ["gemini", ["gemini", "google deepmind", "deepmind", "bard", "google ai studio"]],
   ["grok", ["grok", "x.ai", "grok imagine"]],
   ["copilot", ["github copilot", "microsoft copilot", "copilot"]],
   ["perplexity", ["perplexity"]],
@@ -163,19 +223,38 @@ const MODEL_RULES = [
 // Keywords are matched against " " + text + " ", so prefer multi-word phrases
 // and explicit-space tokens to avoid substring false positives ("ide " in
 // "guide"/"inside", bare "code"/"voice"/"music").
+// Use-case categories that mainstream AI feeds rarely name outright. They are
+// checked FIRST (see classify) so e.g. a live-translation story isn't swallowed
+// by ai-search just because it also says "search" — but only on a strong signal
+// (keyword in the title, or ≥ 3 body hits) so a passing "translate" stays put.
+const TRANSLATION_KWS = ["subtitle", "subtitles", "closed caption", "captions", "translation", "translations", "translator", " translate ", "translates", "translating", "live translate", "real-time translation", "machine translation", "dubbing", " dubbed", "localization", "localisation", "multilingual", "speech-to-speech", "voice translation", "interpreter mode"];
+const WRITING_KWS = ["writing assistant", "writing tool", "ai writing", "copywriting", "content generation", "drafting documents", "author's style", "authors", "novelist", "ghostwrit", "grammarly", "palmyra", "journalism", "newsroom", "ai-written", "ai-generated text", "fiction"];
+const DESIGN_KWS = ["design tool", "ui design", "ux design", "figma", " canva ", "canva's", "canva ai", "prototyping tool", "design system", "graphic design", "web design", "photoshop", "framer", "app design", "designers"];
+const FOCUSED_CATEGORY_RULES = [
+  ["subtitle-translation", TRANSLATION_KWS],
+  ["writing", WRITING_KWS],
+  ["design-ui", DESIGN_KWS],
+];
+const FOCUSED_BODY_HITS = 3;
+function countHits(text, kws) {
+  let n = 0;
+  for (const k of kws) n += text.split(k).length - 1;
+  return n;
+}
+
 const CATEGORY_RULES = [
-  ["video-gen", ["video generation", "text-to-video", "image-to-video", "video model", "ai video", "video diffusion", "sora 2", "veo 3", "kling ai", "runway gen"]],
-  ["image-gen", ["image generation", "text-to-image", "midjourney", "dall-e", "dall·e", "stable diffusion", "flux.1", "ideogram", "recraft", "ai image", "image model", "image-generation"]],
-  ["music-audio", ["ai music", "music generation", "music startup", "suno", "elevenlabs", "text-to-speech", " tts ", "speech synthesis", "voice ai", "voice clon", "voice model", "song generation", "audio generation"]],
+  ["video-gen", ["video generation", "video generator", "generative video", "ai-generated video", "text-to-video", "image-to-video", "video model", "ai video", "video diffusion", "sora 2", "sora app", "veo 3", "kling ai", "runway gen", "higgsfield", "pika labs"]],
+  ["image-gen", ["image generation", "text-to-image", "midjourney", "dall-e", "dall·e", "stable diffusion", "flux.1", "ideogram", "recraft", "ai image", "image model", "image-generation", "image generator", "image editing model", "adobe firefly", "generative fill", "nano banana"]],
+  ["music-audio", ["ai music", "music generation", "music startup", "suno", "elevenlabs", "text-to-speech", " tts ", "speech synthesis", "voice ai", "voice clon", "voice model", "song generation", "audio generation", "ai voice", "voice mode", "speech recognition", "speech-to-text", "transcription", "audio overview", "podcast"]],
   ["ai-search", ["ai search", "ai overview", "ai mode", "perplexity", "search engine", "search results", "search console", "retrieval-augmented", " rag "]],
   ["ai-agent", ["ai agent", "ai agents", "agentic", "autonomous agent", "autonomous background agent", "agent for", "agent capability"]],
-  ["subtitle-translation", ["subtitle", "subtitles", "machine translation", " translate ", "translation model", "multilingual model", "dubbing"]],
-  ["design-ui", ["design tool", "ui design", "ux design", "figma", "prototyping tool", "design system"]],
+  ["subtitle-translation", TRANSLATION_KWS],
+  ["design-ui", DESIGN_KWS],
   ["3d-spatial", ["robotics startup", "humanoid", " robot ", " robots ", "spatial comput", "3d model", "world model", "self-driving", "autonomous vehicle"]],
-  ["writing", ["writing assistant", "copywriting", "content generation", "ai writing", "drafting documents"]],
+  ["writing", WRITING_KWS],
   ["coding", ["ai coding", "coding model", "coding assistant", "coding tool", "code generation", "code completion", "ai pair programmer", "vibe code", "vibe-coded", "github copilot", "claude code", "software developer", "writing code", "developer tool", "competitive programming", "code editor"]],
   ["education", ["research paper", "study finds", "working paper", "university", "scientists", "mathematicians", "education", "tutor", "ai for science"]],
-  ["productivity", ["productivity", "workflow automation", "enterprise ai", "back-office", "automate complex", "workplace ai", "operating model", "expense report"]],
+  ["productivity", ["productivity", "workflow automation", "enterprise ai", "back-office", "automate complex", "workplace ai", "operating model", "expense report", "spreadsheet", "note-taking", "meeting notes", "email assistant", "google workspace", "microsoft 365", "notebooklm"]],
   // Industry / business topics — placed before the generic `llm` bucket so AI
   // industry news (funding, data centers, regulation) is captured. Ordered
   // specific → broad (business' funding/investor terms are widest, so it's last).
@@ -207,6 +286,15 @@ const MODEL_CATEGORY = {
   sora: "multimodal", veo: "multimodal", kling: "multimodal", elevenlabs: "multimodal",
   manus: "multimodal", higgsfield: "multimodal", genspark: "search", glean: "search",
   qwen: "open-source", "kimi-k2": "open-source", ideogram: "image", recraft: "image", cline: "code",
+  // 2026-10 추가
+  "claude-code": "code", codex: "code", "github-copilot": "code", "gemini-cli": "code", trae: "code", kiro: "code",
+  "nano-banana": "image", "adobe-firefly": "image", krea: "image", reve: "image", lovart: "image",
+  gemma: "open-source", glm: "open-source", exaone: "open-source", nemotron: "open-source", olmo: "open-source", huggingchat: "open-source",
+  poe: "llm", pi: "llm", cohere: "llm", doubao: "llm", ernie: "llm", hunyuan: "llm", minimax: "llm", solar: "llm",
+  hailuo: "multimodal", luma: "multimodal", vidu: "multimodal", pixverse: "multimodal", hedra: "multimodal",
+  udio: "multimodal", "fish-audio": "multimodal", coze: "multimodal", notion: "multimodal", zapier: "multimodal",
+  n8n: "multimodal", figma: "multimodal", deepl: "multimodal", meshy: "multimodal", tripo: "multimodal",
+  phind: "search", kagi: "search",
 };
 
 // Article categories considered "AI model / AI tech" — these are KEPT by the
@@ -243,14 +331,38 @@ const NAMED_ENTITIES = {
   aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú",
   agrave: "à", egrave: "è", ntilde: "ñ", ccedil: "ç", auml: "ä", ouml: "ö", uuml: "ü",
 };
+// Latin-1 named entities (U+00A1–U+00FF). Some feeds (The Verge) send an
+// emoji's UTF-8 bytes as Latin-1 entities — "&eth;\u009f&curren;\u0093" for 🤓 —
+// so every name must decode before fixMojibake() can reassemble the bytes.
+const LATIN1_NAMES = (
+  "iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr " +
+  "deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest " +
+  "Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml " +
+  "ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig " +
+  "agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml " +
+  "eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml"
+).split(" ");
+const LATIN1_ENTITIES = Object.fromEntries(
+  LATIN1_NAMES.map((name, i) => [name, String.fromCharCode(0xa1 + i)]),
+);
 // Single pass, so "&amp;#8217;" decodes once (to "&#8217;"), not twice.
 function decodeEntities(s) {
-  return String(s || "").replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => {
+  const decoded = String(s || "").replace(/&(#x[0-9a-f]+|#\d+|[a-z]+[0-9]*);/gi, (m, e) => {
     if (e[0] === "#") {
       const cp = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : +e.slice(1);
       return cp > 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
     }
-    return NAMED_ENTITIES[e.toLowerCase()] ?? m;
+    return LATIN1_ENTITIES[e] ?? NAMED_ENTITIES[e.toLowerCase()] ?? m;
+  });
+  return fixMojibake(decoded);
+}
+// UTF-8 bytes that were read as Latin-1 ("ð\u009f¤\u0093") → the real
+// character (🤓). Only rewrites runs that form valid UTF-8, so real accented
+// text like "café" is left alone.
+function fixMojibake(s) {
+  return s.replace(/[\u00c2-\u00f4][\u0080-\u00bf]{1,3}/g, (run) => {
+    const fixed = Buffer.from(run, "latin1").toString("utf8");
+    return fixed.includes("\ufffd") ? run : fixed;
   });
 }
 function stripHtml(html) {
@@ -372,8 +484,14 @@ function classify(title, body) {
   }
 
   let category = null;
-  for (const [slug, kws] of CATEGORY_RULES) {
-    if (kws.some((k) => full.includes(k))) { category = slug; break; }
+  // Focused use-case pass first: strong signal only (title hit or ≥ 3 body hits).
+  for (const [slug, kws] of FOCUSED_CATEGORY_RULES) {
+    if (kws.some((k) => t.includes(k)) || countHits(full, kws) >= FOCUSED_BODY_HITS) { category = slug; break; }
+  }
+  if (!category) {
+    for (const [slug, kws] of CATEGORY_RULES) {
+      if (kws.some((k) => full.includes(k))) { category = slug; break; }
+    }
   }
 
   // A body-only model hit inside an industry story is a passing mention of a
@@ -449,10 +567,16 @@ function llmPrompt(items) {
     '     breach, data leak or vulnerability in it; it malfunctioning or causing real',
     '     harm (false reports, dangerous output, a rollback); or a change to its',
     '     privacy, data-use or terms policy.',
+    '  4. How AI is concretely being USED in writing, journalism/newsrooms, publishing,',
+    '     translation/localization, education/classrooms, music, or design — a specific',
+    '     adoption, tool, workflow, policy for AI use, or measured result (e.g. a newsroom',
+    '     launching an AI briefing, a school district adopting an AI tutor, authors and',
+    '     AI-written books, a translation company switching to AI). Pick the matching',
+    '     category: writing, subtitle-translation, education, music-audio, design-ui.',
     '',
     'OUT OF SCOPE (keep: false):',
     '  - Generic AI opinion, think-pieces, analysis, or "AI in general" commentary',
-    '    not anchored to a specific product, model, or company.',
+    '    not anchored to a specific product, model, company, or concrete use (see 4).',
     '  - Society/culture takes, labor-market or jobs commentary, ethics essays.',
     '  - A lawsuit, fine, or regulatory order — even one involving a major AI',
     "    company — UNLESS the article is really about that company's own product",
@@ -682,7 +806,12 @@ async function detectHot(items, knownEvents = []) {
 // RSS item lists for a feed: just the first page normally; in backfill mode,
 // successive `?paged=N` pages until the oldest item predates SINCE.
 async function fetchFeedItems(feed) {
-  if (!BACKFILL) return (await parser.parseURL(feed.url)).items || [];
+  if (!BACKFILL) {
+    // 최신순으로 — 피드에 따라(OpenAI 1천여 건, Figma 등) 순서가 보장되지 않아 상한 20건이 옛 글로 채워질 수 있다
+    const items = (await parser.parseURL(feed.url)).items || [];
+    const ts = (i) => new Date(i.isoDate || i.pubDate || 0).getTime() || 0;
+    return items.sort((x, y) => ts(y) - ts(x));
+  }
   if (!feed.paged) return [];
   const items = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
@@ -744,7 +873,8 @@ async function crawl() {
         seen.add(link);
 
         const html = item.contentEncoded || item.content || item.summary || "";
-        const snippet = item.contentSnippet || stripHtml(html);
+        const snippet = item.contentSnippet ? decodeEntities(item.contentSnippet) : stripHtml(html);
+        if (feed.aiOnly && !AI_SIGNAL.test(`${title} ${snippet.slice(0, 600)}`)) continue;
         const summary = truncate(snippet, 260) || truncate(title, 260);
         let content = toParagraphs(html, 1600);
         if (content.length < 80) content = snippet || summary;
@@ -834,7 +964,6 @@ async function crawl() {
       ai_model_slug: model,
       read_time: c.read_time,
       tags: tagsFrom(c.blob, model, category),
-      is_trending: false,
       published_at: c.published_at,
     });
   }
@@ -900,8 +1029,6 @@ async function upsert(rows) {
     category_id: cats[r.category_slug] || cats["ai-ml"] || null,
     ai_model_id: r.ai_model_slug ? mods[r.ai_model_slug] || null : null,
     read_time: r.read_time,
-    view_count: r.view_count,
-    is_trending: r.is_trending,
     tags: r.tags,
     hot_type: r.hot_type ?? null,
     hot_reason: r.hot_reason ?? null,
@@ -1003,29 +1130,12 @@ console.log(
 const rows = await crawl();
 if (!BACKFILL && rows.length > 0) await detectHot(rows, await loadKnownEvents());
 
-// Sort newest-first, then assign synthetic engagement metrics so the Trending
-// page and view counts feel alive (real metrics would come from analytics).
+// Newest-first for the JSON snapshot. (Synthetic view_count / is_trending were
+// removed with the Trending page — nothing shows them, and fake numbers mislead.)
 rows.sort(
   (a, b) =>
     new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime(),
 );
-const hash = (s) => {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h;
-};
-rows.forEach((r, i) => {
-  const recency = Math.max(0, 1 - i / Math.max(1, rows.length)); // newest → ~1
-  const noise = (hash(r.source_url) % 1000) / 1000;
-  r.view_count = Math.round(800 + recency * 18000 + noise * 9000);
-});
-// Mark the ~12 highest-viewed as trending (not for backfilled back-catalogue).
-[...rows]
-  .sort((a, b) => b.view_count - a.view_count)
-  .slice(0, BACKFILL ? 0 : 12)
-  .forEach((r) => {
-    r.is_trending = true;
-  });
 
 writeFileSync(resolve(ROOT, "scripts/crawled-articles.json"), JSON.stringify(rows, null, 2));
 console.log(`\nCrawled ${rows.length} articles → scripts/crawled-articles.json`);
