@@ -9,15 +9,8 @@ import type { AIModel } from "@/lib/types";
 import ModelActions from "./model/ModelActions";
 import ModelInfoSections from "./model/ModelInfoSections";
 import ModelRelatedNews from "./ModelRelatedNews";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  llm: "LLM",
-  image: "Image",
-  code: "Code",
-  search: "Search",
-  multimodal: "Multimodal",
-  "open-source": "Open Source",
-};
 
 interface ModelDetailModalProps {
   model: AIModel | null;
@@ -28,6 +21,7 @@ export default function ModelDetailModal({
   model,
   onClose,
 }: ModelDetailModalProps) {
+  const m = useMessages();
   // Close on Escape and lock body scroll while open.
   useEffect(() => {
     if (!model) return;
@@ -65,7 +59,7 @@ export default function ModelDetailModal({
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label={`${model.name} details`}
+            aria-label={m.model.detailsOf(model.name)}
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -80,7 +74,7 @@ export default function ModelDetailModal({
             >
               <button
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={m.model.close}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-bg-surface/70 border border-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors cursor-pointer z-10"
               >
                 <X size={15} />
@@ -109,13 +103,13 @@ export default function ModelDetailModal({
                       {model.name}
                     </h2>
                     <p className="text-sm text-text-secondary truncate">
-                      by {model.company}
+                      {m.model.by(model.company)}
                     </p>
                     <span
                       className="inline-block mt-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
                       style={{ color: accent, backgroundColor: `${accent}24` }}
                     >
-                      {CATEGORY_LABELS[model.category] ?? model.category}
+                      {m.model.categories[model.category] ?? model.category}
                     </span>
                   </div>
                 </div>

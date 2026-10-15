@@ -17,29 +17,30 @@ export const HOT_LABELS: Record<HotType, { label: string; color: string }> = {
 // Sidebar navigation categories (matches the Pencil design)
 export const CATEGORIES: Category[] = [
   // Core
-  { slug: "all", name: "전체", icon: "layout-grid", color: "#94A3B8", group: "core" },
-  { slug: "llm", name: "LLM / 챗봇", icon: "message-square", color: "#10B981", group: "core" },
-  { slug: "ai-ml", name: "AI / ML", icon: "brain", color: "#3B82F6", group: "core" },
-  { slug: "image-gen", name: "이미지 생성", icon: "image", color: "#A855F7", group: "core" },
-  { slug: "video-gen", name: "비디오 생성", icon: "video", color: "#EF4444", group: "core" },
-  { slug: "music-audio", name: "음악 / 오디오", icon: "music", color: "#EC4899", group: "core" },
-  { slug: "coding", name: "코딩 / 개발", icon: "code", color: "#6366F1", group: "core" },
-  { slug: "ai-search", name: "AI 검색", icon: "search", color: "#14B8A6", group: "core" },
+  { slug: "all", name: "전체", nameEn: "All", icon: "layout-grid", color: "#94A3B8", group: "core" },
+  { slug: "llm", name: "LLM / 챗봇", nameEn: "LLM / Chatbots", icon: "message-square", color: "#10B981", group: "core" },
+  { slug: "ai-ml", name: "AI / ML", nameEn: "AI / ML", icon: "brain", color: "#3B82F6", group: "core" },
+  { slug: "image-gen", name: "이미지 생성", nameEn: "Image Generation", icon: "image", color: "#A855F7", group: "core" },
+  { slug: "video-gen", name: "비디오 생성", nameEn: "Video Generation", icon: "video", color: "#EF4444", group: "core" },
+  { slug: "music-audio", name: "음악 / 오디오", nameEn: "Music / Audio", icon: "music", color: "#EC4899", group: "core" },
+  { slug: "coding", name: "코딩 / 개발", nameEn: "Coding / Dev", icon: "code", color: "#6366F1", group: "core" },
+  { slug: "ai-search", name: "AI 검색", nameEn: "AI Search", icon: "search", color: "#14B8A6", group: "core" },
   // Extended
-  { slug: "subtitle-translation", name: "자막 / 번역", icon: "languages", color: "#F59E0B", group: "extended" },
-  { slug: "design-ui", name: "디자인 / UI", icon: "palette", color: "#F472B6", group: "extended" },
-  { slug: "productivity", name: "생산성 / 자동화", icon: "zap", color: "#FACC15", group: "extended" },
-  { slug: "ai-agent", name: "AI 에이전트", icon: "bot", color: "#22D3EE", group: "extended" },
-  { slug: "3d-spatial", name: "3D / 공간", icon: "box", color: "#818CF8", group: "extended" },
+  { slug: "subtitle-translation", name: "자막 / 번역", nameEn: "Subtitles / Translation", icon: "languages", color: "#F59E0B", group: "extended" },
+  { slug: "design-ui", name: "디자인 / UI", nameEn: "Design / UI", icon: "palette", color: "#F472B6", group: "extended" },
+  { slug: "productivity", name: "생산성 / 자동화", nameEn: "Productivity", icon: "zap", color: "#FACC15", group: "extended" },
+  { slug: "ai-agent", name: "AI 에이전트", nameEn: "AI Agents", icon: "bot", color: "#22D3EE", group: "extended" },
+  { slug: "3d-spatial", name: "3D / 공간", nameEn: "3D / Spatial", icon: "box", color: "#818CF8", group: "extended" },
 ];
 
 // Top-level navigation links (Header)
+// 라벨은 언어별 사전(messages.nav[key])에서
 export const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/news", label: "News" },
-  { href: "/models", label: "Models" },
-  { href: "/saved", label: "Saved" },
-  { href: "/newsletter", label: "Newsletter" },
+  { href: "/", key: "home" },
+  { href: "/news", key: "news" },
+  { href: "/models", key: "models" },
+  { href: "/saved", key: "saved" },
+  { href: "/newsletter", key: "newsletter" },
 ] as const;
 
 // 24 AI Models data for the AI Models grid

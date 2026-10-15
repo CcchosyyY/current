@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { dbArticleToArticle } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { useLocale, useTimeAgo } from "@/lib/i18n/LocaleProvider";
 import type { DBArticleRow } from "@/lib/transforms";
 import type { Article } from "@/lib/types";
-import { getRelativeTime } from "@/lib/utils";
 
 interface ModelRelatedNewsProps {
   slug: string;
@@ -27,6 +27,8 @@ export default function ModelRelatedNews({
   seeAllHref,
 }: ModelRelatedNewsProps) {
   // null = still loading, [] = loaded but empty (section hides itself).
+  const { locale, m } = useLocale();
+  const { ago } = useTimeAgo();
   const [articles, setArticles] = useState<Article[] | null>(null);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function ModelRelatedNews({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold tracking-wider text-text-tertiary">
-          LATEST NEWS
+          {m.model.latestNews}
         </p>
         {seeAllHref && articles && articles.length > 0 && (
           <Link
@@ -64,14 +66,14 @@ export default function ModelRelatedNews({
             className="inline-flex items-center gap-0.5 text-[11px] font-semibold transition-colors"
             style={{ color: accent }}
           >
-            See all <ArrowRight size={12} />
+            {m.model.seeAll} <ArrowRight size={12} />
           </Link>
         )}
       </div>
       <div className="space-y-1">
         {articles === null
           ? Array.from({ length: 2 }).map((_, i) => <RowSkeleton key={i} />)
-          : articles.map((a) => (
+          : articles.map((raw) => localizeArticle(raw, locale)).map((a) => (
               <Link
                 key={a.id}
                 href={`/article/${a.id}`}
@@ -84,7 +86,7 @@ export default function ModelRelatedNews({
                     {a.title}
                   </p>
                   <p className="text-[11px] text-text-tertiary mt-0.5 truncate">
-                    {[a.source, getRelativeTime(a.publishedAt)]
+                    {[a.source, ago(a.publishedAt)]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>

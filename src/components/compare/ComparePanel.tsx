@@ -24,6 +24,7 @@ import { DEFAULT_SETTINGS, type ModelSettings } from "@/modules/execution/types"
 import type { ResolvedTask } from "@/modules/task/types";
 import { ApiCallError, compareApi } from "./api";
 import ResultSlots from "./ResultSlots";
+import { useLocale, useMessages } from "@/lib/i18n/LocaleProvider";
 
 // 비교 화면 (이야기 2·3, plan-stage1 S9). 홈의 가로 슬라이드 오른쪽 패널.
 
@@ -32,6 +33,7 @@ const MIN_MODELS = 2;
 const MAX_MODELS = 3;
 
 export default function ComparePanel() {
+  const m = useMessages();
   const { user, isLoading } = useAuth();
 
   return (
@@ -42,15 +44,15 @@ export default function ComparePanel() {
       {/* 제목·입력은 읽기 좋은 폭(max-w-5xl), 결과는 더 넓게(1600px) — CompareFlow가 나눠 쓴다 */}
       <div className="relative mx-auto max-w-[1600px] px-6 pt-10 pb-6">
         <div className="mx-auto max-w-5xl">
-          <p className="mb-3 font-mono text-[11px] tracking-[0.3em] text-primary-light">MODEL LAB</p>
+          <p className="mb-3 font-mono text-[11px] tracking-[0.3em] text-primary-light">{m.compare.eyebrow}</p>
           <h1 className="font-heading text-3xl md:text-4xl font-bold leading-tight text-white">
-            내 작업에 맞는 모델,{" "}
+            {m.compare.heroA}{" "}
             <span className="bg-gradient-to-r from-primary-light to-violet-400 bg-clip-text text-transparent">
-              직접 비교해서 찾기
+              {m.compare.heroB}
             </span>
           </h1>
           <p className="mt-3 text-sm text-text-secondary">
-            같은 일을 여러 모델에 시키고, 이름을 가린 채 가장 나은 답을 고르세요.
+            {m.compare.heroSub}
           </p>
         </div>
 
@@ -86,6 +88,7 @@ function Backdrop() {
 }
 
 function LoginGate() {
+  const m = useMessages();
   const [busy, setBusy] = useState(false);
   async function signIn() {
     setBusy(true);
@@ -100,21 +103,22 @@ function LoginGate() {
   }
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur-xl">
-      <p className="text-base text-text-primary">비교 기록과 내 순위를 남기려면 로그인이 필요해요.</p>
-      <p className="mt-1.5 text-sm text-text-tertiary">하루 {DAILY_COMPARISONS}회까지 무료로 비교할 수 있어요.</p>
+      <p className="text-base text-text-primary">{m.compare.loginNeeded}</p>
+      <p className="mt-1.5 text-sm text-text-tertiary">{m.compare.freePerDay(DAILY_COMPARISONS)}</p>
       <button
         onClick={signIn}
         disabled={busy}
         className="mx-auto mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-violet-500 px-6 py-3 text-base font-semibold text-white disabled:opacity-60 cursor-pointer"
       >
         {busy ? <Loader2 size={17} className="animate-spin" /> : <LogIn size={17} />}
-        Google로 로그인
+        {m.compare.signInGoogle}
       </button>
     </div>
   );
 }
 
 function CompareFlow() {
+  const { locale, m } = useLocale();
   const { showToast } = useToast();
   // 작업(이름·유형)은 사용자가 쓰지 않는다 — 실행할 때 샘플을 보고 AI가 정한다.
   // 같은 샘플로 다시 돌리면 다시 묻지 않는다.
@@ -146,8 +150,8 @@ function CompareFlow() {
         setSelected((prev) => (prev.length > 0 ? prev : d.models));
         setRemaining(d.remainingToday);
       })
-      .catch(() => showToast("모델 목록을 불러오지 못했어요", "error"));
-  }, [showToast]);
+      .catch(() => showToast(m.compare.loadModelsFailed, "error"));
+  }, [showToast, m]);
 
   const busy = runningSince !== null || choosing;
   const canRun =
@@ -158,7 +162,16 @@ function CompareFlow() {
     !busy;
 
   function fail(e: unknown) {
-    const message = e instanceof ApiCallError || e instanceof Error ? e.message : "문제가 생겼어요";
+    // 서버 오류 문구는 한국어 — 영어 화면에선 오류 코드로 영어 문구를 고른다
+    const fromCode =
+      e instanceof ApiCallError
+        ? e.code === "unknown"
+          ? m.compare.requestFailed
+          : locale === "en"
+            ? m.compare.serverErrors[e.code]
+            : undefined
+        : undefined;
+    const message = fromCode ?? (e instanceof ApiCallError || e instanceof Error ? e.message : m.compare.somethingWrong);
     showToast(message, "error");
     if (e instanceof ApiCallError && e.code === "daily_limit") setRemaining(0);
   }
@@ -248,22 +261,22 @@ function CompareFlow() {
       {formCollapsed ? (
         <div className="mx-auto flex max-w-5xl items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur-xl">
           <span className="shrink-0 font-mono text-xs text-text-tertiary">
-            {selected.length}개 모델 · {blind ? "이름 가림" : "이름 보임"}
-            {!isDefaultSettings(settings) && " · 고급 설정"}
+            {m.compare.summaryModels(selected.length)} · {blind ? m.compare.namesHidden : m.compare.namesShown}
+            {!isDefaultSettings(settings) && ` · ${m.compare.advanced}`}
           </span>
           <span className="min-w-0 flex-1 truncate font-mono text-sm text-text-secondary">{sample}</span>
-          <span className="shrink-0 font-mono text-xs text-text-tertiary">남은 비교 {remaining ?? "-"}/{DAILY_COMPARISONS}</span>
+          <span className="shrink-0 font-mono text-xs text-text-tertiary">{m.compare.remaining(String(remaining ?? "-"), DAILY_COMPARISONS)}</span>
           <button
             onClick={() => setEditing(true)}
             disabled={busy}
             className="flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-sm text-text-secondary hover:border-white/25 hover:text-text-primary disabled:opacity-40 cursor-pointer"
           >
-            <Pencil size={14} /> 수정
+            <Pencil size={14} /> {m.compare.edit}
           </button>
         </div>
       ) : (
       <div className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-9 backdrop-blur-xl space-y-8">
-        <Field step="01" label="모델">
+        <Field step="01" label={m.compare.fieldModels}>
           <ModelChips
             allowed={allowed}
             selected={selected}
@@ -272,13 +285,13 @@ function CompareFlow() {
           />
         </Field>
 
-        <Field step="02" label="모델들에게 보낼 내용">
+        <Field step="02" label={m.compare.fieldSample}>
           <textarea
             value={sample}
             onChange={(e) => setSample(e.target.value)}
             rows={11}
             autoFocus
-            placeholder={"평소 AI에게 말하듯 지시까지 함께 써 주세요.\n예: 다음 자기소개서 문단을 자연스럽게 고쳐줘: 저는 열정 있는 사람 입니다…"}
+            placeholder={m.compare.samplePlaceholder}
             className="w-full resize-y rounded-2xl border border-white/10 bg-black/30 p-5 font-mono text-[15px] leading-relaxed text-text-primary placeholder:text-text-tertiary outline-none focus:border-primary/60"
           />
           <p className={`mt-1.5 text-right text-xs ${sample.length > SAMPLE_MAX ? "text-red-400" : "text-text-tertiary"}`}>
@@ -296,14 +309,14 @@ function CompareFlow() {
               aria-pressed={blind}
             >
               {blind ? <EyeOff size={17} className="text-primary-light" /> : <Eye size={17} />}
-              모델 이름 가리기 {blind ? "ON" : "OFF"}
+              {m.compare.hideNames(blind)}
             </button>
             <button
               onClick={() => setShowSettings((v) => !v)}
               aria-expanded={showSettings}
               className="flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-secondary cursor-pointer"
             >
-              고급 설정
+              {m.compare.advanced}
               {isDefaultSettings(settings) ? null : <span className="h-1.5 w-1.5 rounded-full bg-primary-light" />}
               <ChevronDown size={15} className={showSettings ? "rotate-180" : ""} />
             </button>
@@ -311,11 +324,11 @@ function CompareFlow() {
           <div className="flex items-center gap-4">
             {classifying && (
               <span className="flex items-center gap-1.5 text-sm text-text-secondary">
-                <Loader2 size={14} className="animate-spin" /> 어떤 작업인지 파악하는 중…
+                <Loader2 size={14} className="animate-spin" /> {m.compare.classifying}
               </span>
             )}
             <span className="font-mono text-sm text-text-tertiary">
-              오늘 남은 비교 {remaining ?? "-"}/{DAILY_COMPARISONS}
+              {m.compare.remainingToday(String(remaining ?? "-"), DAILY_COMPARISONS)}
             </span>
             <button
               onClick={run}
@@ -323,12 +336,12 @@ function CompareFlow() {
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-violet-500 px-7 py-3.5 text-base font-semibold text-white shadow-[0_0_30px_-5px] shadow-primary/60 disabled:opacity-40 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed"
             >
               {runningSince !== null ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-              비교 실행
+              {m.compare.run}
             </button>
           </div>
         </div>
         {remaining === 0 && (
-          <p className="text-right text-sm text-amber-400">오늘 무료 비교 {DAILY_COMPARISONS}회를 다 썼어요. 내일 다시 할 수 있어요.</p>
+          <p className="text-right text-sm text-amber-400">{m.compare.limitReached(DAILY_COMPARISONS)}</p>
         )}
       </div>
       )}
@@ -339,11 +352,11 @@ function CompareFlow() {
           {task && (
             <p className="flex items-center gap-2 text-sm text-text-secondary">
               <Tag size={15} className="text-primary-light" />
-              <span className="text-text-tertiary">AI가 파악한 작업</span>
+              <span className="text-text-tertiary">{m.compare.detectedTask}</span>
               <span className="text-text-primary">{task.name}</span>
               <span className="text-text-tertiary">·</span>
               <span className="text-primary-light">{task.taskType.name}</span>
-              {task.isNewType && <span className="text-text-tertiary">(새 유형)</span>}
+              {task.isNewType && <span className="text-text-tertiary">{m.compare.newType}</span>}
             </p>
           )}
           <ResultSlots key={view.id} view={view} runningSince={runningSince} choosing={choosing} onChoose={choose} />
@@ -353,7 +366,7 @@ function CompareFlow() {
                 onClick={reset}
                 className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-text-secondary hover:border-white/25 hover:text-text-primary cursor-pointer"
               >
-                <ArrowLeft size={16} /> 돌아가기
+                <ArrowLeft size={16} /> {m.compare.back}
               </button>
             </div>
           )}
@@ -386,6 +399,7 @@ function ModelChips({
   onChange: (m: CatalogModel[]) => void;
   disabled: boolean;
 }) {
+  const t = useMessages();
   const addable = allowed.filter((a) => !selected.some((s) => s.id === a.id));
   const color = (brand: string | null) => AI_MODELS.find((m) => m.slug === brand)?.color ?? "#6366F1";
 
@@ -401,8 +415,8 @@ function ModelChips({
           <button
             onClick={() => onChange(selected.filter((s) => s.id !== m.id))}
             disabled={disabled || selected.length <= MIN_MODELS}
-            aria-label={`${m.name} 빼기`}
-            title={selected.length <= MIN_MODELS ? `최소 ${MIN_MODELS}개` : "빼기"}
+            aria-label={t.compare.removeModel(m.name)}
+            title={selected.length <= MIN_MODELS ? t.compare.minModels(MIN_MODELS) : t.compare.remove}
             className="rounded-md p-1 text-text-tertiary hover:bg-white/10 hover:text-text-primary disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
           >
             <X size={15} />
@@ -421,7 +435,7 @@ function ModelChips({
           </button>
         ) : null,
       )}
-      <span className="ml-1 text-xs text-text-tertiary">다른 모델은 개인 키 연결 후 (준비 중)</span>
+      <span className="ml-1 text-xs text-text-tertiary">{t.compare.otherModelsSoon}</span>
     </div>
   );
 }
@@ -432,6 +446,7 @@ function isDefaultSettings(s: ModelSettings): boolean {
 }
 
 function SettingsPanel({ value, onChange }: { value: ModelSettings; onChange: (v: ModelSettings) => void }) {
+  const m = useMessages();
   const opt = (active: boolean, disabled = false) =>
     `rounded-lg border px-3.5 py-1.5 text-sm ${
       disabled
@@ -442,19 +457,19 @@ function SettingsPanel({ value, onChange }: { value: ModelSettings; onChange: (v
     }`;
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-5">
-      <p className="text-sm text-text-tertiary">고른 모델 모두에 똑같이 적용돼요. 기본은 각 모델의 기본값이에요.</p>
+      <p className="text-sm text-text-tertiary">{m.compare.settingsNote}</p>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="w-32 text-sm text-text-secondary">추론 강도</span>
-        <button className={opt(value.reasoning === "default")} onClick={() => onChange({ ...value, reasoning: "default" })}>기본</button>
-        <button className={opt(value.reasoning === "low")} onClick={() => onChange({ ...value, reasoning: "low" })}>낮음 (빠름)</button>
-        <button className={opt(false, true)} disabled title="개인 키 필요 (준비 중)">높음 · 개인 키</button>
+        <span className="w-32 text-sm text-text-secondary">{m.compare.reasoning}</span>
+        <button className={opt(value.reasoning === "default")} onClick={() => onChange({ ...value, reasoning: "default" })}>{m.compare.defaultOpt}</button>
+        <button className={opt(value.reasoning === "low")} onClick={() => onChange({ ...value, reasoning: "low" })}>{m.compare.lowFast}</button>
+        <button className={opt(false, true)} disabled title={m.compare.needsOwnKey}>{m.compare.highOwnKey}</button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="w-32 text-sm text-text-secondary">최대 답변 길이</span>
-        <button className={opt(value.maxLength === "default")} onClick={() => onChange({ ...value, maxLength: "default" })}>기본</button>
-        <button className={opt(value.maxLength === "short")} onClick={() => onChange({ ...value, maxLength: "short" })}>짧게</button>
+        <span className="w-32 text-sm text-text-secondary">{m.compare.maxLength}</span>
+        <button className={opt(value.maxLength === "default")} onClick={() => onChange({ ...value, maxLength: "default" })}>{m.compare.defaultOpt}</button>
+        <button className={opt(value.maxLength === "short")} onClick={() => onChange({ ...value, maxLength: "short" })}>{m.compare.short}</button>
         {value.maxLength === "short" && (
-          <span className="text-xs text-amber-400/80">추론 모델은 답이 잘리거나 비어 있을 수 있어요</span>
+          <span className="text-xs text-amber-400/80">{m.compare.shortWarning}</span>
         )}
       </div>
     </div>

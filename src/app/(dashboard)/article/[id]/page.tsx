@@ -5,12 +5,17 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
 import { supabasePublic } from "@/lib/supabase/public";
-import { dbArticleToArticle } from "@/lib/transforms";
-import { getRelativeTime } from "@/lib/utils";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { getLocale } from "@/lib/i18n/server";
+import { getMessages, relativeTime } from "@/lib/i18n/messages";
+import { categoryName } from "@/lib/i18n/config";
+import { CATEGORIES } from "@/lib/constants";
 import type { DBArticleRow } from "@/lib/transforms";
 import ArticleActions from "@/components/ArticleActions";
 import ArticleLogo from "@/components/ArticleLogo";
 
+// 화면 언어(쿠키)에 따라 제목·본문이 달라지므로 루트 레이아웃이 쿠키를 읽어 이 페이지도 동적으로 그린다.
+// (아래 revalidate는 데이터 조회 캐시 용도로 남겨 둠)
 // ISR: 기사 본문은 발행 후 거의 안 바뀌므로 60초 동안 렌더 결과를 캐시한다.
 // → 클릭마다 일어나던 Supabase 왕복이 사라지고(첫 요청만 조회 후 캐시),
 //   재방문/타 사용자 요청은 캐시 히트가 된다.
@@ -57,8 +62,10 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const article = await getArticle(id);
-  if (!article) return { title: "기사를 찾을 수 없어요" };
+  const locale = await getLocale();
+  const found = await getArticle(id);
+  if (!found) return { title: getMessages(locale).articlePage.notFound };
+  const article = localizeArticle(found, locale);
 
   const description = (article.summary ?? "").slice(0, 160);
   return {
@@ -84,11 +91,15 @@ export default async function ArticleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = await getArticle(id);
+  const found = await getArticle(id);
 
-  if (!article) {
+  if (!found) {
     notFound();
   }
+  const locale = await getLocale();
+  const m = getMessages(locale);
+  const article = localizeArticle(found, locale);
+  const cat = CATEGORIES.find((c) => c.slug === article.category);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -97,12 +108,12 @@ export default async function ArticleDetailPage({
         className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mb-6"
       >
         <ArrowLeft size={16} />
-        Back to News
+        {m.articlePage.backToNews}
       </Link>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="text-xs font-medium bg-primary/20 text-primary px-2.5 py-1 rounded-md">
-          {article.category}
+          {cat ? categoryName(cat, locale) : article.category}
         </span>
         <span className="text-xs text-text-tertiary">
           {article.publishedAt.split("T")[0]}
@@ -110,7 +121,7 @@ export default async function ArticleDetailPage({
         <span className="text-xs text-text-tertiary">&middot;</span>
         <span className="flex items-center gap-1 text-xs text-text-tertiary">
           <Clock size={12} />
-          {article.readTime} min read
+          {m.articlePage.readTime(article.readTime)}
         </span>
       </div>
 
@@ -127,7 +138,7 @@ export default async function ArticleDetailPage({
             {article.source}
           </p>
           <p className="text-xs text-text-tertiary">
-            {getRelativeTime(article.publishedAt)}
+            {relativeTime(m, article.publishedAt)}
           </p>
         </div>
       </div>
@@ -152,6 +163,11 @@ export default async function ArticleDetailPage({
       )}
 
       <article className="space-y-5">
+        {locale === "ko" && found.ko && (
+          <p className="rounded-lg border border-border-subtle bg-bg-surface/40 px-3 py-2 text-xs text-text-tertiary">
+            {m.articlePage.translatedNote}
+          </p>
+        )}
         <p className="text-text-secondary leading-relaxed text-base font-medium">
           {article.summary}
         </p>

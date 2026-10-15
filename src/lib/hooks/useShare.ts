@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 interface UseShareOptions {
-  onSuccess?: (message: string) => void;
+  onSuccess?: () => void; // 문구는 부르는 쪽이 언어에 맞게
 }
 
 interface UseShareReturn {
@@ -30,7 +30,7 @@ export function useShare(options?: UseShareOptions): UseShareReturn {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         try {
           await navigator.clipboard.writeText(url);
-          options?.onSuccess?.("Link copied!");
+          options?.onSuccess?.();
           return;
         } catch {
           // Clipboard API failed, try legacy approach
@@ -47,7 +47,7 @@ export function useShare(options?: UseShareOptions): UseShareReturn {
         textarea.select();
         document.execCommand("copy");
         document.body.removeChild(textarea);
-        options?.onSuccess?.("Link copied!");
+        options?.onSuccess?.();
       }
     },
     [options]

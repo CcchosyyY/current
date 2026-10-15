@@ -18,6 +18,8 @@ export interface Article {
   tags: string[];
   hotType: HotType | null;
   hotReason: string | null;
+  /** 한국어 번역 (있을 때만). 화면에선 localizeArticle()로 언어에 맞게 바꿔 쓴다 */
+  ko?: { title: string; summary: string; content: string } | null;
 }
 
 // Hot = 지금 주목해야 하는 기사 (크롤러 Hot 판정 단계가 채움)
@@ -137,7 +139,8 @@ export type AIModelSlug =
 
 export interface Category {
   slug: CategorySlug | "all";
-  name: string;
+  name: string; // 한국어 (기본)
+  nameEn: string;
   icon: string; // lucide-react icon name
   color: string; // hex color for icon background
   group: "core" | "extended";

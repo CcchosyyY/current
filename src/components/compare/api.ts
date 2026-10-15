@@ -25,7 +25,7 @@ async function call<T>(path: string, init?: RequestInit & { json?: unknown }): P
   if (!res.ok) {
     throw new ApiCallError(
       body?.error?.code ?? "unknown",
-      body?.error?.message ?? "요청을 처리하지 못했어요",
+      body?.error?.message ?? "Request failed", // 화면은 오류 코드로 언어별 문구를 고른다 (unknown)
       res.status,
     );
   }

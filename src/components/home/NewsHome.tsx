@@ -11,7 +11,7 @@ import ModelCard from "@/components/ModelCard";
 import { useArticles } from "@/lib/hooks/useArticles";
 import ArticleLogo from "@/components/ArticleLogo";
 import HotSection, { HotBadge } from "@/components/HotSection";
-import { getRelativeTimeShort, formatDate } from "@/lib/utils";
+import { useLocale, useTimeAgo } from "@/lib/i18n/LocaleProvider";
 
 // 처음 열었을 때 보여줄 기사 수 — 나머지는 컨테이너 내부 스크롤로 노출
 const VISIBLE_NEWS_COUNT = 5;
@@ -33,6 +33,8 @@ const FEATURED_SLUGS = [
 ];
 
 export default function NewsHome() {
+  const { locale, m } = useLocale();
+  const { agoShort } = useTimeAgo();
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
 
@@ -111,12 +113,13 @@ export default function NewsHome() {
         <div className="flex items-center justify-between mb-0">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-text-primary font-heading tracking-tight">
-              Today&apos;s AI News
+              {m.home.todaysNews}
             </h2>
             <button
               onClick={() => setNewsOpen(!newsOpen)}
               aria-expanded={newsOpen}
               aria-controls="todays-news"
+              aria-label={m.home.toggleNews}
               className="w-6 h-6 flex items-center justify-center rounded-md border border-border-strong bg-bg-surface hover:bg-bg-surface/80 transition-colors cursor-pointer"
             >
               {newsOpen ? (
@@ -128,13 +131,18 @@ export default function NewsHome() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-text-tertiary">
-              {formatDate(new Date())}
+              {new Date().toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                ...(locale === "ko" ? { weekday: "short" } : {}),
+              })}
             </span>
             <Link
               href={newsHref}
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-light transition-colors"
             >
-              전체 기사
+              {m.home.allArticles}
               <ArrowRight size={14} />
             </Link>
           </div>
@@ -160,7 +168,7 @@ export default function NewsHome() {
                 ) : articles.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-text-secondary text-sm">
-                      최근 24시간 동안 올라온 기사가 없어요
+                      {m.home.noArticles24h}
                     </p>
                   </div>
                 ) : (
@@ -197,7 +205,7 @@ export default function NewsHome() {
                         </span>
 
                         <span className="text-xs text-text-tertiary shrink-0">
-                          {getRelativeTimeShort(article.publishedAt)}
+                          {agoShort(article.publishedAt)}
                         </span>
                       </Link>
                     ))}
@@ -212,7 +220,7 @@ export default function NewsHome() {
                       disabled={isLoading}
                       className="flex items-center gap-2 rounded-full border border-border-subtle bg-bg-surface/40 px-4 py-1.5 text-xs text-text-secondary hover:border-border-strong hover:text-text-primary disabled:opacity-50 cursor-pointer transition-colors"
                     >
-                      {isLoading ? "불러오는 중…" : "더 보기"}
+                      {isLoading ? m.home.loading : m.home.more}
                       <span className="tabular-nums text-text-tertiary">
                         {articles.length} / {totalNews}
                       </span>
@@ -222,7 +230,7 @@ export default function NewsHome() {
                       href={newsHref}
                       className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-bg-surface/40 px-4 py-1.5 text-xs text-text-secondary hover:border-border-strong hover:text-text-primary transition-colors"
                     >
-                      지난 기사 전체 보기
+                      {m.home.pastArticles}
                       <ArrowRight size={12} />
                     </Link>
                   </div>
@@ -239,14 +247,14 @@ export default function NewsHome() {
           <div className="flex items-center gap-2.5">
             <LayoutGrid size={20} className="text-primary" />
             <h2 className="text-lg font-bold text-text-primary font-heading">
-              AI Models
+              {m.home.aiModels}
             </h2>
           </div>
         </div>
 
         {featuredModels.length === 0 ? (
           <div className="py-8 text-center text-sm text-text-tertiary">
-            No models in this category
+            {m.home.noModels}
           </div>
         ) : (
           <div className="space-y-3">
@@ -265,7 +273,7 @@ export default function NewsHome() {
             href="/models"
             className="text-sm text-primary hover:text-primary-light font-medium inline-flex items-center gap-1 transition-colors"
           >
-            See All Models
+            {m.home.seeAllModels}
             <ArrowRight size={14} />
           </Link>
         </div>

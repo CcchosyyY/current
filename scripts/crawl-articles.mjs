@@ -225,7 +225,7 @@ const MODEL_RULES = [
 // checked FIRST (see classify) so e.g. a live-translation story isn't swallowed
 // by ai-search just because it also says "search" — but only on a strong signal
 // (keyword in the title, or ≥ 3 body hits) so a passing "translate" stays put.
-const TRANSLATION_KWS = ["subtitle", "subtitles", "closed caption", "captions", "translation", "translations", "translator", " translate ", "translates", "translating", "live translate", "real-time translation", "machine translation", "dubbing", " dubbed", "localization", "localisation", "multilingual", "speech-to-speech", "voice translation", "interpreter mode"];
+const TRANSLATION_KWS = ["subtitle", "subtitles", "closed caption", "captions", "translation", "translations", "translator", " translate ", "translates", "translating", "live translate", "real-time translation", "machine translation", "dubbing", " dubbed", "localization", "localisation", "multilingual", "voice translation", "interpreter mode"];
 const DESIGN_KWS = ["design tool", "ui design", "ux design", "figma", " canva ", "canva's", "canva ai", "prototyping tool", "design system", "graphic design", "web design", "photoshop", "framer", "app design", "designers"];
 const FOCUSED_CATEGORY_RULES = [
   ["subtitle-translation", TRANSLATION_KWS],
@@ -1038,8 +1038,34 @@ async function upsert(rows) {
   if (!res.ok) {
     throw new Error(`Insert failed ${res.status}: ${await res.text()}`);
   }
-  const inserted = await res.json();
-  return inserted.length;
+  return await res.json(); // 새로 들어간 행만 (이미 있던 source_url은 빠짐)
+}
+
+// 새로 들어간 기사를 한국어로 번역해 채운다 (Haiku 5.5). 실패한 건 다음 실행이나
+// scripts/translate-articles.mjs가 translated_at IS NULL로 다시 잡는다.
+async function translateInserted(inserted) {
+  if (!ANTHROPIC_KEY || NO_LLM || inserted.length === 0) return;
+  const { translateBatch, costUsd } = await import("./lib/translate.mjs");
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic({ apiKey: ANTHROPIC_KEY, maxRetries: 4 });
+  let ok = 0, cost = 0;
+  for (let i = 0; i < inserted.length; i += 6) {
+    const batch = inserted.slice(i, i + 6);
+    try {
+      const { out, usage } = await translateBatch(client, batch);
+      cost += costUsd(usage);
+      for (const [j, t] of out) {
+        const r = await sb(`articles?id=eq.${batch[j].id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ ...t, translated_at: new Date().toISOString() }),
+        });
+        if (r.ok) ok++;
+      }
+    } catch (e) {
+      console.log(`  translate batch failed: ${e.message}`);
+    }
+  }
+  console.log(`  Translated ${ok}/${inserted.length} new articles to Korean (~$${cost.toFixed(4)})`);
 }
 
 // Backfill image_url on existing rows that have none.
@@ -1157,8 +1183,9 @@ if (DRY) {
 } else {
   console.log(`\nUpserting via ${SERVICE_KEY ? "service-role" : "anon"} key…`);
   try {
-    const n = await upsert(rows);
-    console.log(`✓ Inserted ${n} new articles (duplicates on source_url ignored).`);
+    const inserted = await upsert(rows);
+    console.log(`✓ Inserted ${inserted.length} new articles (duplicates on source_url ignored).`);
+    await translateInserted(inserted);
   } catch (e) {
     console.log(`✗ ${e.message}`);
     process.exitCode = 1;

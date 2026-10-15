@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { HotEvent } from "@/lib/types";
-import { dbArticleToArticle } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { HotEventRow } from "@/app/api/hot/route";
 
 export function useHotEvents() {
@@ -46,5 +47,10 @@ export function useHotEvents() {
     return () => controller.abort();
   }, []);
 
-  return { events, isLoading };
+  const { locale } = useLocale();
+  const localized = useMemo(
+    () => events.map((e) => ({ ...e, lead: localizeArticle(e.lead, locale) })),
+    [events, locale],
+  );
+  return { events: localized, isLoading };
 }

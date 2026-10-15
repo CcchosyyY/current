@@ -8,6 +8,8 @@ import type { AIModel } from "@/lib/types";
 import ModelCard from "@/components/ModelCard";
 import { MODEL_SECTIONS, SECTION_FALLBACK } from "@/lib/model-sections";
 import { setModelsSection } from "@/lib/hooks/useModelsSection";
+import { useLocale, useMessages } from "@/lib/i18n/LocaleProvider";
+import { categoryName } from "@/lib/i18n/config";
 
 const sectionId = (slug: string) => `models-${slug}`;
 // 맨 위에 보여줄 제일 유명한 5개
@@ -17,6 +19,7 @@ const PREVIEW = 10;
 
 function ModelsContent() {
   const searchParams = useSearchParams();
+  const { locale, m } = useLocale();
   const category = searchParams.get("category");
 
   const groups = useMemo(() => {
@@ -32,12 +35,12 @@ function ModelsContent() {
       const items = s.models.map((slug) => bySlug.get(slug)).filter((m): m is AIModel => !!m);
       items.forEach((m) => used.add(m.slug));
       const cat = CATEGORIES.find((c) => c.slug === s.slug);
-      return { slug: s.slug, label: cat?.name ?? s.slug, color: cat?.color, items };
+      return { slug: s.slug, label: cat ? categoryName(cat, locale) : s.slug, color: cat?.color, items };
     }).filter((g) => g.items.length > 0);
     const rest = AI_MODELS.filter((m) => !used.has(m.slug));
-    if (rest.length) list.push({ slug: "etc", label: "기타", color: undefined, items: rest });
+    if (rest.length) list.push({ slug: "etc", label: m.modelsPage.etc, color: undefined, items: rest });
     return list;
-  }, []);
+  }, [locale, m]);
 
   const [allOpen, setAllOpen] = useState(false);
   const allModels = useMemo(() => {
@@ -121,7 +124,7 @@ function ModelsContent() {
         <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           <h1 className="flex items-center gap-2 font-heading text-[24px] font-bold text-text-primary">
             <LayoutGrid size={24} className="text-primary" />
-            AI Models
+            {m.modelsPage.title}
             <span className="text-sm font-medium text-text-tertiary tabular-nums">{AI_MODELS.length}</span>
           </h1>
           {/* 이 묶음만 특별히: 펼쳤을 때 접기 버튼을 위에도 — 79개 아래까지 내려가지 않고 접게 */}
@@ -136,7 +139,7 @@ function ModelsContent() {
             }`}
           >
             <ChevronUp size={16} />
-            접기
+            {m.modelsPage.less}
           </button>
           <div />
         </div>
@@ -179,6 +182,7 @@ function SectionGrid({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const m = useMessages();
   const [openState, setOpenState] = useState(false);
   const open = openProp ?? openState;
   const setOpen = (next: boolean) => (onOpenChange ? onOpenChange(next) : setOpenState(next));
@@ -200,7 +204,7 @@ function SectionGrid({
           className="mx-auto flex w-3/4 items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-bg-surface/40 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-border-strong hover:text-text-primary sm:w-1/2 md:w-[37.5%] lg:w-[30%] cursor-pointer"
         >
           {open ? <ChevronUp size={16} /> : <Plus size={16} />}
-          {open ? "접기" : "더보기"}
+          {open ? m.modelsPage.less : m.modelsPage.more}
         </button>
       )}
     </div>

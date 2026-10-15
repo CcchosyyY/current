@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Nunito, Nunito_Sans, Noto_Sans_KR } from "next/font/google";
 import { env } from "@/lib/env";
+import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
+import { getLocale } from "@/lib/i18n/server";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -27,36 +29,35 @@ const notoSansKr = Noto_Sans_KR({
   preload: false,
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
-  title: {
-    default: "Current — AI News Curation Platform",
-    template: "%s | Current",
-  },
-  description:
-    "AI 기술 뉴스를 자동 수집·요약하고 카드형 UI로 제공하는 뉴스 큐레이션 플랫폼",
-  keywords: ["AI", "news", "Claude", "ChatGPT", "Gemini", "tech", "curation"],
-  authors: [{ name: "Jyos" }],
-  openGraph: {
-    type: "website",
-    siteName: "Current",
-    title: "Current — AI News Curation Platform",
-    description:
-      "AI 기술 뉴스를 자동 수집·요약하고 카드형 UI로 제공하는 뉴스 큐레이션 플랫폼",
-  },
-};
+// 기본 제목·설명은 언어별로 (쿠키 lang, 기본 한국어)
+export async function generateMetadata(): Promise<Metadata> {
+  const ko = (await getLocale()) === "ko";
+  const title = ko ? "Current — AI 뉴스 큐레이션" : "Current — AI News Curation Platform";
+  const description = ko
+    ? "AI 모델·도구 뉴스를 매일 모아 보여주고, 내 작업에 맞는 모델을 직접 비교해 찾는 서비스"
+    : "Daily AI model and tool news, plus side-by-side model comparisons for your own tasks";
+  return {
+    metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
+    title: { default: title, template: "%s | Current" },
+    description,
+    keywords: ["AI", "news", "Claude", "ChatGPT", "Gemini", "tech", "curation"],
+    authors: [{ name: "Jyos" }],
+    openGraph: { type: "website", siteName: "Current", title, description },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="ko" className="dark">
+    <html lang={locale} className="dark">
       <body
         className={`${nunito.variable} ${nunitoSans.variable} ${notoSansKr.variable} antialiased bg-bg-page text-text-primary font-body`}
       >
-        {children}
+        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Newspaper, Search, X } from "lucide-react";
 import NewsCard from "@/components/NewsCard";
 import { CATEGORIES } from "@/lib/constants";
-import { dbArticleToArticle, type DBArticleRow } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle, type DBArticleRow } from "@/lib/transforms";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { categoryName } from "@/lib/i18n/config";
+import type { Messages } from "@/lib/i18n/messages";
 import type { Article } from "@/lib/types";
 
 // 전체 기사 — 홈의 "Today's AI News"(24시간)에서 넘어오는 곳.
@@ -14,10 +17,10 @@ import type { Article } from "@/lib/types";
 
 const PAGE = 30;
 const PERIODS = [
-  { value: "all", label: "전체", hours: undefined },
-  { value: "24h", label: "24시간", hours: 24 },
-  { value: "7d", label: "7일", hours: 24 * 7 },
-  { value: "30d", label: "30일", hours: 24 * 30 },
+  { value: "all", hours: undefined },
+  { value: "24h", hours: 24 },
+  { value: "7d", hours: 24 * 7 },
+  { value: "30d", hours: 24 * 30 },
 ] as const;
 type Period = (typeof PERIODS)[number]["value"];
 
@@ -26,16 +29,13 @@ const kstDay = (iso: string | null | undefined) => {
   const t = Date.parse(iso ?? "");
   return new Date((Number.isNaN(t) ? Date.now() : t) + 9 * 3600_000).toISOString().slice(0, 10);
 };
-const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
-
-function dayLabels(key: string) {
+function dayLabels(key: string, m: Messages) {
   const today = kstDay(new Date().toISOString());
   const yesterday = kstDay(new Date(Date.now() - 24 * 3600_000).toISOString());
-  const [, m, d] = key.split("-").map(Number);
-  const wd = WEEKDAY[new Date(`${key}T00:00:00Z`).getUTCDay()];
-  const date = `${m}월 ${d}일 (${wd})`;
-  if (key === today) return { label: "오늘", date };
-  if (key === yesterday) return { label: "어제", date };
+  const [, month, day] = key.split("-").map(Number);
+  const date = m.news.dayDate(month, day, new Date(`${key}T00:00:00Z`).getUTCDay());
+  if (key === today) return { label: m.news.today, date };
+  if (key === yesterday) return { label: m.news.yesterday, date };
   return { label: date, date: "" };
 }
 
@@ -50,7 +50,7 @@ function pickFeature(items: Article[]): Article {
   );
 }
 
-function groupByDay(articles: Article[]) {
+function groupByDay(articles: Article[], m: Messages) {
   const map = new Map<string, Article[]>();
   for (const a of articles) {
     const key = kstDay(a.publishedAt || a.createdAt);
@@ -59,12 +59,13 @@ function groupByDay(articles: Article[]) {
   }
   return [...map.entries()].map(([key, items]) => {
     const feature = pickFeature(items);
-    return { key, ...dayLabels(key), items, feature, rest: items.filter((a) => a !== feature) };
+    return { key, ...dayLabels(key, m), items, feature, rest: items.filter((a) => a !== feature) };
   });
 }
 
 function NewsContent() {
   const router = useRouter();
+  const { locale, m } = useLocale();
   const params = useSearchParams();
   const category = params.get("category") || "all";
   const q = params.get("q") ?? "";
@@ -135,16 +136,19 @@ function NewsContent() {
     router.replace(`/news${sp.toString() ? `?${sp}` : ""}`, { scroll: false });
   }
 
-  const categoryName = category === "all" ? null : CATEGORIES.find((c) => c.slug === category)?.name;
-  const days = useMemo(() => groupByDay(articles), [articles]);
+  const cat = category === "all" ? null : CATEGORIES.find((c) => c.slug === category);
+  const catLabel = cat ? categoryName(cat, locale) : null;
+  // 화면 언어에 맞춰 제목·요약 (언어를 바꾸면 다시 받지 않고 바로 바뀐다)
+  const localized = useMemo(() => articles.map((a) => localizeArticle(a, locale)), [articles, locale]);
+  const days = useMemo(() => groupByDay(localized, m), [localized, m]);
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="flex items-center gap-2 font-heading text-[24px] font-bold text-text-primary">
           <Newspaper size={24} className="text-primary" />
-          News
-          {categoryName && <span className="text-lg font-semibold text-text-secondary">· {categoryName}</span>}
+          {m.news.title}
+          {catLabel && <span className="text-lg font-semibold text-text-secondary">· {catLabel}</span>}
           <span className="text-sm font-medium tabular-nums text-text-tertiary">{loading && page === 1 ? "" : total}</span>
         </h1>
 
@@ -161,19 +165,19 @@ function NewsContent() {
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Search"
+              placeholder={m.news.search}
               maxLength={200}
               className="w-52 bg-transparent text-[12px] text-text-primary outline-none placeholder:text-text-tertiary"
             />
             {q && (
-              <button type="button" onClick={() => setParam("q", null)} aria-label="검색 지우기" className="text-text-tertiary hover:text-text-primary cursor-pointer">
+              <button type="button" onClick={() => setParam("q", null)} aria-label={m.news.clearSearch} className="text-text-tertiary hover:text-text-primary cursor-pointer">
                 <X size={12} />
               </button>
             )}
           </form>
 
           {/* 기간 */}
-          <div className="flex h-[26px] items-center rounded-lg border border-border-subtle p-0.5" role="group" aria-label="기간">
+          <div className="flex h-[26px] items-center rounded-lg border border-border-subtle p-0.5" role="group" aria-label={m.news.period}>
             {PERIODS.map((p) => (
               <button
                 key={p.value}
@@ -183,7 +187,7 @@ function NewsContent() {
                   period === p.value ? "bg-primary text-white" : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                {p.label}
+                {m.news.periods[p.value]}
               </button>
             ))}
           </div>
@@ -199,7 +203,7 @@ function NewsContent() {
         </div>
       ) : articles.length === 0 ? (
         <p className="rounded-2xl border border-border-subtle bg-bg-card py-16 text-center text-sm text-text-secondary">
-          {q ? `"${q}"에 맞는 기사가 없어요` : "조건에 맞는 기사가 없어요"}
+          {q ? m.news.noMatch(q) : m.news.noResults}
         </p>
       ) : (
         <div className="space-y-12">
@@ -213,7 +217,7 @@ function NewsContent() {
                 <h2 className="sticky -top-4 z-10 -mx-2 mb-4 flex items-baseline gap-3 bg-bg-page/95 px-2 pb-3 pt-7 backdrop-blur md:-top-6 md:pt-9 lg:-top-8 lg:pt-11">
                   <span className="font-heading text-xl font-bold text-text-primary">{day.label}</span>
                   <span className="text-sm text-text-tertiary">{day.date}</span>
-                  {complete && <span className="ml-auto text-sm tabular-nums text-text-tertiary">{day.items.length}건</span>}
+                  {complete && <span className="ml-auto text-sm tabular-nums text-text-tertiary">{m.news.count(day.items.length)}</span>}
                 </h2>
                 <NewsCard article={day.feature} variant="feature" />
                 {day.rest.length > 0 && (
@@ -236,7 +240,7 @@ function NewsContent() {
         </div>
       )}
       {!loading && articles.length > 0 && !hasMore && (
-        <p className="py-4 text-center text-xs text-text-tertiary">모든 기사를 다 봤어요 · {total}건</p>
+        <p className="py-4 text-center text-xs text-text-tertiary">{m.news.allSeen(total)}</p>
       )}
     </div>
   );
