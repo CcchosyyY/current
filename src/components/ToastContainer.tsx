@@ -3,6 +3,7 @@
 import { useToast, type Toast } from "@/lib/hooks/useToast";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle, AlertCircle, Info, X } from "lucide-react";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 
 const iconMap = {
   success: CheckCircle,
@@ -17,6 +18,7 @@ const styleMap = {
 } as const;
 
 export default function ToastContainer() {
+  const m = useMessages();
   const { toasts, removeToast } = useToast();
 
   return (
@@ -42,7 +44,7 @@ export default function ToastContainer() {
               <button
                 onClick={() => removeToast(toast.id)}
                 className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Close toast"
+                aria-label={m.common.closeToast}
               >
                 <X size={16} />
               </button>

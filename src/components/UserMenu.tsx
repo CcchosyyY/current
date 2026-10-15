@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { LogOut, LogIn, Bookmark, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 import { createClient } from "@/lib/supabase/client";
 
 export default function UserMenu() {
+  const m = useMessages();
   const { user, isLoading } = useAuth();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -70,7 +72,7 @@ export default function UserMenu() {
       <button
         onClick={handleSignIn}
         disabled={busy}
-        aria-label="Sign in with Google"
+        aria-label={m.user.signInWithGoogle}
         className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary border border-border-subtle hover:border-border-strong rounded-lg px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {busy ? (
@@ -78,7 +80,7 @@ export default function UserMenu() {
         ) : (
           <LogIn size={16} />
         )}
-        <span className="hidden sm:inline">Sign in</span>
+        <span className="hidden sm:inline">{m.user.signIn}</span>
       </button>
     );
   }
@@ -88,14 +90,14 @@ export default function UserMenu() {
   const displayName =
     (user.user_metadata?.full_name as string | undefined) ||
     user.email ||
-    "User";
+    m.user.fallbackName;
   const initial = (displayName[0] || "U").toUpperCase();
 
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((prev) => !prev)}
-        aria-label="User menu"
+        aria-label={m.user.userMenu}
         className="w-8 h-8 rounded-full bg-bg-surface border border-border-subtle overflow-hidden flex items-center justify-center cursor-pointer"
       >
         {avatarUrl ? (
@@ -142,7 +144,7 @@ export default function UserMenu() {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-surface hover:text-text-primary transition-colors"
               >
                 <Bookmark size={16} />
-                Saved
+                {m.user.saved}
               </Link>
             </div>
 
@@ -159,7 +161,7 @@ export default function UserMenu() {
                 ) : (
                   <LogOut size={16} />
                 )}
-                Sign Out
+                {m.user.signOut}
               </button>
             </div>
           </motion.div>

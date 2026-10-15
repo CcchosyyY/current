@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import type { AIModel } from "@/lib/types";
 import { findCompany } from "@/lib/companies";
-import { MODEL_DETAILS } from "@/lib/model-details";
+import { modelDescription, modelDetail, companyDetail as companyDetailFor } from "@/lib/model-i18n";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 type Section = "description" | "specs" | "about";
 
@@ -49,16 +50,18 @@ export default function ModelInfoSections({
   show = ["description", "specs", "about"],
 }: ModelInfoSectionsProps) {
   const [expanded, setExpanded] = useState(false);
+  const { locale, m } = useLocale();
 
   const company = findCompany(model.company);
-  const companyDetail = company?.detail;
+  const companyDetail = company ? companyDetailFor(company.slug, locale) : undefined;
   const accent = model.color ?? "#3B82F6";
-  const detail = MODEL_DETAILS[model.slug];
+  const detail = modelDetail(model.slug, locale);
+  const description = modelDescription(model, locale);
 
   const overviewParas = detail?.overview
     ? detail.overview.split("\n\n")
-    : model.description
-      ? [model.description]
+    : description
+      ? [description]
       : [];
 
   const hasDescription =
@@ -90,7 +93,7 @@ export default function ModelInfoSections({
 
               {detail?.highlights && detail.highlights.length > 0 && (
                 <div className="space-y-2.5">
-                  <SectionLabel>KEY FEATURES</SectionLabel>
+                  <SectionLabel>{m.model.keyFeatures}</SectionLabel>
                   <ul className="space-y-2">
                     {detail.highlights.map((h) => (
                       <li key={h} className="flex items-start gap-2.5">
@@ -111,7 +114,7 @@ export default function ModelInfoSections({
 
               {detail?.bestFor && detail.bestFor.length > 0 && (
                 <div className="space-y-2">
-                  <SectionLabel>BEST FOR</SectionLabel>
+                  <SectionLabel>{m.model.bestFor}</SectionLabel>
                   <div className="flex flex-wrap gap-2">
                     {detail.bestFor.map((b) => (
                       <span
@@ -128,7 +131,7 @@ export default function ModelInfoSections({
           ) : (
             // Collapsed teaser — first paragraph, clamped to two lines.
             <p className="text-[15px] text-text-secondary leading-relaxed line-clamp-2">
-              {overviewParas[0] ?? model.description}
+              {overviewParas[0] ?? description}
             </p>
           )}
 
@@ -139,7 +142,7 @@ export default function ModelInfoSections({
               className="flex items-center gap-1 text-sm font-semibold transition-colors cursor-pointer"
               style={{ color: accent }}
             >
-              {expanded ? "Show less" : "Read more"}
+              {expanded ? m.model.showLess : m.model.readMore}
               <ChevronDown
                 size={16}
                 className={`transition-transform ${expanded ? "rotate-180" : ""}`}
@@ -152,7 +155,7 @@ export default function ModelInfoSections({
       {/* Specs */}
       {show.includes("specs") && detail?.specs && detail.specs.length > 0 && (
         <div className="space-y-2">
-          <SectionLabel>SPECS</SectionLabel>
+          <SectionLabel>{m.model.specs}</SectionLabel>
           <div className="grid grid-cols-2 gap-2.5">
             {detail.specs.map((s) => (
               <Stat key={s.label} label={s.label} value={s.value} />
@@ -164,18 +167,18 @@ export default function ModelInfoSections({
       {/* About the company */}
       {show.includes("about") && companyDetail && (
         <div className="space-y-2.5">
-          <SectionLabel>ABOUT {model.company.toUpperCase()}</SectionLabel>
+          <SectionLabel>{m.model.about(model.company)}</SectionLabel>
           {(companyDetail.founded ||
             companyDetail.valuation ||
             companyDetail.hq) && (
             <div className="grid grid-cols-3 gap-2.5">
               {companyDetail.founded && (
-                <Stat label="Founded" value={companyDetail.founded} />
+                <Stat label={m.model.founded} value={companyDetail.founded} />
               )}
               {companyDetail.valuation && (
-                <Stat label="Valuation" value={companyDetail.valuation} />
+                <Stat label={m.model.valuation} value={companyDetail.valuation} />
               )}
-              {companyDetail.hq && <Stat label="HQ" value={companyDetail.hq} />}
+              {companyDetail.hq && <Stat label={m.model.hq} value={companyDetail.hq} />}
             </div>
           )}
           {companyDetail.about && (

@@ -7,11 +7,13 @@ import { Bookmark, BookmarkCheck, Share2, Clock } from "lucide-react";
 import type { Article } from "@/lib/types";
 import { AI_MODELS } from "@/lib/constants";
 import ArticleLogo from "@/components/ArticleLogo";
-import { getRelativeTime } from "@/lib/utils";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
 import { useShare } from "@/lib/hooks/useShare";
 import { useToast } from "@/lib/hooks/useToast";
 import { HotBadge } from "@/components/HotSection";
+import { useLocale, useTimeAgo } from "@/lib/i18n/LocaleProvider";
+import { categoryName } from "@/lib/i18n/config";
+import { CATEGORIES } from "@/lib/constants";
 
 interface NewsCardProps {
   article: Article;
@@ -45,10 +47,12 @@ function ArticlePlaceholder({ article }: { article: Article }) {
 }
 
 function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
+  const { locale, m } = useLocale();
+  const { ago } = useTimeAgo();
   const { toggleBookmark, isBookmarked } = useBookmarks();
   const { showToast } = useToast();
   const { share } = useShare({
-    onSuccess: (msg) => showToast(msg, "success"),
+    onSuccess: () => showToast(m.article.linkCopied, "success"),
   });
 
   const bookmarked = isBookmarked(article.id);
@@ -57,14 +61,14 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
     e.preventDefault();
     e.stopPropagation();
     const ok = toggleBookmark(article.id, {
-      onError: () => showToast("저장하지 못했어요. 잠시 후 다시 시도해 주세요", "error"),
+      onError: () => showToast(m.article.saveFailed, "error"),
     });
     if (!ok) {
-      showToast("Sign in to save articles", "info");
+      showToast(m.article.signInToSave, "info");
       return;
     }
     showToast(
-      bookmarked ? "Removed from bookmarks" : "Saved to bookmarks",
+      bookmarked ? m.article.removed : m.article.saved,
       "success"
     );
   }
@@ -107,11 +111,14 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-              {article.category}
+              {(() => {
+                const cat = CATEGORIES.find((c) => c.slug === article.category);
+                return cat ? categoryName(cat, locale) : article.category;
+              })()}
             </span>
             <span className="text-xs text-text-tertiary flex items-center gap-1">
               <Clock size={12} aria-hidden="true" />
-              {getRelativeTime(article.publishedAt)}
+              {ago(article.publishedAt)}
             </span>
           </div>
 
@@ -132,14 +139,14 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <button
-                aria-label={`Bookmark "${article.title}"`}
+                aria-label={m.article.bookmark(article.title)}
                 className={bookmarkClassName}
                 onClick={handleBookmark}
               >
                 <BookmarkIcon size={14} />
               </button>
               <button
-                aria-label={`Share "${article.title}"`}
+                aria-label={m.article.share(article.title)}
                 className="p-1 hover:text-primary transition-colors text-text-tertiary"
                 onClick={handleShare}
               >
@@ -155,14 +162,14 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
   const actions = (size: number, pad: string) => (
     <div className="flex items-center gap-1 shrink-0">
       <button
-        aria-label={`Bookmark "${article.title}"`}
+        aria-label={m.article.bookmark(article.title)}
         className={`${pad} transition-colors ${bookmarked ? "text-primary" : "text-text-tertiary hover:text-primary"}`}
         onClick={handleBookmark}
       >
         <BookmarkIcon size={size} />
       </button>
       <button
-        aria-label={`Share "${article.title}"`}
+        aria-label={m.article.share(article.title)}
         className={`${pad} text-text-tertiary hover:text-primary transition-colors`}
         onClick={handleShare}
       >
@@ -211,7 +218,7 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
               <ArticleLogo article={article} size={16} />
               <span className="truncate">{article.source}</span>
               <span>·</span>
-              <span className="shrink-0">{getRelativeTime(article.publishedAt)}</span>
+              <span className="shrink-0">{ago(article.publishedAt)}</span>
             </span>
             {actions(16, "p-1.5")}
           </div>
@@ -254,7 +261,7 @@ function NewsCardInner({ article, variant = "list" }: NewsCardProps) {
           </span>
           {article.source}
           <span>·</span>
-          {getRelativeTime(article.publishedAt)}
+          {ago(article.publishedAt)}
         </span>
       </div>
 

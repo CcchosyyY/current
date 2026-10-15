@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { Article } from "@/lib/types";
-import { dbArticleToArticle } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { DBArticleRow } from "@/lib/transforms";
 
 interface UseModelArticlesReturn {
@@ -87,5 +88,7 @@ export function useModelArticles(
     if (hasMore && !loadingMore && !isLoading) setPage((p) => p + 1);
   };
 
-  return { articles, total, isLoading, loadingMore, hasMore, loadMore };
+  const { locale } = useLocale();
+  const localized = useMemo(() => articles.map((a) => localizeArticle(a, locale)), [articles, locale]);
+  return { articles: localized, total, isLoading, loadingMore, hasMore, loadMore };
 }

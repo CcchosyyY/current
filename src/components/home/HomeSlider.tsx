@@ -7,6 +7,7 @@ import { FlaskConical, Newspaper } from "lucide-react";
 import ComparePanel from "@/components/compare/ComparePanel";
 import NewsHome from "./NewsHome";
 import SlideTab from "./SlideTab";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 
 // 홈 = 뉴스(왼쪽) ↔ 모델 비교(오른쪽) 가로 슬라이드.
 // 어느 쪽인지는 주소의 ?view=compare로 둔다 → 뒤로가기·새로고침·로그인 후 복귀가 그대로 동작.
@@ -14,6 +15,7 @@ import SlideTab from "./SlideTab";
 const SLIDE = { type: "spring", stiffness: 90, damping: 20, mass: 0.9 } as const;
 
 export default function HomeSlider() {
+  const m = useMessages();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -74,7 +76,7 @@ export default function HomeSlider() {
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.25 }}
           >
-            <SlideTab direction="right" icon={FlaskConical} label={["여러 모델", "비교해보기"]} onClick={() => go("compare")} />
+            <SlideTab direction="right" icon={FlaskConical} label={m.home.toCompare} onClick={() => go("compare")} />
           </motion.div>
         ) : (
           <motion.div
@@ -85,7 +87,7 @@ export default function HomeSlider() {
             exit={{ opacity: 0, x: 40 }}
             transition={{ duration: 0.25, delay: 0.15 }}
           >
-            <SlideTab direction="left" icon={Newspaper} label={["AI 뉴스", "보러가기"]} onClick={() => go("news")} />
+            <SlideTab direction="left" icon={Newspaper} label={m.home.toNews} onClick={() => go("news")} />
           </motion.div>
         )}
       </AnimatePresence>

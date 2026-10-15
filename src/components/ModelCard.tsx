@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { AIModel } from "@/lib/types";
 import ModelDetailModal from "./ModelDetailModal";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 
 interface ModelCardProps {
   model: AIModel;
@@ -15,6 +16,7 @@ interface ModelCardProps {
  * "Quick view" button opens the detail modal instead.
  */
 function ModelCardInner({ model }: ModelCardProps) {
+  const m = useMessages();
   const [open, setOpen] = useState(false);
 
   const gradient = `linear-gradient(135deg, color-mix(in srgb, ${model.color} 20%, #08080E), color-mix(in srgb, ${
@@ -52,7 +54,7 @@ function ModelCardInner({ model }: ModelCardProps) {
         {/* The whole tile navigates to the model page. */}
         <Link
           href={`/models/${model.slug}`}
-          aria-label={`${model.name} 페이지 보기`}
+          aria-label={m.model.openPage(model.name)}
           className="absolute inset-0 z-0"
         />
         {/* Decorative content is click-through so the link underneath fires. */}
@@ -69,7 +71,7 @@ function ModelCardInner({ model }: ModelCardProps) {
           }}
           className="absolute top-2 right-2 z-10 rounded-full border border-white/25 bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-black/80 opacity-0 transition-[opacity,background-color] duration-150 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 cursor-pointer"
         >
-          Quick view
+          {m.model.quickView}
         </button>
       </div>
 

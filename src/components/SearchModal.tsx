@@ -7,7 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowRight, FileText, Cpu, Compass } from "lucide-react";
 import { AI_MODELS, NAV_LINKS } from "@/lib/constants";
 import type { Article } from "@/lib/types";
-import { dbArticleToArticle } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { modelDescription } from "@/lib/model-i18n";
 import type { DBArticleRow } from "@/lib/transforms";
 
 interface SearchModalProps {
@@ -31,6 +33,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const resultRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const router = useRouter();
+  const { locale, m } = useLocale();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -72,42 +75,43 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     const articles: SearchResult[] = searchArticles
       .slice(0, MAX_RESULTS_PER_CATEGORY)
+      .map((raw) => localizeArticle(raw, locale))
       .map((a) => ({
         id: `article-${a.id}`,
         title: a.title,
-        subtitle: `${a.source} · ${a.readTime}min read`,
+        subtitle: `${a.source} · ${m.search.readTime(a.readTime)}`,
         href: `/article/${a.id}`,
         category: "articles" as const,
       }));
 
     const models: SearchResult[] = AI_MODELS.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) || m.company.toLowerCase().includes(q)
+      (x) =>
+        x.name.toLowerCase().includes(q) || x.company.toLowerCase().includes(q)
     )
       .slice(0, MAX_RESULTS_PER_CATEGORY)
-      .map((m) => ({
-        id: `model-${m.slug}`,
-        title: m.name,
-        subtitle: `${m.company} · ${m.description}`,
-        // Model results open the model's website (there is no per-model route).
-        href: m.websiteUrl,
+      .map((x) => ({
+        id: `model-${x.slug}`,
+        title: x.name,
+        subtitle: `${x.company} · ${modelDescription(x, locale)}`,
+        href: `/models/${x.slug}`,
         category: "models" as const,
       }));
 
+    // 페이지 이름은 지금 언어와 영어 둘 다로 찾는다 ("뉴스"·"news" 모두)
     const pages: SearchResult[] = NAV_LINKS.filter((l) =>
-      l.label.toLowerCase().includes(q)
+      m.nav[l.key].toLowerCase().includes(q) || l.key.includes(q)
     )
       .slice(0, MAX_RESULTS_PER_CATEGORY)
       .map((l) => ({
         id: `page-${l.href}`,
-        title: l.label,
+        title: m.nav[l.key],
         subtitle: l.href,
         href: l.href,
         category: "pages" as const,
       }));
 
     return [...articles, ...models, ...pages];
-  }, [query, searchArticles]);
+  }, [query, searchArticles, locale, m]);
 
   // Group results by category
   const groupedResults = useMemo(() => {
@@ -123,25 +127,25 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     if (articles.length > 0)
       groups.push({
-        label: "Articles",
+        label: m.search.articles,
         icon: <FileText size={14} />,
         items: articles,
       });
     if (models.length > 0)
       groups.push({
-        label: "AI Models",
+        label: m.search.models,
         icon: <Cpu size={14} />,
         items: models,
       });
     if (pages.length > 0)
       groups.push({
-        label: "Pages",
+        label: m.search.pages,
         icon: <Compass size={14} />,
         items: pages,
       });
 
     return groups;
-  }, [results]);
+  }, [results, m]);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -255,7 +259,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           onClick={handleBackdropClick}
           role="dialog"
           aria-modal="true"
-          aria-label="Search"
+          aria-label={m.search.dialog}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -277,14 +281,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search articles, models, and pages..."
-                aria-label="Search input"
+                placeholder={m.search.placeholder}
+                aria-label={m.search.input}
                 className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-tertiary outline-none"
               />
               <button
                 onClick={onClose}
                 className="shrink-0 bg-bg-surface border border-border-subtle rounded px-1.5 py-0.5 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-                aria-label="Close search"
+                aria-label={m.search.close}
               >
                 ESC
               </button>
@@ -294,13 +298,13 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             <div className="max-h-[360px] overflow-y-auto">
               {query.trim() === "" && (
                 <div className="px-4 py-10 text-center text-sm text-text-tertiary">
-                  Type to search articles, models, and pages...
+                  {m.search.hint}
                 </div>
               )}
 
               {query.trim() !== "" && results.length === 0 && (
                 <div className="px-4 py-10 text-center text-sm text-text-tertiary">
-                  No results found for &apos;{query}&apos;
+                  {m.search.noResults(query)}
                 </div>
               )}
 
@@ -363,19 +367,19 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <kbd className="bg-bg-surface border border-border-subtle rounded px-1.5 py-0.5 text-[10px] font-mono">
                   &uarr;&darr;
                 </kbd>
-                navigate
+                {m.search.navigate}
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="bg-bg-surface border border-border-subtle rounded px-1.5 py-0.5 text-[10px] font-mono">
                   &crarr;
                 </kbd>
-                open
+                {m.search.open}
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="bg-bg-surface border border-border-subtle rounded px-1.5 py-0.5 text-[10px] font-mono">
                   esc
                 </kbd>
-                close
+                {m.search.closeHint}
               </span>
             </div>
           </motion.div>

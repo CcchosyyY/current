@@ -26,6 +26,8 @@ import { useCategoryCounts } from "@/lib/hooks/useCategoryCounts";
 import { useSeenCategories } from "@/lib/hooks/useSeenCategories";
 import { modelCountsByCategory } from "@/lib/model-sections";
 import { useModelsSection } from "@/lib/hooks/useModelsSection";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { categoryName } from "@/lib/i18n/config";
 import SidebarToggle from "./SidebarToggle";
 
 const STORAGE_KEY = "sidebar-collapsed";
@@ -90,6 +92,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { locale, m } = useLocale();
   const urlCategory = searchParams.get("category") || "all";
   // Models에서는 지금 화면에 보이는 묶음을 강조 (스크롤을 따라감)
   const modelsSection = useModelsSection();
@@ -148,7 +151,7 @@ export default function Sidebar({
         href={`${pathname}?category=${cat.slug}`}
         // Models는 묶음으로 직접 스크롤하므로 Next의 '맨 위로' 스크롤을 끈다 (위로 튀었다 다시 내려오던 문제)
         scroll={!onModelsPage}
-        title={collapsed ? cat.name : undefined}
+        title={collapsed ? categoryName(cat, locale) : undefined}
         className={`group relative flex items-center gap-3 py-[7px] rounded-lg transition-all duration-150 ${
           collapsed ? "justify-center px-2.5" : "pl-3.5 pr-2.5"
         } ${
@@ -200,15 +203,15 @@ export default function Sidebar({
                   : "text-text-secondary group-hover:text-text-primary"
               }`}
             >
-              {cat.name}
+              {categoryName(cat, locale)}
             </span>
             {/* 새 글 점 — 마지막으로 연 뒤 새 기사가 들어왔을 때. 카테고리를 열면 사라진다 */}
             {showNew && (
               <span
                 className="h-1.5 w-1.5 rounded-full animate-pulse"
                 style={{ backgroundColor: cat.color }}
-                title="새 글이 있어요"
-                aria-label="새 글 있음"
+                title={m.sidebar.newPosts}
+                aria-label={m.sidebar.hasNew}
               />
             )}
             {count > 0 && (
@@ -233,7 +236,7 @@ export default function Sidebar({
       {/* Core categories */}
       {!collapsed && (
         <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
-          Main
+          {m.sidebar.main}
         </h3>
       )}
       {collapsed && <div className="mb-2" />}
@@ -252,7 +255,7 @@ export default function Sidebar({
       {/* Extended categories */}
       {!collapsed && (
         <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
-          More
+          {m.sidebar.more}
         </h3>
       )}
 
@@ -307,7 +310,7 @@ export default function Sidebar({
               className="relative z-50 w-[260px] h-full bg-bg-sidebar border-r border-border-subtle flex flex-col py-5 px-4 shrink-0 overflow-y-auto overscroll-contain"
               role="dialog"
               aria-modal="true"
-              aria-label="카테고리 메뉴"
+              aria-label={m.sidebar.categoryMenu}
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
@@ -315,14 +318,14 @@ export default function Sidebar({
             >
               <button
                 onClick={onMobileClose}
-                aria-label="메뉴 닫기"
+                aria-label={m.sidebar.closeMenu}
                 className="self-end mb-1 p-1.5 rounded-md text-text-tertiary hover:text-text-primary hover:bg-white/[0.04] transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
 
               <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
-                Main
+                {m.sidebar.main}
               </h3>
 
               <nav aria-label="Core category navigation" className="flex flex-col gap-0.5">
@@ -336,7 +339,7 @@ export default function Sidebar({
               </div>
 
               <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2.5">
-                More
+                {m.sidebar.more}
               </h3>
 
               <nav aria-label="Extended category navigation" className="flex flex-col gap-0.5 flex-1">

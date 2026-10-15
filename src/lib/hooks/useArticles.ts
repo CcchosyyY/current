@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { Article } from "@/lib/types";
-import { dbArticleToArticle } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
 import type { DBArticleRow } from "@/lib/transforms";
 
 interface UseArticlesParams {
@@ -78,5 +79,8 @@ export function useArticles(params: UseArticlesParams = {}): UseArticlesReturn {
     return () => controller.abort();
   }, [category, search, sort, page, limit, hours]);
 
-  return { articles, isLoading, error, pagination };
+  // 화면 언어에 맞춰 제목·요약 (언어를 바꾸면 다시 받지 않고 바로 바뀐다)
+  const { locale } = useLocale();
+  const localized = useMemo(() => articles.map((a) => localizeArticle(a, locale)), [articles, locale]);
+  return { articles: localized, isLoading, error, pagination };
 }

@@ -11,15 +11,8 @@ import ModelInfoSections from "@/components/model/ModelInfoSections";
 import ModelDetailModal from "@/components/ModelDetailModal";
 import NewsCard from "@/components/NewsCard";
 import { useModelArticles } from "@/lib/hooks/useModelArticles";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  llm: "LLM",
-  image: "Image",
-  code: "Code",
-  search: "Search",
-  multimodal: "Multimodal",
-  "open-source": "Open Source",
-};
 
 function CardSkeleton() {
   return (
@@ -37,7 +30,8 @@ function CardSkeleton() {
 export default function ModelPageClient() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
-  const model = AI_MODELS.find((m) => m.slug === slug) ?? null;
+  const model = AI_MODELS.find((x) => x.slug === slug) ?? null;
+  const m = useMessages();
 
   // "간략히 보기" quick-view modal (full model detail lives here, not on the page).
   const [quickOpen, setQuickOpen] = useState(false);
@@ -62,7 +56,7 @@ export default function ModelPageClient() {
           href="/models"
           className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
         >
-          <ArrowLeft size={16} /> All models
+          <ArrowLeft size={16} /> {m.model.allModels}
         </Link>
 
         <div className="mt-4 flex items-start justify-between gap-6 flex-wrap">
@@ -90,10 +84,10 @@ export default function ModelPageClient() {
                   className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
                   style={{ color: accent, backgroundColor: `${accent}24` }}
                 >
-                  {CATEGORY_LABELS[model.category] ?? model.category}
+                  {m.model.categories[model.category] ?? model.category}
                 </span>
               </div>
-              <p className="text-sm text-text-secondary">by {model.company}</p>
+              <p className="text-sm text-text-secondary">{m.model.by(model.company)}</p>
             </div>
           </div>
 
@@ -104,7 +98,7 @@ export default function ModelPageClient() {
               onClick={() => setQuickOpen(true)}
               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-border-subtle text-[13px] font-bold text-text-secondary hover:text-text-primary hover:border-border-strong transition-colors whitespace-nowrap cursor-pointer"
             >
-              <Eye size={14} aria-hidden="true" /> Quick view
+              <Eye size={14} aria-hidden="true" /> {m.model.quickView}
             </button>
           </div>
         </div>
@@ -120,7 +114,7 @@ export default function ModelPageClient() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-text-primary font-heading">
-            Latest news about {model.name}
+            {m.model.latestNewsAbout(model.name)}
           </h2>
           {total > 0 && (
             <span className="text-sm text-text-tertiary">{total}</span>
@@ -135,7 +129,7 @@ export default function ModelPageClient() {
           </div>
         ) : articles.length === 0 ? (
           <div className="py-16 text-center text-sm text-text-secondary border border-dashed border-border-subtle rounded-2xl">
-            No news yet for {model.name}.
+            {m.model.noNews(model.name)}
           </div>
         ) : (
           <>
@@ -153,7 +147,7 @@ export default function ModelPageClient() {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-surface border border-border-strong text-sm font-semibold text-text-primary hover:border-text-tertiary transition-colors disabled:opacity-60 cursor-pointer"
                 >
                   {loadingMore && <Loader2 size={15} className="animate-spin" />}
-                  {loadingMore ? "Loading…" : "Load more"}
+                  {loadingMore ? m.model.loading : m.model.loadMore}
                 </button>
               </div>
             )}

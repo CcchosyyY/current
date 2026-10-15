@@ -19,6 +19,8 @@ import {
 import { AI_MODELS } from "@/lib/constants";
 import type { ChoiceKind, ComparisonView, SlotView } from "@/modules/comparison/types";
 import Markdown, { type MarkdownSize } from "./Markdown";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
+import type { Messages } from "@/lib/i18n/messages";
 
 // A·B·C 결과 칸 + 선택 + 공개 (이야기 3의 ⑩~⑫).
 // - 칸마다 따로: 끝난 모델은 바로 보이고, 아직 실행 중인 칸만 시간이 흐른다.
@@ -34,23 +36,12 @@ const LETTERS = "ABCDEFGHIJ";
 function brandColor(brand: string | null | undefined): string {
   return AI_MODELS.find((m) => m.slug === brand)?.color ?? "#6366F1";
 }
-function formatSeconds(ms: number | null): string {
-  return ms === null ? "-" : `${(ms / 1000).toFixed(1)}초`;
+function formatSeconds(ms: number | null, m: Messages): string {
+  return ms === null ? "-" : m.compare.seconds((ms / 1000).toFixed(1));
 }
 function formatCost(usd: number | null | undefined): string {
   if (usd === null || usd === undefined) return "-";
   return usd < 0.01 ? `$${usd.toFixed(5)}` : `$${usd.toFixed(3)}`;
-}
-const ERROR_TEXT: Record<string, string> = {
-  timeout: "시간 초과 (60초)",
-  empty_output: "답이 비어 있어요 (답변 길이 '짧게'면 생길 수 있어요)",
-  rate_limited: "요청이 많아 거절됐어요",
-  insufficient_credits: "크레딧 한도에 도달했어요",
-  provider_error: "모델 쪽 오류",
-};
-// 2개 비교면 "둘 다", 3개면 "셋 다"
-function tieLabel(count: number): string {
-  return count === 2 ? "둘 다 비슷함" : count === 3 ? "셋 다 비슷함" : "모두 비슷함";
 }
 type Layout = "tabs" | "side";
 const LAYOUT_KEY = "current:compare-layout";
@@ -71,12 +62,13 @@ const isPending = (s: SlotView) => s.status === "pending" || s.status === "runni
 const isFailed = (s: SlotView) => s.status === "error" || s.status === "timeout";
 
 function Elapsed({ since }: { since: number }) {
+  const m = useMessages();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 100);
     return () => clearInterval(t);
   }, []);
-  return <span className="font-mono tabular-nums">{((now - since) / 1000).toFixed(1)}초</span>;
+  return <span className="font-mono tabular-nums">{m.compare.seconds(((now - since) / 1000).toFixed(1))}</span>;
 }
 
 interface Props {
@@ -87,6 +79,7 @@ interface Props {
 }
 
 export default function ResultSlots({ view, runningSince, choosing, onChoose }: Props) {
+  const m = useMessages();
   const [focus, setFocus] = useState<number | null>(null); // 크게 보기 중인 칸
   const [layout, setLayout] = useState<Layout>(loadLayout);
   const [pickedTab, setPickedTab] = useState<number | null>(null); // 사용자가 누른 탭
@@ -153,9 +146,9 @@ export default function ResultSlots({ view, runningSince, choosing, onChoose }: 
         ) : (
           <div />
         )}
-        <div className="flex shrink-0 justify-self-end rounded-xl border border-white/10 bg-black/30 p-1" role="group" aria-label="보기 방식">
-          <LayoutButton active={layout === "tabs"} onClick={() => changeLayout("tabs")} icon={<RectangleHorizontal size={15} />} label="하나씩" />
-          <LayoutButton active={layout === "side"} onClick={() => changeLayout("side")} icon={<Columns3 size={15} />} label="나란히" />
+        <div className="flex shrink-0 justify-self-end rounded-xl border border-white/10 bg-black/30 p-1" role="group" aria-label={m.compare.viewMode}>
+          <LayoutButton active={layout === "tabs"} onClick={() => changeLayout("tabs")} icon={<RectangleHorizontal size={15} />} label={m.compare.oneAtATime} />
+          <LayoutButton active={layout === "side"} onClick={() => changeLayout("side")} icon={<Columns3 size={15} />} label={m.compare.sideBySide} />
         </div>
       </div>
 
@@ -209,6 +202,7 @@ function LayoutButton({ active, onClick, icon, label }: { active: boolean; onCli
 
 /** 하나씩 보기의 탭 (두 줄): 위 — 글자 + 상태 / 아래 — (공개됐으면) 모델 이름, 아니면 걸린 시간 */
 function SlotTab({ slot, active, chosen, onClick }: { slot: SlotView; active: boolean; chosen: boolean; onClick: () => void }) {
+  const m = useMessages();
   const status = isPending(slot) ? (
     <Loader2 size={16} className="animate-spin text-primary-light" />
   ) : isFailed(slot) ? (
@@ -216,7 +210,7 @@ function SlotTab({ slot, active, chosen, onClick }: { slot: SlotView; active: bo
   ) : chosen ? (
     <Check size={17} className="text-primary-light" />
   ) : null;
-  const sub = isPending(slot) ? "실행 중" : isFailed(slot) ? "실패" : formatSeconds(slot.latencyMs);
+  const sub = isPending(slot) ? m.compare.running : isFailed(slot) ? m.compare.failedShort : formatSeconds(slot.latencyMs, m);
 
   return (
     <button
@@ -258,13 +252,14 @@ function ChoiceFooter({
   onChoose: (kind: ChoiceKind) => void;
   layout: Layout;
 }) {
+  const m = useMessages();
   if (view.status === "awaiting_choice") {
     return (
       <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
         <span className="mr-2 text-sm text-text-tertiary">
-          {view.isBlind ? "고르면 어떤 모델이었는지 공개돼요" : "가장 나은 답을 골라 주세요"}
+          {view.isBlind ? m.compare.revealHint : m.compare.pickBest}
           <span className="ml-2 hidden font-mono text-xs sm:inline">
-            {layout === "tabs" ? "(← → 로 다른 답 보기)" : `(키 1~${view.slots.length}로 고르기)`}
+            {layout === "tabs" ? m.compare.arrowHint : m.compare.keyHint(view.slots.length)}
           </span>
         </span>
         <button
@@ -272,14 +267,14 @@ function ChoiceFooter({
           onClick={() => onChoose("tie")}
           className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-text-secondary hover:border-white/25 hover:text-text-primary disabled:opacity-50 cursor-pointer"
         >
-          <Equal size={16} /> {tieLabel(view.slots.length)}
+          <Equal size={16} /> {m.compare.tie(view.slots.length)}
         </button>
         <button
           disabled={!canChoose}
           onClick={() => onChoose("all_bad")}
           className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-text-secondary hover:border-white/25 hover:text-text-primary disabled:opacity-50 cursor-pointer"
         >
-          <ThumbsDown size={16} /> 전부 별로
+          <ThumbsDown size={16} /> {m.compare.allBad}
         </button>
       </div>
     );
@@ -288,15 +283,15 @@ function ChoiceFooter({
     return (
       <p className="mt-5 text-center text-sm text-text-secondary">
         {view.choice.kind === "tie"
-          ? `“${tieLabel(view.slots.length)}”으로 기록했어요`
-          : "“전부 별로”로 기록했어요"}
+          ? m.compare.recordedTie(m.compare.tie(view.slots.length))
+          : m.compare.recordedAllBad}
       </p>
     );
   }
   if (view.status === "failed") {
     return (
       <p className="mt-5 flex items-center justify-center gap-2 text-sm text-amber-400">
-        <AlertTriangle size={16} /> 2개 이상 실패해서 비교할 수 없어요. 오늘 횟수에는 세지 않아요.
+        <AlertTriangle size={16} /> {m.compare.tooManyFailed}
       </p>
     );
   }
@@ -304,6 +299,7 @@ function ChoiceFooter({
 }
 
 function SlotHeader({ slot, chosen }: { slot: SlotView; chosen: boolean }) {
+  const m = useMessages();
   return (
     <div className="flex items-center gap-3">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 font-mono text-base font-semibold text-text-primary">
@@ -317,7 +313,7 @@ function SlotHeader({ slot, chosen }: { slot: SlotView; chosen: boolean }) {
       )}
       {chosen && (
         <span className="ml-auto flex shrink-0 items-center gap-1 text-base text-primary-light">
-          <Check size={17} /> 선택
+          <Check size={17} /> {m.compare.chosen}
         </span>
       )}
     </div>
@@ -325,6 +321,7 @@ function SlotHeader({ slot, chosen }: { slot: SlotView; chosen: boolean }) {
 }
 
 function SlotBody({ slot, runningSince, size = "sm" }: { slot: SlotView; runningSince: number | null; size?: MarkdownSize }) {
+  const m = useMessages();
   if (isPending(slot)) {
     return (
       <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2.5 text-sm text-text-tertiary">
@@ -334,7 +331,7 @@ function SlotBody({ slot, runningSince, size = "sm" }: { slot: SlotView; running
             <Elapsed since={runningSince} />
           </span>
         ) : (
-          "실행 중"
+          m.compare.running
         )}
       </div>
     );
@@ -343,7 +340,7 @@ function SlotBody({ slot, runningSince, size = "sm" }: { slot: SlotView; running
     return (
       <p className="flex items-start gap-2 py-6 text-sm text-amber-400">
         <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-        {ERROR_TEXT[slot.errorCode ?? ""] ?? "실패했어요"}
+        {m.compare.errors[slot.errorCode ?? ""] ?? m.compare.failed}
       </p>
     );
   }
@@ -367,6 +364,7 @@ function Slot({
   onExpand: () => void;
   wide?: boolean; // 하나씩 보기: 넓은 한 칸, 글자 크게, 본문은 읽기 좋은 폭으로 가운데
 }) {
+  const m = useMessages();
   return (
     <div
       // 화면 높이에 맞춘 긴 칸 (헤더·요약줄·선택 버튼 자리를 뺀 높이)
@@ -381,8 +379,8 @@ function Slot({
         {slot.status === "success" && (
           <button
             onClick={onExpand}
-            aria-label={`${LETTERS[slot.position]} 크게 보기`}
-            title="크게 보기"
+            aria-label={m.compare.expand(LETTERS[slot.position])}
+            title={m.compare.expandTitle}
             className="rounded-md p-1.5 text-text-tertiary hover:bg-white/10 hover:text-text-primary cursor-pointer"
           >
             <Maximize2 size={17} />
@@ -399,7 +397,7 @@ function Slot({
       {!isPending(slot) && (
         <div className="flex items-center gap-4 border-t border-white/10 px-5 py-3.5 text-sm text-text-tertiary">
           <span className="flex items-center gap-1.5 font-mono text-base font-semibold text-white">
-            <Clock size={16} /> {formatSeconds(slot.latencyMs)}
+            <Clock size={16} /> {formatSeconds(slot.latencyMs, m)}
           </span>
           {"costUsd" in slot && <span className="font-mono text-white/80">{formatCost(slot.costUsd)}</span>}
           {slot.status === "success" && canChoose && (
@@ -407,7 +405,7 @@ function Slot({
               onClick={onPick}
               className="ml-auto rounded-xl bg-primary/90 px-4 py-2 text-sm font-semibold text-white hover:bg-primary cursor-pointer"
             >
-              {wide ? `${LETTERS[slot.position]}가 낫다` : "이게 낫다"}
+              {wide ? m.compare.letterBetter(LETTERS[slot.position]) : m.compare.thisBetter}
             </button>
           )}
         </div>
@@ -436,6 +434,7 @@ function FocusView({
   onClose: () => void;
   onPick: (runId: string) => void;
 }) {
+  const m = useMessages();
   const slot = view.slots[position];
   const count = view.slots.length;
   const move = useCallback((d: number) => onMove((position + d + count) % count), [position, count, onMove]);
@@ -475,10 +474,10 @@ function FocusView({
             {isPending(s) && <Loader2 size={11} className="animate-spin" />}
           </button>
         ))}
-        <span className="ml-3 text-xs text-text-tertiary">← → 로 넘기기 · Esc 닫기</span>
+        <span className="ml-3 text-xs text-text-tertiary">{m.compare.focusHint}</span>
         <button
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={m.compare.close}
           className="ml-auto rounded-lg p-1.5 text-text-tertiary hover:bg-white/10 hover:text-text-primary cursor-pointer"
         >
           <X size={18} />
@@ -486,7 +485,7 @@ function FocusView({
       </div>
 
       <div className="relative flex min-h-0 flex-1">
-        <button onClick={() => move(-1)} aria-label="이전" className="px-4 text-text-tertiary hover:text-text-primary cursor-pointer">
+        <button onClick={() => move(-1)} aria-label={m.compare.prev} className="px-4 text-text-tertiary hover:text-text-primary cursor-pointer">
           <ChevronLeft size={28} />
         </button>
         <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-col py-6">
@@ -497,7 +496,7 @@ function FocusView({
           {!isPending(slot) && (
             <div className="mt-4 flex items-center gap-4 border-t border-white/10 pt-4 text-sm text-text-tertiary">
               <span className="flex items-center gap-1.5 font-mono text-lg font-semibold text-white">
-                <Clock size={17} /> {formatSeconds(slot.latencyMs)}
+                <Clock size={17} /> {formatSeconds(slot.latencyMs, m)}
               </span>
               {"costUsd" in slot && <span className="font-mono text-white/80">{formatCost(slot.costUsd)}</span>}
               {slot.status === "success" && canChoose && slot.runId && (
@@ -505,13 +504,13 @@ function FocusView({
                   onClick={() => onPick(slot.runId!)}
                   className="ml-auto rounded-xl bg-primary px-5 py-2.5 text-base font-semibold text-white hover:bg-primary-dark cursor-pointer"
                 >
-                  {LETTERS[slot.position]}가 낫다
+                  {m.compare.letterBetter(LETTERS[slot.position])}
                 </button>
               )}
             </div>
           )}
         </div>
-        <button onClick={() => move(1)} aria-label="다음" className="px-4 text-text-tertiary hover:text-text-primary cursor-pointer">
+        <button onClick={() => move(1)} aria-label={m.compare.next} className="px-4 text-text-tertiary hover:text-text-primary cursor-pointer">
           <ChevronRight size={28} />
         </button>
       </div>

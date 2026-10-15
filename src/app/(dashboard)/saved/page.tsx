@@ -5,12 +5,14 @@ import { Bookmark } from "lucide-react";
 import SavedGrid from "@/components/SavedGrid";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
-import { dbArticleToArticle } from "@/lib/transforms";
+import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { DBArticleRow } from "@/lib/transforms";
 import type { Article } from "@/lib/types";
 
 export default function SavedPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const { locale, m } = useLocale();
   const { bookmarkedIds, loaded: bookmarksLoaded } = useBookmarks();
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,9 +47,9 @@ export default function SavedPage() {
   // Show only articles that are still bookmarked, so un-saving a card on this
   // page removes it instantly (the toggle broadcasts to every hook instance).
   // Until bookmarks have loaded we show the fetched list as-is to avoid a flash.
-  const displayed = bookmarksLoaded
-    ? articles.filter((a) => bookmarkedIds.has(a.id))
-    : articles;
+  const displayed = (bookmarksLoaded ? articles.filter((a) => bookmarkedIds.has(a.id)) : articles).map((a) =>
+    localizeArticle(a, locale),
+  );
   const count = displayed.length;
 
   return (
@@ -55,10 +57,10 @@ export default function SavedPage() {
       <div className="flex items-center gap-3">
         <h1 className="text-[24px] font-bold font-heading text-text-primary flex items-center gap-2">
           <Bookmark size={24} className="text-primary" />
-          Saved Articles
+          {m.saved.title}
         </h1>
         <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full">
-          {count} saved
+          {m.saved.count(count)}
         </span>
       </div>
 
@@ -74,11 +76,10 @@ export default function SavedPage() {
             <Bookmark size={28} className="text-text-tertiary" />
           </div>
           <h3 className="text-lg font-semibold text-text-primary mb-2">
-            No saved articles yet
+            {m.saved.emptyTitle}
           </h3>
           <p className="text-sm text-text-secondary max-w-sm">
-            Bookmark articles you want to read later by clicking the save icon
-            on any news card.
+            {m.saved.emptyBody}
           </p>
         </div>
       ) : (

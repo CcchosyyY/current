@@ -7,9 +7,12 @@ import { Search, Bell } from "lucide-react";
 import { NAV_LINKS } from "@/lib/constants";
 import SearchModal from "./SearchModal";
 import UserMenu from "./UserMenu";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useMessages } from "@/lib/i18n/LocaleProvider";
 
 export default function Header() {
   const pathname = usePathname();
+  const m = useMessages();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   // Resolve the platform after mount so the keyboard hint matches reality
   // (Ctrl on Windows/Linux, ⌘ on Mac) without an SSR hydration mismatch.
@@ -77,7 +80,7 @@ export default function Header() {
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                {link.label}
+                {m.nav[link.key]}
               </Link>
             );
           })}
@@ -88,12 +91,12 @@ export default function Header() {
           {/* Search trigger - desktop */}
           <button
             onClick={openSearch}
-            aria-label={isMac ? "Search (Cmd+K)" : "Search (Ctrl+K)"}
+            aria-label={m.header.searchLabel(isMac ? "Cmd+K" : "Ctrl+K")}
             className="hidden md:flex items-center gap-2 bg-bg-card border border-border-subtle rounded-md px-2.5 py-1.5 w-[180px] cursor-pointer hover:border-border-strong transition-colors"
           >
             <Search size={14} className="text-text-tertiary" aria-hidden="true" />
             <span className="text-sm text-text-tertiary flex-1 text-left">
-              Search news...
+              {m.header.searchPlaceholder}
             </span>
             <kbd className="bg-bg-surface border border-border-subtle rounded px-1.5 py-0.5 text-[10px] text-text-tertiary font-mono">
               {isMac ? "⌘K" : "Ctrl K"}
@@ -103,7 +106,7 @@ export default function Header() {
           {/* Search trigger - mobile */}
           <button
             onClick={openSearch}
-            aria-label="Search"
+            aria-label={m.header.search}
             className="md:hidden p-1.5 hover:bg-bg-surface rounded-lg transition-colors"
           >
             <Search size={20} className="text-text-secondary" />
@@ -111,11 +114,14 @@ export default function Header() {
 
           {/* Notification bell */}
           <button
-            aria-label="Notifications"
+            aria-label={m.header.notifications}
             className="relative p-1.5 hover:bg-bg-surface rounded-lg transition-colors"
           >
             <Bell size={16} className="text-text-secondary" />
           </button>
+
+          {/* 언어 (한국어 기본) */}
+          <LanguageSwitcher />
 
           {/* User avatar + dropdown */}
           <UserMenu />

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { AI_MODELS } from "@/lib/constants";
 import ModelPageClient from "./ModelPageClient";
+import { getLocale } from "@/lib/i18n/server";
+import { getMessages } from "@/lib/i18n/messages";
+import { modelDescription } from "@/lib/model-i18n";
 
 // 정적 모델 목록 기반이라 DB 조회 없이 메타데이터 생성
 export async function generateMetadata({
@@ -9,14 +12,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const model = AI_MODELS.find((m) => m.slug === slug);
-  if (!model) return { title: "모델을 찾을 수 없어요" };
+  const model = AI_MODELS.find((x) => x.slug === slug);
+  const locale = await getLocale();
+  const m = getMessages(locale);
+  if (!model) return { title: m.model.notFound };
 
-  const title = `${model.name} — AI 모델 뉴스`;
-  const description =
-    model.description ??
-    `${model.name} (${model.company}) 관련 최신 AI 뉴스를 한곳에 모았습니다.`;
-
+  const title = m.model.pageTitle(model.name);
+  const description = modelDescription(model, locale) || m.model.pageDescription(model.name, model.company);
   return {
     title,
     description,

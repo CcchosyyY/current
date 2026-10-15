@@ -5,12 +5,14 @@ import Link from "next/link";
 import { ChevronDown, Flame } from "lucide-react";
 import { useHotEvents } from "@/lib/hooks/useHotEvents";
 import { AI_MODELS, HOT_LABELS } from "@/lib/constants";
+import { useLocale, useMessages, useTimeAgo } from "@/lib/i18n/LocaleProvider";
 import ArticleLogo from "@/components/ArticleLogo";
-import { getRelativeTimeShort } from "@/lib/utils";
 import type { HotEvent, HotType } from "@/lib/types";
 
 export function HotBadge({ type }: { type: HotType }) {
-  const { label, color } = HOT_LABELS[type];
+  const m = useMessages();
+  const { color } = HOT_LABELS[type];
+  const label = m.hot.types[type] ?? HOT_LABELS[type].label;
   return (
     <span
       className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-normal leading-none shrink-0"
@@ -24,7 +26,9 @@ export function HotBadge({ type }: { type: HotType }) {
 // 사건 하나 = 카드 하나. 같은 사건의 여러 기사 중 대표 기사(첫 기사)만 보여준다.
 function HotEventCard({ event }: { event: HotEvent }) {
   const { lead } = event;
-  const model = lead.aiModel ? AI_MODELS.find((m) => m.slug === lead.aiModel) : null;
+  const model = lead.aiModel ? AI_MODELS.find((x) => x.slug === lead.aiModel) : null;
+  const { locale } = useLocale();
+  const { agoShort } = useTimeAgo();
 
   return (
     <Link
@@ -38,13 +42,22 @@ function HotEventCard({ event }: { event: HotEvent }) {
           <span className="text-[11px] text-text-secondary truncate">{model.name}</span>
         )}
         <span className="ml-auto text-[11px] text-text-tertiary shrink-0">
-          {getRelativeTimeShort(event.firstAt)}
+          {agoShort(event.firstAt)}
         </span>
       </div>
-      <p className="text-sm font-semibold text-text-primary">{event.reason}</p>
-      <p className="text-xs text-text-secondary line-clamp-2 group-hover:text-primary transition-colors">
-        {lead.title}
-      </p>
+      {/* Hot 사유(reason)는 한국어로만 만들어진다 — 영어 화면에선 기사 제목을 굵게 */}
+      {locale === "ko" ? (
+        <>
+          <p className="text-sm font-semibold text-text-primary">{event.reason}</p>
+          <p className="text-xs text-text-secondary line-clamp-2 group-hover:text-primary transition-colors">
+            {lead.title}
+          </p>
+        </>
+      ) : (
+        <p className="text-sm font-semibold text-text-primary line-clamp-3 group-hover:text-primary transition-colors">
+          {lead.title}
+        </p>
+      )}
     </Link>
   );
 }
@@ -55,6 +68,7 @@ const COLLAPSED_KEY = "current:hot-collapsed";
 // 노출 기간 안의 Hot 사건. 없으면 섹션 자체를 숨긴다. 카테고리와 무관하게 전체 Hot.
 export default function HotSection() {
   const { events, isLoading } = useHotEvents();
+  const m = useMessages();
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
@@ -93,7 +107,7 @@ export default function HotSection() {
           </span>
         )}
         <span className="ml-auto flex items-center gap-1 text-xs text-text-tertiary">
-          {open ? "접기" : "펼치기"}
+          {open ? m.common.collapse : m.common.expand}
           <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
       </button>
