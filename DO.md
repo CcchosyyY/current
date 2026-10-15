@@ -16,11 +16,11 @@
   - 백엔드: DB 7테이블+RLS, OpenRouter 어댑터, 카탈로그 344개, 작업 유형 묶기(판정 AI), 실행·비교·블라인드·한도 API — 실제 HTTP 26항목 검증
   - 화면: 홈 = 뉴스 ↔ 비교 **가로 슬라이드**. 비교는 모델 → 보낼 내용 → 실행, 끝난 모델부터 표시, 블라인드 선택 후 공개 (1·2차 UI)
 - **Hot: 완료** (main 머지 → 크롤러가 12시간마다 Hot 판정) — 새 모델·긴급 뉴스를 사건 단위로 홈(뉴스 쪽) 상단에
-- 뉴스: 메인/Trending/Models/Newsletter/Saved, 크롤러 12시간 주기(KST 09/21시), 피드 6곳, 기사 568건+
+- 뉴스: 메인/News(전체 기사)/Models/Newsletter/Saved, 크롤러 12시간 주기(KST 09/21시), 피드 6곳, 기사 568건+
 
 ## ✅ 결정된 것
 
-- 프로젝트 이름 **Current** · 비교는 **로그인 필수** · 크롤러 keepalive **안 함**(60일 커밋 없으면 꺼지게 둠)
+- 프로젝트 이름 **Current** · 비교·북마크·Saved는 **로그인 필수** · NEW 표시 기준 **12시간** · 크롤러 keepalive **안 함**(60일 커밋 없으면 꺼지게 둠)
 - OpenRouter: **서버 키**로 허용 목록 저가 모델 3개(`gpt-5-nano`·`gemini-2.5-flash-lite`·`claude-haiku-5.5`, 운영자 부담), 그 밖은 **개인 키**
 - 서버 키 한도: 사용자 **하루 5회** + 서비스 하루 $1 + OpenRouter 키 $5. 반복 측정 하루 1회·샘플 2개까지 (R-26)
 - 블라인드: 선택 전 이름·로고·비용 숨김(서버가 안 보냄), **속도는 보임**. 선택지 이게 낫다 / 셋 다 비슷함 / 전부 별로
@@ -34,13 +34,16 @@
 
 ## 🔥 Now — 지금 (1~3개만)
 
-- [ ] **비교 화면 UI 다듬기** — 2차까지 반영(작업 칸 제거·끝난 모델부터·넓은 칸·크게 보기). 다음 피드백 대기
+- [ ] **비교 화면 UI 다듬기** — 3차 반영(마크다운 렌더링·숫자 키 선택·고급 설정 위치·문구). 사용자가 웹에서 확인 후 피드백 예정
+  - 후보로 남은 것: 좁은 화면 대응(결과 3칸 고정), 선택 후 공개 연출 + 요약 줄
+
+## ⏸️ 보류 (10/15 결정)
+
 - [ ] **S10 기록 화면** — 내 비교 목록 / 비교 다시 보기 (`GET /api/comparisons?mine=1`)
-- [ ] **S11 검증** — 비용 대조(runs 합계 vs OpenRouter 사용량), RLS 재확인 (브라우저 동작은 사용자가 확인함)
+- [ ] **S11 검증** — 비용 대조(runs 합계 vs OpenRouter 사용량), RLS 재확인
 
 ## ⏭️ Next — 다음
 
-- [ ] 결과 본문 마크다운 렌더링 (지금은 줄바꿈만 — `**굵게**`·목록이 그대로 보임)
 - [ ] 결과 글자 단위 스트리밍 (지금은 모델별로 끝나면 표시)
 - [ ] 비교 2단계: 유형별 전체/내 순위 (`ranking_*` DB 함수, Bradley-Terry 검토) → 추천 모델을 순위 기반으로
 - [ ] 비교 3단계: 일관성 측정(반복 하루 1회) + 비용 시뮬레이터 + 개인 키
@@ -51,12 +54,8 @@
 
 ## 🧹 정리 — 잡일
 
-- [ ] `middleware` → `proxy` 파일 컨벤션 마이그레이션 (Next.js 16 deprecation 경고)
-- [ ] `docs/openrouter-integration.md`(10/13, `feat/openrouter-playground`) 정리 — 새 설계로 대체됨
-- [ ] 쓰지 않는 API 정리 여부: `/api/tasks/resolve`, `/api/task-types/suggest` (작업 이름 칸 제거 후 화면에서 안 씀, 내 작업 저장에서 재사용 가능)
-- [ ] NEW 신선도 점 기준(6시간) — 크롤 12시간 주기라 대부분 안 붙음. 12시간으로 늘릴지 결정
-- [ ] Verge 본문 일부 이모지 깨짐(`ð¤` — 원본 피드의 mojibake)
-- [ ] 기사 로고 fallback(모델→회사→사이트)을 Trending·Saved·상세에도 적용
+- [ ] 뉴스레터 메일 발송 켜기 — Resend 가입 + 도메인 인증 → GitHub secrets `RESEND_API_KEY`·`NEWSLETTER_FROM`, vars `SITE_URL`(배포 주소). 지금은 사이트에만 올라감
+- [ ] 이 PC(WSL)에서 브라우저 테스트 불가 — `sudo apt install libasound2t64` 필요 (Playwright/Puppeteer Chromium)
 
 ## 💡 Someday — 백로그
 
@@ -64,23 +63,18 @@
 - [ ] Vercel 배포 (Auth·OpenRouter 콜백 URL도 배포 도메인으로 추가)
 
 **모델 / 회사**
-- [ ] `PAGE_FIRST_SLUGS` 전체 모델로 확장 (현재 chatgpt만 파일럿)
 - [ ] Try 버튼: 밝은 브랜드색 대비 보정 (글자색 토글)
 - [ ] 회사 로고 171→200 보완 + 큰 로고(.ico) 64px 최적화 + berkshire-hathaway 대체
 - [ ] 모델→회사 명시 매핑(companySlug) / 회사 상세(시총·창립·본사) 데이터 확장
 
 **페이지 / 기능**
-- [ ] Newsletter 상세("Read") 페이지
 - [ ] Profile / Settings 페이지, 알림 벨(드롭다운)
 - [ ] 페이지별 SEO 메타데이터(generateMetadata)
 - [ ] 대시보드 서버/클라이언트 컴포넌트 분리 (번들 최적화)
 - [ ] 크롤러 Claude API 기사 요약 (현재 RSS snippet 그대로 사용)
 
-**Trending 페이지 개편** (현재: `view_count` 내림차순 정렬 + 기간 클라 필터뿐)
-- [ ] 실제 조회수 추적 — 기사 열람 시 `view_count` +1 (RPC/API). 현재는 크롤마다 합성값 재계산 (`crawl-articles.mjs:638-649`)
-- [ ] `is_trending` 실제화 — 크롤러 합성 플래그 → 조회수 + 최신성 신호 기반으로
-- [ ] UI/UX 개선 — 순위 변동(▲▼) 실제 데이터화(지금은 isTrending→고정 ↗/−), 1~3위 강조, 빈상태·스켈레톤 다듬기, 모바일 레이아웃
-- [ ] 기간 필터 서버화 — 현재 마운트 시점 `Date.now()` 기준 클라 필터(부정확) → 쿼리로 이관
+**News 페이지** (Trending을 대체, 10/15)
+- [ ] 실제 조회수 추적이 생기면 "많이 읽은 순" 정렬 추가 (가짜 view_count는 제거함)
 
 **폴리싱 / 인프라**
 - [ ] Nunito 한글 폴백(Noto Sans KR), 사이드바 반응형, 라이트/다크 토글
