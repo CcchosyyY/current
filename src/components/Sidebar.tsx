@@ -14,11 +14,9 @@ import {
   Search,
   Languages,
   Palette,
-  PenTool,
   Zap,
   Bot,
   Box,
-  GraduationCap,
   LayoutGrid,
   X,
   type LucideIcon,
@@ -27,6 +25,7 @@ import { CATEGORIES } from "@/lib/constants";
 import { useCategoryCounts } from "@/lib/hooks/useCategoryCounts";
 import { useSeenCategories } from "@/lib/hooks/useSeenCategories";
 import { modelCountsByCategory } from "@/lib/model-sections";
+import { useModelsSection } from "@/lib/hooks/useModelsSection";
 import SidebarToggle from "./SidebarToggle";
 
 const STORAGE_KEY = "sidebar-collapsed";
@@ -41,11 +40,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   search: Search,
   languages: Languages,
   palette: Palette,
-  "pen-tool": PenTool,
   zap: Zap,
   bot: Bot,
   box: Box,
-  "graduation-cap": GraduationCap,
   "layout-grid": LayoutGrid,
 };
 
@@ -93,11 +90,17 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeCategory = searchParams.get("category") || "all";
+  const urlCategory = searchParams.get("category") || "all";
+  // Models에서는 지금 화면에 보이는 묶음을 강조 (스크롤을 따라감)
+  const modelsSection = useModelsSection();
+  const activeCategory = pathname === "/models" && modelsSection ? modelsSection : urlCategory;
   // 홈의 비교 화면(?view=compare)에서는 뉴스 카테고리가 쓸모없으니 사이드바를 접어 없앤다
   const hiddenForCompare = pathname === "/" && searchParams.get("view") === "compare";
 
-  const articleCounts = useCategoryCounts(`${pathname}|${activeCategory}`);
+  // Models에선 스크롤할 때마다 ?category=가 바뀌므로(스크롤 감지) 기사 수 재조회 키에서 카테고리를 뺀다
+  const articleCounts = useCategoryCounts(
+    pathname === "/models" ? pathname : `${pathname}|${activeCategory}`,
+  );
   const { latest } = articleCounts;
   // Models 화면에서는 카테고리 옆 숫자가 기사 수가 아니라 그 묶음의 모델 수
   const onModelsPage = pathname === "/models";
@@ -143,6 +146,8 @@ export default function Sidebar({
       <Link
         key={cat.slug}
         href={`${pathname}?category=${cat.slug}`}
+        // Models는 묶음으로 직접 스크롤하므로 Next의 '맨 위로' 스크롤을 끈다 (위로 튀었다 다시 내려오던 문제)
+        scroll={!onModelsPage}
         title={collapsed ? cat.name : undefined}
         className={`group relative flex items-center gap-3 py-[7px] rounded-lg transition-all duration-150 ${
           collapsed ? "justify-center px-2.5" : "pl-3.5 pr-2.5"

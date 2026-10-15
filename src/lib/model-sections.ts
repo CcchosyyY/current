@@ -42,8 +42,6 @@ export const MODEL_SECTIONS: { slug: string; models: string[] }[] = [
 // 묶음이 없는 사이드바 카테고리는 가장 가까운 묶음으로 보낸다
 export const SECTION_FALLBACK: Record<string, string> = {
   all: "top",
-  writing: "llm",
-  education: "productivity",
 };
 
 /** 사이드바 카테고리별 모델 수 (Models 화면에서 사이드바 숫자로 쓴다). "all" = 전체 모델 수 */
