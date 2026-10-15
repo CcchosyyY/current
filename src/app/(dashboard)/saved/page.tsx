@@ -11,55 +11,44 @@ import type { Article } from "@/lib/types";
 
 export default function SavedPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const { bookmarkedIds } = useBookmarks();
+  const { bookmarkedIds, loaded: bookmarksLoaded } = useBookmarks();
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
 
-    if (user) {
-      // Fetch bookmarked articles from API
-      fetch("/api/bookmarks?limit=50")
-        .then((res) => (res.ok ? res.json() : null))
-        .then((json) => {
-          if (Array.isArray(json?.data)) {
-            setArticles(
-              json.data
-                .map((b: { articles: DBArticleRow | null }) => b.articles)
-                .filter(Boolean)
-                .map((a: DBArticleRow) => dbArticleToArticle(a))
-            );
-          }
-        })
-        .catch(() => {})
-        .finally(() => setIsLoading(false));
-    } else {
-      // No user — show articles from localStorage bookmarks via API
-      if (bookmarkedIds.size === 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- 북마크 없을 때 빈 목록으로 즉시 종료 (정당한 데이터 동기화 effect)
-        setArticles([]);
-        setIsLoading(false);
-        return;
-      }
-      // Fetch each bookmarked article individually
-      Promise.all(
-        Array.from(bookmarkedIds).map((id) =>
-          fetch(`/api/articles/${id}`)
-            .then((res) => (res.ok ? res.json() : null))
-            .then((json) =>
-              json?.data ? dbArticleToArticle(json.data as DBArticleRow) : null
-            )
-            .catch(() => null)
-        )
-      ).then((results) => {
-        setArticles(results.filter(Boolean) as Article[]);
-        setIsLoading(false);
-      });
+    // /saved is login-only (src/proxy.ts redirects guests), so no user → nothing.
+    if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 로그아웃 상태면 빈 목록으로 즉시 종료 (정당한 데이터 동기화 effect)
+      setArticles([]);
+      setIsLoading(false);
+      return;
     }
-  }, [user, authLoading, bookmarkedIds]);
 
-  const count = articles.length;
+    fetch("/api/bookmarks?limit=200")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (Array.isArray(json?.data)) {
+          setArticles(
+            json.data
+              .map((b: { articles: DBArticleRow | null }) => b.articles)
+              .filter(Boolean)
+              .map((a: DBArticleRow) => dbArticleToArticle(a))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [user, authLoading]);
+
+  // Show only articles that are still bookmarked, so un-saving a card on this
+  // page removes it instantly (the toggle broadcasts to every hook instance).
+  // Until bookmarks have loaded we show the fetched list as-is to avoid a flash.
+  const displayed = bookmarksLoaded
+    ? articles.filter((a) => bookmarkedIds.has(a.id))
+    : articles;
+  const count = displayed.length;
 
   return (
     <div className="space-y-6">
@@ -93,7 +82,7 @@ export default function SavedPage() {
           </p>
         </div>
       ) : (
-        <SavedGrid articles={articles} />
+        <SavedGrid articles={displayed} />
       )}
     </div>
   );
