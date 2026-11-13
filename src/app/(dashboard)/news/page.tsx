@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Newspaper, Search, X } from "lucide-react";
 import NewsCard from "@/components/NewsCard";
@@ -14,6 +14,7 @@ import type { Article } from "@/lib/types";
 // 전체 기사 — 홈의 "Today's AI News"(24시간)에서 넘어오는 곳.
 // 카테고리는 사이드바(?category=), 검색어(?q=)와 기간(?period=)도 주소에 남겨 공유·뒤로가기가 된다.
 // 아래로 내리면 PAGE건씩 이어서 불러온다.
+// 기사를 보고 뒤로가기로 돌아오면 불러온 목록·스크롤 위치를 그대로 되살린다(sessionStorage).
 
 const PAGE = 30;
 const PERIODS = [
@@ -23,6 +24,41 @@ const PERIODS = [
   { value: "30d", hours: 24 * 30 },
 ] as const;
 type Period = (typeof PERIODS)[number]["value"];
+
+// ── 뒤로가기 복원 ─────────────────────────────────────────────────────────────
+// 기사 상세로 갔다가 돌아오면 이 페이지가 새로 마운트돼 1페이지부터 다시 불러온다.
+// 그래서 떠날 때 불러온 목록 + <main> 스크롤 위치를 조건(filterKey)별로 저장해 두고,
+// 뒤로/앞으로 가기(popstate)로 돌아왔을 때만 되살린다. 사이드바로 새로 들어오면 처음부터.
+const CACHE_PREFIX = "news-list:";
+const CACHE_TTL_MS = 30 * 60_000;
+type ListCache = { articles: Article[]; total: number; page: number; scrollTop: number; at: number };
+
+let cameBack = false;
+if (typeof window !== "undefined") {
+  window.addEventListener("popstate", () => {
+    cameBack = true;
+  });
+}
+
+function readCache(key: string): ListCache | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_PREFIX + key);
+    const c = raw ? (JSON.parse(raw) as ListCache) : null;
+    return c && Date.now() - c.at < CACHE_TTL_MS && Array.isArray(c.articles) ? c : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key: string, c: ListCache) {
+  try {
+    // 목록에 안 쓰는 본문은 빼서 저장 용량을 줄인다
+    const articles = c.articles.map((a) => ({ ...a, content: "", ko: a.ko ? { ...a.ko, content: "" } : a.ko }));
+    sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ ...c, articles }));
+  } catch {
+    // 용량 초과·저장 불가 — 복원만 못 할 뿐
+  }
+}
 
 // ── 날짜별 묶음 (한국 시간 기준) ──────────────────────────────────────────────
 const kstDay = (iso: string | null | undefined) => {
@@ -72,14 +108,21 @@ function NewsContent() {
   const period = (PERIODS.find((p) => p.value === params.get("period"))?.value ?? "all") as Period;
   const hours = PERIODS.find((p) => p.value === period)?.hours;
 
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const filterKey = `${category}|${q}|${period}`;
+  // 뒤로가기로 돌아온 경우에만 저장해 둔 목록으로 시작 (첫 렌더에서 한 번만 정한다)
+  const [restored] = useState(() => {
+    const back = cameBack;
+    cameBack = false;
+    return back ? readCache(filterKey) : null;
+  });
+  const [articles, setArticles] = useState<Article[]>(restored?.articles ?? []);
+  const [total, setTotal] = useState(restored?.total ?? 0);
+  const [page, setPage] = useState(restored?.page ?? 1);
+  const [loading, setLoading] = useState(!restored);
   const [draft, setDraft] = useState(q);
   const sentinel = useRef<HTMLDivElement>(null);
-  const filterKey = `${category}|${q}|${period}`;
   const [loadedKey, setLoadedKey] = useState(filterKey);
+  const skipFetch = useRef(!!restored); // 되살린 페이지는 다시 받지 않는다
 
   // 조건이 바뀌면 처음부터 (렌더 중에 리셋 — effect보다 깜빡임이 적다)
   if (loadedKey !== filterKey) {
@@ -92,6 +135,10 @@ function NewsContent() {
   }
 
   useEffect(() => {
+    if (skipFetch.current) {
+      skipFetch.current = false;
+      return;
+    }
     const ctrl = new AbortController();
     const sp = new URLSearchParams({ page: String(page), limit: String(PAGE), sort: "latest" });
     if (category !== "all") sp.set("category", category);
@@ -113,6 +160,34 @@ function NewsContent() {
       });
     return () => ctrl.abort();
   }, [category, q, hours, page]);
+
+  // 되살린 스크롤 위치로 이동 (목록이 그려진 뒤)
+  useEffect(() => {
+    const main = sentinel.current?.closest("main");
+    if (restored && main) main.scrollTop = restored.scrollTop;
+  }, [restored]);
+
+  // 떠날 때(기사 클릭 등) 지금 목록과 스크롤 위치를 저장. 최신 값은 ref로 들고 있다.
+  // layout effect 정리 함수는 DOM이 빠지기 전에 돈다 — 그 뒤엔 <main>이 짧아져 scrollTop이 0으로 눌린다.
+  const snapshot = useRef({ filterKey, articles, total, page, loading });
+  useEffect(() => {
+    snapshot.current = { filterKey, articles, total, page, loading };
+  });
+  useLayoutEffect(() => {
+    const main = sentinel.current?.closest("main");
+    return () => {
+      const s = snapshot.current;
+      if (!main || s.articles.length === 0) return;
+      writeCache(s.filterKey, {
+        articles: s.articles,
+        total: s.total,
+        // 다음 페이지를 받는 중이면 그 페이지는 아직 없으니 한 페이지 전으로 저장
+        page: s.loading ? Math.max(1, s.page - 1) : s.page,
+        scrollTop: main.scrollTop,
+        at: Date.now(),
+      });
+    };
+  }, []);
 
   // 목록 끝이 보이면 다음 페이지
   const hasMore = articles.length < total;

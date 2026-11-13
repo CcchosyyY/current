@@ -57,7 +57,7 @@
 - [ ] 다국어(10/15): 영어 화면에서도 한국어로만 남는 것 — 뉴스레터 본문(한국어로 생성), 서버 API 오류 문구(비교 화면은 코드로 영어 대체), 기사 태그(#slug). 필요하면 뉴스레터 영어판 생성
 - [ ] 기사 번역은 Haiku 5.5 + 이름 교정표(scripts/lib/translate.mjs NAME_FIXES). 음역된 이름이 또 보이면 표에 추가 후 `node scripts/translate-articles.mjs --all`
 - [ ] 뉴스레터 메일 발송 켜기 — Resend 가입 + 도메인 인증 → GitHub secrets `RESEND_API_KEY`·`NEWSLETTER_FROM`, vars `SITE_URL`(배포 주소). 지금은 사이트에만 올라감
-- [ ] 이 PC(WSL)에서 브라우저 테스트 불가 — `sudo apt install libasound2t64` 필요 (Playwright/Puppeteer Chromium)
+- [ ] 이 PC(WSL) 브라우저 테스트: `libasound2t64`가 없어 MCP 브라우저는 안 뜸 → `sudo apt install libasound2t64`. 임시로는 `apt-get download libasound2t64` + `dpkg -x`로 풀어 `LD_LIBRARY_PATH`를 주고 `~/.cache/ms-playwright`의 headless shell을 playwright-core 스크립트로 띄우면 됨 (11/13 확인)
 
 ## 💡 Someday — 백로그
 

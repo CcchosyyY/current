@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/security";
 import { HOT_WINDOW_HOURS } from "@/lib/constants";
-import type { DBArticleRow } from "@/lib/transforms";
+import { ARTICLE_SELECT, type DBArticleRow } from "@/lib/transforms";
 import type { HotType } from "@/lib/types";
 
 const hotLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
@@ -40,11 +40,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("articles")
       .select(
-        `
-        *,
-        categories(name, slug, color),
-        ai_models(name, slug, company, brand_color, logo_url)
-      `,
+        ARTICLE_SELECT,
       )
       .not("hot_type", "is", null)
       .gte("published_at", since)
@@ -58,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // 오래된 순으로 읽으므로 각 묶음의 첫 행이 사건의 첫 기사(= 대표)가 된다
     const groups = new Map<string, DBArticleRow[]>();
-    for (const row of (data ?? []) as DBArticleRow[]) {
+    for (const row of (data ?? []) as unknown as DBArticleRow[]) {
       const key = row.hot_event ?? `article-${row.id}`;
       const group = groups.get(key);
       if (group) group.push(row);

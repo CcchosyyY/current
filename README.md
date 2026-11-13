@@ -6,8 +6,8 @@
   <h1>🌊 Current <sub>by Jyos</sub></h1>
 
   <p>
-    <b>외국 AI 모델 뉴스를 자동 수집·요약해 카드형 UI로 보여주고,</b><br/>
-    <b>원하는 모델의 뉴스·주가를 ESP32 하드웨어 디스플레이로 받아보는 서비스</b>
+    <b>AI 소식을 자동으로 모아 한국어로 보여주고,</b><br/>
+    <b>내 작업에 맞는 AI 모델을 직접 비교해 고르게 돕는 서비스</b>
   </p>
 
   <!-- BADGES -->
@@ -33,12 +33,12 @@
 
 ## 📖 소개
 
-**Current**는 빠르게 쏟아지는 AI 기술 뉴스를 한곳에 모아 보여주는 **뉴스 큐레이션 플랫폼**입니다.
-Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수집하고, **Claude API**로
-분류·요약한 뒤 카드형 UI로 깔끔하게 정리합니다.
+**Current**는 AI를 잘 모르는 사람도 "그래서 나는 어떤 AI를 쓰면 되지?"에 답할 수 있게 돕는 서비스입니다.
 
-나아가 사용자가 관심 있는 모델을 **별표(즐겨찾기)** 해두면, 그 모델의 헤드라인과 관련 기업 주가를
-**ESP32 + TFT 하드웨어 디스플레이**로 받아보는 것을 목표로 합니다. (소프트웨어 + 전용 하드웨어 결합)
+- **뉴스** — Claude, ChatGPT, Gemini 등 AI 모델 기사를 RSS로 자동 수집하고, **Claude API**로 분류·한국어 번역해
+  카드형 UI로 정리합니다. 새 모델 출시·긴급 소식은 **Hot**으로 홈 상단에 보여줍니다.
+- **비교** — 내 질문 하나를 **OpenRouter**로 여러 모델에 동시에 보내고, 이름을 가린 채(블라인드) 답을 비교해
+  가장 마음에 드는 답을 고릅니다. 고른 뒤에 모델 이름·비용이 공개됩니다.
 
 > 💡 컴퓨터공학부 졸업 프로젝트(9개월) — 실서비스 론칭 및 수익화를 목표로 1인 개발 중입니다.
 
@@ -65,10 +65,12 @@ Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수�
 - 🤖 **Claude 기반 분류** — Claude Haiku로 카테고리·모델을 자동 태깅 (키워드 + LLM 하이브리드)
 - 🗂 **카드형 대시보드** — 14개 카테고리 필터, 모델별 페이지/상세 모달, 전문 검색
 - ⭐ **사용자별 북마크** — Google 로그인(OAuth) 후 관심 기사 저장 → `/saved`
-- 📚 **News** — 전체 기사 목록 (카테고리·검색·기간 필터, 스크롤로 계속 불러오기)
-- 🔌 **(예정) 주가 연동** — AI 모델 ↔ 관련 기업 매핑, 주가 위젯
-- 📟 **(예정) ESP32 하드웨어** — 선택한 모델의 헤드라인·주가를 TFT 디스플레이로 표시
-- 🏢 **(추가 목표) 글로벌 기업 뉴스·주식 분석** — 외국 주요 기업 뉴스를 Claude로 분석해 큐레이션
+- 📚 **News** — 날짜별 전체 기사 목록 (카테고리·검색·기간 필터)
+- 🔥 **Hot** — 새 모델 출시·긴급 뉴스를 사건 단위로 묶어 홈 상단에 표시
+- 🌐 **한국어 번역 / 다국어** — 기사 자동 번역, 사이트 한국어·영어 전환
+- 📬 **Newsletter** — 매일 아침 중요한 기사만 골라 요약
+- ⚖️ **모델 비교** — 샘플 하나를 모델 3개에 병렬 실행, 블라인드 선택 후 공개, 판정 AI가 작업 유형 자동 분류
+- 🏆 **(예정) 순위·추천** — 작업 유형별 전체/내 순위, 순위 기반 모델 추천
 
 ---
 
@@ -78,10 +80,9 @@ Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수�
 |------|------|
 | **프론트엔드** | Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS v4, framer-motion |
 | **백엔드** | Next.js Route Handlers (REST API), Node 크롤러 (rss-parser) |
-| **DB / 인증** | Supabase (PostgreSQL, Auth + Google OAuth, RLS), 전문검색(tsvector + GIN) |
-| **AI** | Claude API (Anthropic) — 기사 분류·요약 |
+| **DB / 인증** | Supabase (PostgreSQL, Auth + Google OAuth, RLS), 검색(원문+한국어 부분 일치, pg_trgm) |
+| **AI** | Claude API (Anthropic) — 기사 분류·번역·Hot 판정·작업 유형 묶기 / OpenRouter — 비교 대상 모델 실행 |
 | **인프라** | Vercel (배포), GitHub Actions (크롤러 cron, 12시간 주기) |
-| **하드웨어 (예정)** | ESP32, 4인치 TFT(ILI9341), Fusion 360 3D 케이스 |
 
 ---
 
@@ -91,7 +92,7 @@ Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수�
 
 ```
                       ┌──────────────────────────┐
-   RSS 피드 ───────▶  │  크롤러 (Node, cron 6h)   │ ── Claude Haiku 분류
+   RSS 피드 ───────▶  │  크롤러 (Node, cron 12h)  │ ── Claude Haiku 분류·번역·Hot
                       │  scripts/crawl-articles   │
                       └────────────┬─────────────┘
                                    │ upsert (service_role)
@@ -100,10 +101,10 @@ Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수�
    │   브라우저    │ ◀────▶ │  Next.js App  │ ◀────▶ │    Supabase      │
    │  (대시보드)   │  HTTP  │  /app, /api   │  SQL   │ Postgres+Auth+RLS │
    └──────────────┘        └──────┬───────┘        └─────────────────┘
-                                   │ (예정) 디바이스 API
+                                   │ 비교 실행 (서버 키 / 블라인드)
                                    ▼
                           ┌──────────────┐
-                          │  ESP32 + TFT  │  선택 모델 헤드라인·주가 표시
+                          │  OpenRouter   │  GPT · Gemini · Claude 등 344개 모델
                           └──────────────┘
 ```
 
@@ -112,15 +113,17 @@ Claude, ChatGPT, Gemini 등 주요 AI 모델 관련 기사를 RSS로 자동 수�
 ```
 src/
 ├─ app/
-│  ├─ (dashboard)/      # 홈·모델·기사·trending·saved (사이드바 레이아웃)
-│  ├─ api/              # articles · ai-models · bookmarks · newsletter
+│  ├─ (dashboard)/      # 홈(뉴스↔비교)·news·models·article·saved·newsletter
+│  ├─ api/              # articles · ai-models · bookmarks · hot · newsletter · catalog · tasks · comparisons
 │  └─ auth/callback/    # Google OAuth 콜백
-├─ components/          # NewsCard · ModelCard · Sidebar · Header 등
+├─ components/          # NewsCard · ModelCard · Sidebar · Header · compare/* 등
+├─ modules/             # account · catalog · task · execution · comparison · evaluation (비교 도메인 로직)
 └─ lib/
    ├─ supabase/         # client / server / middleware / schema.sql
    ├─ hooks/            # useArticles · useBookmarks · useAuth …
    └─ constants.ts · types.ts · transforms.ts · security.ts
-scripts/crawl-articles.mjs   # RSS 크롤러 (키워드 + Claude 분류)
+scripts/crawl-articles.mjs   # RSS 크롤러 (키워드 + Claude 분류·번역·Hot)
+scripts/newsletter.mjs       # 아침 뉴스레터 생성
 ```
 
 ---
@@ -164,7 +167,8 @@ npx next dev -p 3003
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon 키 |
 | `SUPABASE_SERVICE_ROLE_KEY` | 크롤러용 service_role 키 (RLS 우회) |
 | `NEXT_PUBLIC_SITE_URL` | OAuth redirect 기준 URL |
-| `ANTHROPIC_API_KEY` | (선택) Claude 분류용 |
+| `ANTHROPIC_API_KEY` | Claude 분류·번역·판정용 |
+| `OPENROUTER_API_KEY` | 모델 비교 실행용 (서버 키) |
 
 ### 뉴스 크롤링 (수동 실행)
 
@@ -178,17 +182,14 @@ node scripts/crawl-articles.mjs --no-llm # LLM 분류 생략 (키워드만)
 
 ## 🗺 로드맵
 
-프로젝트는 **기본 목표(반드시 완성)** 와 **추가 목표(여력 시 확장)** 두 트랙으로 나뉩니다.
+> 2026-10-15 방향 전환: 주가 연동·ESP32 하드웨어·기업 주식 분석은 접고, 뉴스 위에 **모델 비교 서비스**를 붙였습니다.
 
-### 🎯 기본 목표 — AI 모델 × 뉴스 × 주가 × 하드웨어
-- [x] AI 모델 뉴스 대시보드 (수집·분류·UI·북마크)
-- [ ] AI 모델 ↔ 관련 기업 주가 연동
-- [ ] ESP32 하드웨어 — 선택 모델 헤드라인·주가 표시
-
-### ➕ 추가 목표 — 글로벌 기업 × 뉴스 분석 × 주식
-- [ ] 외국 주요 기업 뉴스 수집·Claude 분석 (호재/악재·키워드)
-- [ ] 기업 주식 분석 (뉴스 → 주가 연계)
-- [ ] 기업 뉴스·주가 하드웨어 결합
+- [x] AI 뉴스 대시보드 (수집·분류·번역·UI·북마크·Hot·뉴스레터)
+- [x] 비교 1단계 — 블라인드 비교 (실행·선택·공개·작업 유형 자동 분류)
+- [ ] 비교 1단계 마무리 — 내 비교 기록, 비용·RLS 검증
+- [ ] 비교 2단계 — 작업 유형별 전체/내 순위 → 추천
+- [ ] 비교 3단계 — 일관성 측정 · 비용 시뮬레이터 · 개인 키
+- [ ] 비교 4단계 — 새 모델 출시 뉴스 → "내 작업으로 비교해 보기"
 
 > 자세한 기획·로드맵은 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) 참고.
 

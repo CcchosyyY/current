@@ -94,6 +94,8 @@ CREATE INDEX IF NOT EXISTS idx_articles_hot_event ON articles(hot_event) WHERE h
 CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category_id);
 CREATE INDEX IF NOT EXISTS idx_articles_ai_model ON articles(ai_model_id);
 CREATE INDEX IF NOT EXISTS idx_articles_search ON articles USING GIN (search_vector);
+-- 검색은 search_text(원문+한국어 번역, 부분 일치)를 쓴다 — supabase/migrations/20261113000000_article_search_text.sql
+-- (title_ko 등 번역 컬럼과 pg_trgm(extensions 스키마)이 먼저 있어야 한다)
 
 -- ============================================================
 -- 4. BOOKMARKS (requires auth — protected by RLS)
