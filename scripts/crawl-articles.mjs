@@ -15,6 +15,9 @@
 //       # fill image_url on existing DB rows that have none (from og:image)
 //   node scripts/crawl-articles.mjs --detect-hot[=DAYS]
 //       # re-run the Hot pass on DB rows published in the last DAYS (default 3)
+//   node scripts/crawl-articles.mjs --reclassify --since=ISO [--until=ISO] [--dry]
+//       # re-run the LLM classification on DB rows INSERTED in that window
+//       # (e.g. runs that fell back to keyword-only when the Anthropic API failed)
 //
 // Auth: uses SUPABASE_SERVICE_ROLE_KEY if present (recommended for production /
 // cron), otherwise falls back to the public anon key from .env.local. The anon
@@ -1119,7 +1122,84 @@ async function redetectHot(days) {
   console.log(`updated ${updated}/${rows.length}`);
 }
 
+// Re-run the LLM second pass on rows inserted (created_at) in a window — for
+// crawls whose LLM pass failed and kept keyword results. Same rules as crawl():
+// only ambiguous rows go to Haiku; keep=false rows are deleted, since a working
+// crawl would never have inserted them.
+async function reclassify(since, until) {
+  let q = `articles?select=id,title,summary,content,category_id,ai_model_id&created_at=gte.${encodeURIComponent(since)}`;
+  if (until) q += `&created_at=lt.${encodeURIComponent(until)}`;
+  const [res, catRes, modRes] = await Promise.all([
+    sb(`${q}&order=created_at.asc&limit=1000`),
+    sb("categories?select=id,slug"),
+    sb("ai_models?select=id,slug"),
+  ]);
+  if (!res.ok || !catRes.ok || !modRes.ok) throw new Error(`select failed ${res.status}/${catRes.status}/${modRes.status}`);
+  const rows = await res.json();
+  const cats = Object.fromEntries((await catRes.json()).map((c) => [c.slug, c.id]));
+  const mods = Object.fromEntries((await modRes.json()).map((m) => [m.slug, m.id]));
+  const catSlug = Object.fromEntries(Object.entries(cats).map(([k, v]) => [v, k]));
+  const modSlug = Object.fromEntries(Object.entries(mods).map(([k, v]) => [v, k]));
+
+  const ambiguous = rows.filter((r) => {
+    const body = `${r.summary || ""} ${r.content || ""}`;
+    const kw = classify(r.title, body);
+    const full = " " + (r.title + " " + body).toLowerCase() + " ";
+    return !(kw.titleMatched && !hasIndustrySignal(full));
+  });
+  console.log(`Reclassify: ${rows.length} rows since ${since}${until ? ` until ${until}` : ""}, ${ambiguous.length} ambiguous → Haiku…`);
+
+  const verdicts = new Map();
+  for (let start = 0; start < ambiguous.length; start += LLM_BATCH) {
+    const chunk = ambiguous.slice(start, start + LLM_BATCH);
+    const map = await llmClassifyBatch(chunk); // throw on failure — never half-apply silently
+    for (const [i, v] of map) verdicts.set(chunk[i].id, v);
+  }
+
+  let changed = 0, removed = 0, same = 0;
+  for (const r of ambiguous) {
+    const v = verdicts.get(r.id);
+    if (!v) continue;
+    const before = `${catSlug[r.category_id] || "?"}/${modSlug[r.ai_model_id] || "-"}`;
+    if (!v.keep) {
+      console.log(`  🗑  ${before}  ${truncate(r.title, 90)}`);
+      removed++;
+      if (!DRY) {
+        const del = await sb(`articles?id=eq.${r.id}`, { method: "DELETE" });
+        if (!del.ok) console.log(`  ✗ delete ${r.id}: ${del.status}`);
+      }
+      continue;
+    }
+    const after = `${v.category}/${v.model || "-"}`;
+    if (before === after) { same++; continue; }
+    console.log(`  ✎ ${before} → ${after}  ${truncate(r.title, 80)}`);
+    changed++;
+    if (!DRY) {
+      const up = await sb(`articles?id=eq.${r.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          category_id: cats[v.category] || cats["ai-ml"] || null,
+          ai_model_id: v.model ? mods[v.model] || null : null,
+          tags: tagsFrom(`${r.title} ${r.summary || ""}`, v.model, v.category),
+        }),
+      });
+      if (!up.ok) console.log(`  ✗ ${r.id}: ${up.status}`);
+    }
+  }
+  console.log(`changed ${changed}, deleted ${removed}, unchanged ${same}` + (DRY ? " (--dry: no DB write)" : ""));
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
+if (process.argv.includes("--reclassify")) {
+  if (!SUPABASE_URL || !SERVICE_KEY || !LLM_ENABLED || !SINCE_ARG) {
+    console.error("--reclassify needs SUPABASE_URL + a service-role/secret key + ANTHROPIC_API_KEY + --since=ISO");
+    process.exit(1);
+  }
+  const until = process.argv.find((a) => a.startsWith("--until="))?.slice(8);
+  await reclassify(SINCE_ARG, until);
+  process.exit(process.exitCode ?? 0);
+}
+
 const DETECT_HOT_ARG = process.argv.find((a) => a.startsWith("--detect-hot"));
 if (DETECT_HOT_ARG) {
   if (!SUPABASE_URL || !SERVICE_KEY) {
