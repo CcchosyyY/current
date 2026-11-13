@@ -2,6 +2,16 @@ import type { Article, CategorySlug, AIModelSlug, HotType } from "./types";
 import type { Locale } from "./i18n/config";
 import { isRenderableImageUrl } from "./image-config";
 
+// Columns for article queries — not `*`, which would also ship the big
+// search-only columns (search_text = every text field in both languages).
+export const ARTICLE_SELECT = `
+  id, title, summary, content, source_url, source_name, image_url, published_at, created_at,
+  read_time, view_count, is_trending, tags, hot_type, hot_reason, hot_event,
+  title_ko, summary_ko, content_ko,
+  categories(name, slug, color),
+  ai_models(name, slug, company, brand_color, logo_url)
+`;
+
 // Shape returned by Supabase articles query with joined relations
 export interface DBArticleRow {
   id: string;

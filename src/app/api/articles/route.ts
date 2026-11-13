@@ -2,8 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/security";
+import { ARTICLE_SELECT } from "@/lib/transforms";
 
 const articlesLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
+
+// 한국어로 쓴 이름 → 번역문에 실제로 남는 영어 이름. 번역이 이 이름들을 영어로 고쳐 두므로
+// (scripts/lib/translate.mjs NAME_FIXES — 둘을 같이 고칠 것) "클로드"로 찾으면 아무것도 안 걸린다.
+const PHRASE_ALIASES: [string, string][] = [
+  ["클로드 코드", "Claude Code"], ["오픈 AI", "OpenAI"], ["허깅 페이스", "Hugging Face"],
+];
+const NAME_ALIASES: [string, string][] = [
+  ["클로드", "Claude"], ["앤스로픽", "Anthropic"], ["앤트로픽", "Anthropic"], ["엔트로픽", "Anthropic"],
+  ["오픈에이아이", "OpenAI"], ["오픈AI", "OpenAI"], ["챗GPT", "ChatGPT"], ["챗지피티", "ChatGPT"],
+  ["제미나이", "Gemini"], ["제미니", "Gemini"], ["그록", "Grok"], ["코파일럿", "Copilot"],
+  ["미드저니", "Midjourney"], ["퍼플렉시티", "Perplexity"], ["딥시크", "DeepSeek"], ["딥마인드", "DeepMind"],
+  ["허깅페이스", "Hugging Face"], ["미스트랄", "Mistral"], ["노트북LM", "NotebookLM"],
+  ["일레븐랩스", "ElevenLabs"], ["런웨이", "Runway"], ["엑스에이아이", "xAI"],
+];
+
+// 검색어 → 단어마다 ILIKE '%단어%' 패턴 (모든 단어가 들어 있어야 걸린다).
+// 이름은 단어 앞부분으로 맞춘다 — "클로드가"도 Claude로 (조사는 버린다).
+function searchPatterns(search: string): string[] {
+  let text = search;
+  for (const [from, to] of PHRASE_ALIASES) text = text.split(from).join(to);
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 8)
+    .map((w) => NAME_ALIASES.find(([from]) => w.startsWith(from))?.[1] ?? w)
+    .map((w) => `%${w.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
+}
 
 const ArticlesQuerySchema = z.object({
   category: z.string().optional(),
@@ -101,11 +129,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("articles")
       .select(
-        `
-        *,
-        categories(name, slug, color),
-        ai_models(name, slug, company, brand_color, logo_url)
-      `,
+        ARTICLE_SELECT,
         { count: "exact" },
       )
       .range(offset, offset + limit - 1);
@@ -120,18 +144,14 @@ export async function GET(request: NextRequest) {
       query = query.eq("ai_model_id", aiModelId);
     }
 
-    // Full-text search over the weighted `search_vector` column
-    // (title > summary > content). `websearch` parses the term with
-    // websearch_to_tsquery — it handles multi-word, "quoted phrases",
-    // and -exclusions, and is passed as a bound parameter so there is no
-    // injection surface (unlike the previous ilike + .or() string).
+    // Substring search over `search_text` (original + Korean translation,
+    // pg_trgm index). The English-only full-text `search_vector` missed every
+    // Korean term and hyphenated names like "GPT-5". Each word is its own
+    // ilike filter (AND), sent as a value — no .or() string to inject into.
+    const patterns = search ? searchPatterns(search) : [];
     if (search) {
-      const trimmed = search.trim();
-      if (trimmed) {
-        query = query.textSearch("search_vector", trimmed, {
-          type: "websearch",
-          config: "english",
-        });
+      if (patterns.length > 0) {
+        for (const p of patterns) query = query.ilike("search_text", p);
       } else {
         // Whitespace-only search must not fall through to an unfiltered
         // (all-articles) query — return an empty page instead.
@@ -162,11 +182,9 @@ export async function GET(request: NextRequest) {
         .select("id", { count: "exact", head: true });
       if (categoryId) countQuery = countQuery.eq("category_id", categoryId);
       if (aiModelId) countQuery = countQuery.eq("ai_model_id", aiModelId);
-      if (search) {
-        countQuery = countQuery.textSearch("search_vector", search.trim(), {
-          type: "websearch",
-          config: "english",
-        });
+      for (const p of patterns) countQuery = countQuery.ilike("search_text", p);
+      if (hours) {
+        countQuery = countQuery.gte("published_at", new Date(Date.now() - hours * 60 * 60 * 1000).toISOString());
       }
       const { count: total } = await countQuery;
       return NextResponse.json({

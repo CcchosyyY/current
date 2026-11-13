@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/security";
+import { ARTICLE_SELECT } from "@/lib/transforms";
 
 const articleLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
 
@@ -29,11 +30,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from("articles")
-      .select(`
-        *,
-        categories(name, slug, color),
-        ai_models(name, slug, company, brand_color, logo_url)
-      `)
+      .select(ARTICLE_SELECT)
       .eq("id", parsed.data.id)
       .single();
 

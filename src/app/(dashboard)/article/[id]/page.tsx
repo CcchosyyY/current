@@ -5,7 +5,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
 import { supabasePublic } from "@/lib/supabase/public";
-import { dbArticleToArticle, localizeArticle } from "@/lib/transforms";
+import { ARTICLE_SELECT, dbArticleToArticle, localizeArticle } from "@/lib/transforms";
 import { getLocale } from "@/lib/i18n/server";
 import { getMessages, relativeTime } from "@/lib/i18n/messages";
 import { categoryName } from "@/lib/i18n/config";
@@ -44,11 +44,7 @@ export async function generateStaticParams() {
 const getArticle = cache(async (id: string) => {
   const { data, error } = await supabasePublic
     .from("articles")
-    .select(`
-      *,
-      categories(name, slug, color),
-      ai_models(name, slug, company, brand_color, logo_url)
-    `)
+    .select(ARTICLE_SELECT)
     .eq("id", id)
     .single();
 
